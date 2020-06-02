@@ -23,13 +23,23 @@ class DbConnection:
         pass
 
     @abstractmethod
+    def commit(self):
+        """Commit changes."""
+        pass
+
+    @abstractmethod
+    def close(self):
+        """Commit changes and close the connection."""
+        pass
+
+    @abstractmethod
     def read(
             self, table_name: str,
             headers: Sequence[str],
-            and_filters: Sequence[str],
-            or_filters: Sequence[str],
-            offset: int,
-            limit: int
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            offset: int = None,
+            limit: int = None
     ):
         """Read from the database."""
         pass
@@ -52,5 +62,10 @@ class DbConnection:
 
     @abstractmethod
     def get_table_info(self, table_name: str):
+        """TODO"""
+        pass
+
+    @abstractmethod
+    def check_table_exists(self, resource_name) -> bool:
         """TODO"""
         pass

@@ -50,7 +50,14 @@ class SqliteConnection(DbConnection):
         self.cursor = self.connection.cursor()
 
     def commit(self):
-        """Commit Changes and close database connection."""
+        """Commit Changes."""
+
+        if not self.connection:
+            return
+        self.connection.commit()
+
+    def close(self):
+        """Commit changes and close the database connection."""
 
         if not self.connection:
             return
@@ -144,11 +151,12 @@ class SqliteConnection(DbConnection):
         for column in columns:
 
             # Adding columns
-            query = f"{query}{column.name} {column.type}"
+            query = f"{query}{column.name} {column.datatype}"
 
             if column.required:
                 query = f"{query} NOT NULL"
 
+            # Check for double p key
             if column.primary_key and primary_key:
                 raise Exception("There can't be more than one primary key.")
 
@@ -176,3 +184,7 @@ class SqliteConnection(DbConnection):
         self.cursor.execute(query)
 
         return sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
+
+    def check_table_exists(self, resource_name) -> bool:
+        """TODO"""
+        pass

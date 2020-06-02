@@ -10,6 +10,6 @@ from typing import NamedTuple
 class Column(NamedTuple):
     """This is a column, as required to create database column."""
     name: str
-    type: str
+    datatype: str
     required: bool
     primary_key: bool
