@@ -30,7 +30,7 @@ class SqliteConnection(DbConnection):
         self.connection = None
         self.cursor = None
 
-        self.db_path = Config.get().read('local database', 'path', 'res/database.db')
+        self.db_path = Config.get().read('local database', 'path', '../res/database.db')
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -77,10 +77,14 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self.connect()
 
+        headers = set(headers)
+        headers.add('primary_key')
+
         # Creating Query
         # --------------
         query = f"SELECT {', '.join(headers)} FROM {table_name}"
 
+        # add filters
         if and_filters or or_filters:
             query = f"{query} WHERE "
 
@@ -97,9 +101,11 @@ class SqliteConnection(DbConnection):
             if and_filters:
                 query = f"{query})"
 
+        # add limit
         if limit:
             query = f"{query} LIMIT {limit}"
 
+        # add offset
         if offset:
             query = f"{query} OFFSET {offset}"
         # --------------
@@ -119,6 +125,8 @@ class SqliteConnection(DbConnection):
         # Get info on ``table_name`` from database
         table_info = self.get_table_info(table_name)
 
+        # TODO: Check table exists first
+
         # Creating Query
         # --------------
         query = f"INSERT INTO {table_name} VALUES ("
@@ -126,12 +134,19 @@ class SqliteConnection(DbConnection):
         for column in table_info:
 
             if column['name'] == 'primary_key':
+                query = f'''{query} null,'''
                 continue
 
-            query = f'''{query} "{values[column['name']]}",'''
+            if isinstance(values[column['name']], str):
+                query = f'''{query} "{values[column['name']]}",'''
+            else:
+                query = f'''{query} {values[column['name']]},'''
+
         query = f"{''.join(query[:-1])})"
         # --------------
+
         self.cursor.execute(query)
+        return self.cursor.lastrowid
 
     def create_table(
             self, table_name: str,
@@ -156,14 +171,6 @@ class SqliteConnection(DbConnection):
             if column.required:
                 query = f"{query} NOT NULL"
 
-            # Check for double p key
-            if column.primary_key and primary_key:
-                raise Exception("There can't be more than one primary key.")
-
-            if column.primary_key:
-                primary_key = True
-                query = f"{query} PRIMARY KEY"
-
             query = f"{query},"
 
         if not primary_key:
@@ -172,6 +179,20 @@ class SqliteConnection(DbConnection):
         query = f"{''.join(query[:-1])})"
         # --------------
         self.cursor.execute(query)
+
+    def delete_table(self, table_name: str):
+        """Delete a table from the database."""
+
+        # Initialize connection
+        self.connect()
+
+        query = f"DROP TABLE {table_name}"
+
+        # If a table doesn't exist, we can't delete it
+        try:
+            self.cursor.execute(query)
+        except sqlite3.OperationalError:
+            pass
 
     def get_table_info(self, table_name: str):
         """Get information on ``table_name``."""

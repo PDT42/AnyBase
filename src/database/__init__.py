@@ -12,4 +12,3 @@ class Column(NamedTuple):
     name: str
     datatype: str
     required: bool
-    primary_key: bool

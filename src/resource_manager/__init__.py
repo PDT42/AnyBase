@@ -12,6 +12,6 @@ from resource_type_manager import ResourceType
 class Resource(NamedTuple):
     """This is a ``Resource``."""
 
-    resource_id: str
+    resource_id: int
     resource_type: ResourceType
     data: Mapping[Any, Any]

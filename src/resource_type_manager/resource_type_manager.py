@@ -25,13 +25,16 @@ class ResourceTypeManager:
         # Ensuring the table to store the resource types in exists
         self._init_resource_types_table()
 
+        # Raise an exception if a type with that name already exists
+        if self.check_resource_type_exists(resource_type):
+            raise Exception(f"A ResourceType with the resource_name '{resource_type.resource_name}' already exists!")
+
         # Creating a query dict as required by write_dict
         query_dict = {
-            'resource_type_id': resource_type.resource_type_id,
             'resource_name': resource_type.resource_name,
             'resource_table_name': resource_type.resource_table_name,
             'resource_columns': ' '.join([
-                f"{column.name} {column.datatype} {int(column.required)} {int(column.primary_key)}"
+                f"{column.name} {column.datatype} {int(column.required)}"
                 for column in resource_type.columns
             ])
         }
@@ -80,9 +83,9 @@ class ResourceTypeManager:
             resource_name=resource_name,
             resource_table_name=resource_table_name,
             columns=[
-                Column(name, datatype, bool(int(required)), bool(int(primary_key)))
-                for name, datatype, required, primary_key in [
-                    resource_columns[i:i + 4] for i in range(0, len(resource_columns), 4)
+                Column(name, datatype, bool(int(required)))
+                for name, datatype, required in [
+                    resource_columns[i:i + 3] for i in range(0, len(resource_columns), 3)
                 ]
             ]
         )
@@ -96,9 +99,9 @@ class ResourceTypeManager:
 
         if not self.db_connection.check_table_exists('abintern_resource_types'):
             columns = [
-                Column('resource_type_id', 'VARCHAR', True, True),
-                Column('resource_name', 'VARCHAR', True, False),
-                Column('resource_table_name', 'VARCHAR', True, False),
-                Column('resource_columns', 'VARCHAR', True, False)
+                Column('resource_type_id', 'VARCHAR', True),
+                Column('resource_name', 'VARCHAR', True),
+                Column('resource_table_name', 'VARCHAR', True),
+                Column('resource_columns', 'VARCHAR', True)
             ]
             self.db_connection.create_table('abintern_resource_types', columns)

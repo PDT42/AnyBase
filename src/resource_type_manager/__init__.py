@@ -12,7 +12,7 @@ from database import Column
 class ResourceType(NamedTuple):
     """This is a ``ResourceType``, it defines a resource."""
 
-    resource_type_id: str
     resource_name: str
-    resource_table_name: str
     columns: Sequence[Column]
+    resource_table_name: str = None
+    resource_type_id: int = None

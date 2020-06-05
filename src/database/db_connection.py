@@ -61,6 +61,10 @@ class DbConnection:
         pass
 
     @abstractmethod
+    def delete_table(self, table_name: str):
+        """Delete a table from the database."""
+
+    @abstractmethod
     def get_table_info(self, table_name: str):
         """TODO"""
         pass
