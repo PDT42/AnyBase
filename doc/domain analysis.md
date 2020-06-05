@@ -3,8 +3,14 @@
 ## Resource
 Eine Resource ist **ein** Datensatzelement. Jede Resource hat einen ResourceType.
 
+## RecourceManager
+Der ResourceManager verwaltet die Resourcen. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn könnnen Resourcen abgerufen, erstellt und verwaltet werden. 
+
 ## ResourceType
 Ein ResourceType definiert die Felder einer Resource. ResourcenTypen müssen in einer eigenen Datenbank gehalten werden, die beim StartUp der Software gelesen wird. 
+
+## ResourceTypeManager
+Der ResourceTypeManager verwaltet die ResourceTypes. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn können ResourcenTypen erstellt und verwaltet werden.
 
 ## User
 Nutzer im System. Nutzer haben einen UserType, mit dem ihr Accesslevel angegeben wird. 

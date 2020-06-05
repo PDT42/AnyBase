@@ -1,0 +1,50 @@
+@startuml test
+class ResourceType {
+    resource_type_id
+    resource_name
+    resource_table_name
+    Column[]: columns
+}
+
+class Column {
+    name
+    datatype
+    required
+}
+
+class Resource {
+    resource_id
+    ResourceType: resource_type
+    data
+}
+
+class ResourceTypeManager {
+    DbConnection db_connection
+    create_resource_type(ResourceType: resource_type)
+    delete_resource_type(ResourceType: resource_type)
+    update_resource_type(ResourceType: resource_type)
+    get_all()
+}
+
+class ResourceManager  {
+    DbConnection db_connection
+    create_resource(Resource: resource)
+    delete_resource(Resource: resource)
+    update_resource(Resource: resource)
+    get_all(ResourceType: resource_type)
+}
+
+interface DbConnection {
+    get()
+    commit()
+    close()
+    read()
+    write_dict()
+    create_table()
+    delete_table()
+    get_table_info()
+    check_table_exists()
+}
+
+
+@enduml
