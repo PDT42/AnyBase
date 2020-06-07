@@ -7,13 +7,13 @@ Tests for the manager module.
 
 import unittest
 
-from resource_manager.resource_manager import ResourceManager
+from asset.asset_manager import AssetManager
 
 
 class TestResourceManager(unittest.TestCase):
     """Tests for the ``ResourceManager``."""
 
     def test_create_resource_type(self):
-        """Test :meth:`~resource_manager.manager.ResourceManager.create_resource_type`."""
+        """Test :meth:`~asset.manager.ResourceManager.create_asset_type`."""
 
         # TODO

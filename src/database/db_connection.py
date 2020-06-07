@@ -33,6 +33,11 @@ class DbConnection:
         pass
 
     @abstractmethod
+    def reset(self):
+        """Reset the connection."""
+        pass
+
+    @abstractmethod
     def read(
             self, table_name: str,
             headers: Sequence[str],
@@ -70,6 +75,6 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def check_table_exists(self, resource_name) -> bool:
+    def check_table_exists(self, table_name) -> bool:
         """TODO"""
         pass

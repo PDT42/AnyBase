@@ -56,6 +56,15 @@ class SqliteConnection(DbConnection):
             return
         self.connection.commit()
 
+    def reset(self):
+        """Reset connection."""
+
+        if not self.connection:
+            return
+        self.connection.close()
+        self.connection = None
+        self.connect()
+
     def close(self):
         """Commit changes and close the database connection."""
 
@@ -71,7 +80,7 @@ class SqliteConnection(DbConnection):
             or_filters: Sequence[str] = None,
             offset: int = None,
             limit: int = None
-    ) -> Sequence[Mapping[str, str]]:
+    ) -> Sequence[Mapping[str, Any]]:
         """Read from ``table``."""
 
         # Initialize connection
@@ -125,7 +134,8 @@ class SqliteConnection(DbConnection):
         # Get info on ``table_name`` from database
         table_info = self.get_table_info(table_name)
 
-        # TODO: Check table exists first
+        if not self.check_table_exists(table_name):
+            raise Exception(f"Table {table_name} does not exist!")
 
         # Creating Query
         # --------------
@@ -138,9 +148,9 @@ class SqliteConnection(DbConnection):
                 continue
 
             if isinstance(values[column['name']], str):
-                query = f'''{query} "{values[column['name']]}",'''
+                query = f'''{query}"{values[column['name']]}", '''
             else:
-                query = f'''{query} {values[column['name']]},'''
+                query = f'''{query}{values[column['name']]}, '''
 
         query = f"{''.join(query[:-1])})"
         # --------------
@@ -206,6 +216,14 @@ class SqliteConnection(DbConnection):
 
         return sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
 
-    def check_table_exists(self, resource_name) -> bool:
-        """TODO"""
-        pass
+    def check_table_exists(self, table_name) -> bool:
+        """Check if a table ``table_name`` already exists in the database"""
+
+        # Initialize connection
+        self.connect()
+
+        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+
+        self.cursor.execute(query)
+
+        return bool(self.cursor.fetchall()[0]['exists'])
