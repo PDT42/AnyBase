@@ -3,12 +3,12 @@
 ## Asset
 Eine Asset ist **ein** Datensatzelement. Jedes Asset hat einen AssetType.
 
-## RecourceManager
+## AssetManager
 Der AssetManager verwaltet die Assets. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn könnnen Assets abgerufen, erstellt und verwaltet werden. 
 
 ## AssetType
 Ein AssetType definiert die Felder eines Assets. AssetTypes müssen in einer eigenen Datenbank gehalten werden, die beim StartUp der Software gelesen wird.
-Im AssetType wird festgehalten, wie die Tabelle heißt, in die Assets des AssetTypes gespeichert werden. Er verknüpft die Resource mit den zu ihr gehörenden PageLayouts.
+Im AssetType wird festgehalten, wie die Tabelle heißt, in die Assets des AssetTypes gespeichert werden. Er verknüpft das Asset mit den zu ihr gehörenden PageLayouts.
 
 ## AssetTypeManager
 Der AssetTypeManager verwaltet die AssetTypes. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn können AssetTypes erstellt und verwaltet werden.

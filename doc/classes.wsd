@@ -1,4 +1,7 @@
 @startuml test
+
+allow_mixing
+
 class AssetType {
     asset_type_id
     asset_name
@@ -36,15 +39,16 @@ class AssetPage {
 }
 
 class AssetDetailPageManager {
-
+    AssetType: asset_type
 }
 
-class ResouceDetailPage {
-    
+class AssetDetailPage {
+    Asset: asset
 }
 
 class AssetManager  {
     DbConnection db_connection
+    AssetTypeManager asset_type_manager
     create_asset(Asset: asset)
     delete_asset(Asset: asset)
     update_asset(Asset: asset)
@@ -67,6 +71,18 @@ interface Plugin {
 
 }
 
+database database
 
+DbConnection .> database
+DbConnection --o AssetManager
+DbConnection --o AssetTypeManager
+AssetTypeManager --o AssetManager
+AssetTypeManager .. AssetType
+AssetManager .. Asset
+Column --o AssetType
+AssetPageManager --o AssetType
+AssetPageManager .. AssetPage
+AssetDetailPageManager .. AssetDetailPage
+AssetDetailPageManager --o Asset
 
 @enduml
