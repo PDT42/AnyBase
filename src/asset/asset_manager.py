@@ -21,7 +21,7 @@ class AssetManager:
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
     def create_asset(self, asset: Asset):
-        """TODO"""
+        """Create an asset in the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset.asset_type):
             return 0
@@ -31,3 +31,11 @@ class AssetManager:
         self.db_connection.write_dict(asset.asset_type.asset_table_name, asset.data)
         self.db_connection.commit()
 
+    def delete_asset(self, asset: Asset):
+        """Delete an asset from the system."""
+
+    def update_asset(self, asset: Asset):
+        """Update the information on an asset in the database."""
+
+    def get_all(self, asset_type: AssetType):
+        """Get all assets of ``AssetType`` from the database."""

@@ -60,6 +60,9 @@ class AssetTypeManager:
     def delete_asset_type(self, asset_type: AssetType):
         """Delete ``asset_type`` and all it's assets from the system."""
 
+    def update_asset_type(self, asset_type: AssetType):
+        """Update an ``asset_type`` in the database."""
+
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
         """Check if ``asset_type`` exists."""
 

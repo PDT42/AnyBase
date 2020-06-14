@@ -32,18 +32,38 @@ class AssetTypeManager {
 
 class AssetPageManager {
     DbConnection db_connection
+    create_page(AssetDetailPage: asset_detail_page)
+    delete_page(AssetType: asset_type)
+    update_page(AssetDetailPage: asset_detail_page)
+    check_page_exists(AssetType: asset_type)
+    get_page(AssetType: asset_type)
+    get_editor(AssetType: asset_type)
 }
 
 class AssetPage {
+    Asset: asset
+    PageLayout: page_layout
+}
 
+class PageLayout {
+    format
+    plugins [] Plugin
 }
 
 class AssetDetailPageManager {
     AssetType: asset_type
+    DbConnection: db_connection
+    create_page(AssetDetailPage: asset_detail_page)
+    delete_page(Asset: asset)
+    update_page(AssetDetailPage: asset_detail_page)
+    check_page_exists(Asset: asset)
+    get_page(Asset: asset)
+    get_editor(Asset: asset)
 }
 
 class AssetDetailPage {
     Asset: asset
+    PageLayout: page_layout
 }
 
 class AssetManager  {
@@ -76,13 +96,25 @@ database database
 DbConnection .> database
 DbConnection --o AssetManager
 DbConnection --o AssetTypeManager
+DbConnection --o AssetPageManager
+DbConnection --o AssetDetailPageManager
+
 AssetTypeManager --o AssetManager
 AssetTypeManager .. AssetType
+
 AssetManager .. Asset
+
+AssetType --o AssetPageManager
+
 Column --o AssetType
-AssetPageManager --o AssetType
+
 AssetPageManager .. AssetPage
+
 AssetDetailPageManager .. AssetDetailPage
-AssetDetailPageManager --o Asset
+
+PageLayout --o AssetDetailPage
+PageLayout --o AssetPage
+
+Plugin --o PageLayout
 
 @enduml
