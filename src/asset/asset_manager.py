@@ -55,12 +55,10 @@ class AssetManager:
 
         assets = []
         for asset_row in result:
-            data = {column.name: asset_row[column.name] for column in asset_type.columns}
-
             assets.append(Asset(
                 asset_id=asset_row.pop('primary_key'),
                 asset_type=asset_type,
-                data=data
+                data=self._convert_row_to_data(asset_row, asset_type.columns)
             ))
 
         return assets
@@ -69,7 +67,12 @@ class AssetManager:
     # private methods #
     ###################
 
-    def _convert_row_to_data(self, row: MutableMapping[str, Any], columns: Sequence[Column]):
+    def _convert_row_to_data(
+            self, row: MutableMapping[str, Any],
+            columns: Sequence[Column]) \
+            -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
-        # TODO
-        pass
+
+        data: MutableMapping[str, Any] = {column.name: row[column.name] for column in columns}
+
+        return data

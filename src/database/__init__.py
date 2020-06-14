@@ -4,7 +4,17 @@
 
 This is the database package.
 """
+from enum import Enum
 from typing import NamedTuple
+
+
+class DataTypes(Enum):
+    """The available data types."""
+    TEXT = 'VARCHAR'
+    NUMBER = 'REAL'
+    DATE = 'DATE'
+    DATETIME = 'DATETIME'
+    # TODO: Update sqlite connection using this
 
 
 class Column(NamedTuple):
