@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+<div class="container">
+    <div class="row">
+        <form class="col-md-8 align-self-center" action="/create-asset-type" method="post">
+
+            <div class="form-group row" style="padding-top: 20px">
+                <label for="assetName" class="col-md-2 col-form-label">Asset Name:</label>
+                <div class="col-md-10">
+                    <input type="text" class="form-control" name="assetName" id="assetName">
+                </div>
+            </div>
+
+            <div class="form-group row" style="padding-top: 5px">
+                <label for="columnName" class="col-md-2 col-form-label">Column Name:</label>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="columnName" id="columnName">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-control custom-select" name="columnDataType" id="columnDataType">
+                        <option selected value="VARCHAR">Text</option>
+                        <option value="NUMBER">Number</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="checkbox" class="form-control my-1 mr-sm-2" name="columnRequired" id="columnRequired"
+                           value="checkboxTrue">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Add</button>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

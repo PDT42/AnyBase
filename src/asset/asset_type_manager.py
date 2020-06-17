@@ -4,7 +4,7 @@
 
 This is the module for the AssetTypeManager.
 """
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 from database import Column
 from database.db_connection import DbConnection
@@ -38,7 +38,7 @@ class AssetTypeManager:
         query_dict = {
             'primary_key': asset_type.asset_type_id,
             'asset_name': asset_type.asset_name,
-            'asset_table_name': AssetTypeManager.generate_asset_table_name(asset_type.asset_name),
+            'asset_table_name': AssetTypeManager.generate_asset_table_name(asset_type),
             'asset_columns': ' '.join([
                 f"{column.name} {column.datatype} {int(column.required)}"
                 for column in asset_type.columns
@@ -50,7 +50,7 @@ class AssetTypeManager:
 
         # Creating a table appropriate for the asset_type
         self.db_connection.create_table(
-            AssetTypeManager.generate_asset_table_name(asset_type.asset_name),
+            AssetTypeManager.generate_asset_table_name(asset_type),
             asset_type.columns
         )
 
@@ -59,8 +59,9 @@ class AssetTypeManager:
 
     def delete_asset_type(self, asset_type: AssetType):
         """Delete ``asset_type`` and all it's assets from the system."""
-        # TODO
-        pass
+
+        self.db_connection.delete(self._asset_types_table_name, [f"primary_key = {asset_type.asset_type_id}"])
+        self.db_connection.delete_table(self.generate_asset_table_name(asset_type))
 
     def update_asset_type(self, asset_type: AssetType):
         """Update an ``asset_type`` in the database."""
@@ -79,7 +80,7 @@ class AssetTypeManager:
         )
 
         table_exists = self.db_connection.check_table_exists(
-            AssetTypeManager.generate_asset_table_name(asset_type.asset_name))
+            AssetTypeManager.generate_asset_table_name(asset_type))
         return bool(db_response) and table_exists
 
     def get_all(self) -> Sequence[AssetType]:
@@ -104,6 +105,31 @@ class AssetTypeManager:
             ))
 
         return assets_types
+
+    def get_one(self, asset_type_id: int) -> Optional[AssetType]:
+        """Get the ``AssetType`` with id ``asset_type_id``."""
+
+        # Ensuring the table to store the asset types in exists
+        self._init_asset_types_table()
+
+        # Reading asset types from the database
+        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+            table_name=self._asset_types_table_name,
+            headers=self._asset_headers,
+            and_filters=[f'primary_key = {asset_type_id}']
+        )
+
+        if len(result) < 1:
+            return None
+
+        asset_type = self.get_asset_type_from_str(
+            asset_name=result[0]['asset_name'],
+            asset_columns=result[0]['asset_columns'],
+            asset_table_name=result[0]['asset_table_name'],
+            asset_type_id=result[0]['primary_key']
+        )
+
+        return asset_type
 
     ######################
     #   STATIC METHODS   #
@@ -133,9 +159,9 @@ class AssetTypeManager:
         )
 
     @staticmethod
-    def generate_asset_table_name(asset_name: str) -> str:
-        """Generate an ``asset_table_name`` from the assets name."""
-        return f"abasset_table_{asset_name}"
+    def generate_asset_table_name(asset_type: AssetType) -> str:
+        """Generate an ``asset_table_name`` from the ``asset type``."""
+        return f"abasset_table_{asset_type.asset_name}"
 
     #####################
     #  PRIVATE METHODS  #

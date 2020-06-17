@@ -31,6 +31,7 @@ class SqliteConnection(DbConnection):
         self.cursor = None
 
         self.db_path = Config.get().read('local database', 'path', '../res/database.db')
+        self.connect()
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -72,6 +73,13 @@ class SqliteConnection(DbConnection):
             return
         self.connection.commit()
         self.connection.close()
+
+    def kill(self):
+        """Close and delete the database connection."""
+        if self.connection:
+            self.connection.close()
+        SqliteConnection._instance = None
+
 
     def read(
             self, table_name: str,
@@ -122,6 +130,18 @@ class SqliteConnection(DbConnection):
 
         return self.cursor.fetchall()
 
+
+    def delete(self, table_name: str, and_filters: Sequence[str]):
+        """Delete from ``table_name`` where filters apply."""
+
+        # Initialize connection
+        self.connect()
+
+        query = f"DELETE FROM {table_name} WHERE {' AND '.join(and_filters)}"
+
+        self.cursor.execute(query)
+
+
     def write_dict(
             self, table_name: str,
             values: Mapping[str, Any]
@@ -158,6 +178,7 @@ class SqliteConnection(DbConnection):
         self.cursor.execute(query)
         return self.cursor.lastrowid
 
+
     def create_table(
             self, table_name: str,
             columns: Sequence[Column]
@@ -190,6 +211,7 @@ class SqliteConnection(DbConnection):
         # --------------
         self.cursor.execute(query)
 
+
     def delete_table(self, table_name: str):
         """Delete a table from the database."""
 
@@ -204,6 +226,7 @@ class SqliteConnection(DbConnection):
         except sqlite3.OperationalError:
             pass
 
+
     def get_table_info(self, table_name: str):
         """Get information on ``table_name``."""
 
@@ -215,6 +238,7 @@ class SqliteConnection(DbConnection):
         self.cursor.execute(query)
 
         return sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
+
 
     def check_table_exists(self, table_name) -> bool:
         """Check if a table ``table_name`` already exists in the database"""

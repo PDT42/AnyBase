@@ -33,6 +33,11 @@ class DbConnection:
         pass
 
     @abstractmethod
+    def kill(self):
+        """Close and delete the database connection."""
+        pass
+
+    @abstractmethod
     def reset(self):
         """Reset the connection."""
         pass
@@ -47,6 +52,11 @@ class DbConnection:
             limit: int = None
     ):
         """Read from the database."""
+        pass
+
+    @abstractmethod
+    def delete(self, table_name: str, and_filters: Sequence[str]):
+        """Delete From ``table_name`` where ``filters`` apply."""
         pass
 
     @abstractmethod

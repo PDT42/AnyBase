@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+<div class="container" style="padding-top: 20px">
+    <div class="row">
+        <div class="col-md-8 align-self-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p>{{ asset_type.asset_name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8 align-self-center">
+            <ul class="list-group list-group-flush">
+                {% for asset in assets %}
+                <li class="list-group-item row">
+                    <p>{{ asset.asset_id }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

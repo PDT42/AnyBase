@@ -28,6 +28,7 @@ class AssetTypeManager {
     update_asset_type(AssetType: asset_type)
     check_asset_type_exists(AssetType: asset_type)
     get_all()
+    get_one(int: asset_type_id)
 }
 
 class AssetPageManager {
@@ -73,6 +74,7 @@ class AssetManager  {
     delete_asset(Asset: asset)
     update_asset(Asset: asset)
     get_all(AssetType: asset_type)
+    get_one(int: asset_id)
 }
 
 interface DbConnection {
@@ -80,6 +82,7 @@ interface DbConnection {
     commit()
     close()
     read()
+    delete()
     write_dict()
     create_table()
     delete_table()

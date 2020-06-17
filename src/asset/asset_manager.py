@@ -4,7 +4,7 @@
 
 This is the the module for the resource manager.
 """
-from typing import Any, MutableMapping, Sequence
+from typing import Any, MutableMapping, Optional, Sequence
 
 from asset.asset_type_manager import AssetTypeManager
 from database import Column
@@ -35,8 +35,12 @@ class AssetManager:
 
     def delete_asset(self, asset: Asset):
         """Delete an asset from the system."""
-        # TODO
-        pass
+
+        self.db_connection.delete(
+            self.asset_type_manager.generate_asset_table_name(asset.asset_type),
+            [f"primary_key = {asset.asset_id}"]
+        )
+        self.db_connection.commit()
 
     def update_asset(self, asset: Asset):
         """Update the information on an asset in the database."""
@@ -50,7 +54,7 @@ class AssetManager:
             return []
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            self, self.asset_type_manager.generate_asset_table_name(asset_type.asset_name),
+            self.asset_type_manager.generate_asset_table_name(asset_type),
             [column.name for column in asset_type.columns])
 
         assets = []
@@ -62,6 +66,25 @@ class AssetManager:
             ))
 
         return assets
+
+    def get_one(self, asset_id: int, asset_type: AssetType) -> Optional[Asset]:
+        """Get the ``Asset`` with ``asset_id`` from the database."""
+
+        result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+            headers=[column.name for column in asset_type.columns],
+            and_filters=[f'primary_key = {asset_id}']
+        )
+
+        if len(result) < 1:
+            return None
+
+        asset = Asset(
+            asset_id=result[0].pop('primary_key'),
+            asset_type=asset_type,
+            data=self._convert_row_to_data(result[0], asset_type.columns)
+        )
+        return asset
 
     ###################
     # private methods #
