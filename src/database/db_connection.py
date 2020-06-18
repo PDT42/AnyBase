@@ -85,6 +85,11 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def check_table_exists(self, table_name) -> bool:
+    def check_table_exists(self, table_name: str) -> bool:
         """TODO"""
+        pass
+
+    @abstractmethod
+    def count(self, table_name: str) -> int:
+        """Count the number ob items in ``table_name``."""
         pass

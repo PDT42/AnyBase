@@ -54,7 +54,6 @@ class AssetTypeManager:
             asset_type.columns
         )
 
-        self.db_connection.commit()
         return 1
 
     def delete_asset_type(self, asset_type: AssetType):
@@ -130,6 +129,13 @@ class AssetTypeManager:
         )
 
         return asset_type
+
+    def goodbye(self):
+        """Say goodbye to the ``AssetTypeManager``."""
+
+        self.db_connection.close()
+        self.db_connection.kill()
+
 
     ######################
     #   STATIC METHODS   #

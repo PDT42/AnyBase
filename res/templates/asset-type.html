@@ -8,19 +8,42 @@
 <!-- Extend Block 'body' in base.html -->
 {% block body %}
 <div class="container" style="padding-top: 20px">
+
     <div class="row">
-        <div class="col-md-8 align-self-center">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4">
-                        <p>{{ asset_type.asset_name }}</p>
+        <div class="col-sm">
+            <div class="row">
+
+                <div class="col">
+                    <h4>{{ asset_type.asset_name }}</h4>
+                </div>
+
+                <div class="col">
+                    <div class="row justify-content-end">
+                        <div class="col-3">
+                            <form action="/asset-type/{{ asset_type.asset_type_id }}/create-asset" method="GET">
+                                <button type="submit" name="createAsset" class="btn btn-block btn-dark">
+                                    Create
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-3">
+                            <form action="/asset-type/{{ asset_type.asset_type_id }}" method="DELETE">
+                                <button type="submit" name="deleteAsset" class="btn btn-block btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
+
+    <hr/>
+
     <div class="row">
-        <div class="col-md-8 align-self-center">
+        <div class="col-sm">
             <ul class="list-group list-group-flush">
                 {% for asset in assets %}
                 <li class="list-group-item row">

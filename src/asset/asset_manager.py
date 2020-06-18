@@ -31,7 +31,6 @@ class AssetManager:
         asset.data.update({'primary_key': None})
 
         self.db_connection.write_dict(asset.asset_type.asset_table_name, asset.data)
-        self.db_connection.commit()
 
     def delete_asset(self, asset: Asset):
         """Delete an asset from the system."""
@@ -40,7 +39,6 @@ class AssetManager:
             self.asset_type_manager.generate_asset_table_name(asset.asset_type),
             [f"primary_key = {asset.asset_id}"]
         )
-        self.db_connection.commit()
 
     def update_asset(self, asset: Asset):
         """Update the information on an asset in the database."""
@@ -85,6 +83,12 @@ class AssetManager:
             data=self._convert_row_to_data(result[0], asset_type.columns)
         )
         return asset
+
+    def goodbye(self):
+        """Say goodbye to the ``AssetManager``."""
+
+        self.db_connection.close()
+        self.db_connection.kill()
 
     ###################
     # private methods #

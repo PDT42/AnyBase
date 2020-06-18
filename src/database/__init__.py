@@ -4,21 +4,29 @@
 
 This is the database package.
 """
+
 from enum import Enum
 from typing import NamedTuple
 
 
-class DataTypes(Enum):
+class DataType(NamedTuple):
+    """This is a possible datatype."""
+    typename: str
+    db_type: str
+    convert: callable
+
+
+class DataTypes:
     """The available data types."""
-    TEXT = 'VARCHAR'
-    NUMBER = 'REAL'
-    DATE = 'DATE'
-    DATETIME = 'DATETIME'
+
+    TEXT = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
+    NUMBER = DataType(typename='NUMBER', db_type='REAL', convert=float)
+    # TODO: Add additional required types
     # TODO: Update sqlite connection using this
 
 
 class Column(NamedTuple):
     """This is a column, as required to create database column."""
     name: str
-    datatype: str
+    datatype: DataType
     required: bool

@@ -80,6 +80,9 @@ class SqliteConnection(DbConnection):
             self.connection.close()
         SqliteConnection._instance = None
 
+    ########################
+    # Database Interaction #
+    ########################
 
     def read(
             self, table_name: str,
@@ -89,7 +92,13 @@ class SqliteConnection(DbConnection):
             offset: int = None,
             limit: int = None
     ) -> Sequence[Mapping[str, Any]]:
-        """Read from ``table``."""
+        """Read from database ``table`` calls ``table_name.
+
+        This will read all ``headers`` from ``table_name`` combining the
+        ``and_filter`` and the ``or_filters`` in the query it runs on the
+        database and using ``offset`` and ``limit`` in the way the names
+        suggest.
+        """
 
         # Initialize connection
         self.connect()
@@ -101,7 +110,7 @@ class SqliteConnection(DbConnection):
         # --------------
         query = f"SELECT {', '.join(headers)} FROM {table_name}"
 
-        # add filters
+        # Adding Filters
         if and_filters or or_filters:
             query = f"{query} WHERE "
 
@@ -118,18 +127,19 @@ class SqliteConnection(DbConnection):
             if and_filters:
                 query = f"{query})"
 
-        # add limit
+        # Adding Limit
         if limit:
             query = f"{query} LIMIT {limit}"
 
-        # add offset
+        # Adding Offset
         if offset:
             query = f"{query} OFFSET {offset}"
         # --------------
         self.cursor.execute(query)
 
-        return self.cursor.fetchall()
+        result = self.cursor.fetchall()
 
+        return result
 
     def delete(self, table_name: str, and_filters: Sequence[str]):
         """Delete from ``table_name`` where filters apply."""
@@ -174,10 +184,11 @@ class SqliteConnection(DbConnection):
 
         query = f"{''.join(query[:-1])})"
         # --------------
-
         self.cursor.execute(query)
-        return self.cursor.lastrowid
 
+        result = self.cursor.lastrowid
+
+        return result
 
     def create_table(
             self, table_name: str,
@@ -186,6 +197,8 @@ class SqliteConnection(DbConnection):
         """Create a table called ``table_name`` with ``columns`` in the database."""
 
         primary_key = False
+
+        # TODO: Make sure to ignore spaces in column names
 
         # Initialize connection
         self.connect()
@@ -209,6 +222,7 @@ class SqliteConnection(DbConnection):
 
         query = f"{''.join(query[:-1])})"
         # --------------
+
         self.cursor.execute(query)
 
 
@@ -223,9 +237,10 @@ class SqliteConnection(DbConnection):
         # If a table doesn't exist, we can't delete it
         try:
             self.cursor.execute(query)
+            self.close()
         except sqlite3.OperationalError:
+            self.close()
             pass
-
 
     def get_table_info(self, table_name: str):
         """Get information on ``table_name``."""
@@ -234,11 +249,10 @@ class SqliteConnection(DbConnection):
         self.connect()
 
         query = f"PRAGMA table_info('{table_name}')"
-
         self.cursor.execute(query)
 
-        return sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
-
+        result = sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
+        return result
 
     def check_table_exists(self, table_name) -> bool:
         """Check if a table ``table_name`` already exists in the database"""
@@ -247,7 +261,20 @@ class SqliteConnection(DbConnection):
         self.connect()
 
         query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name}'"
-
         self.cursor.execute(query)
 
-        return bool(self.cursor.fetchall()[0]['exists'])
+        result = bool(self.cursor.fetchall()[0]['exists'])
+        return result
+
+    def count(self, table_name: str) -> int:
+        """Count the number of items in ``table_name``."""
+
+        # Initialize connection
+        self.connect()
+
+        query = f"SELECT COUNT(*) FROM {table_name}"
+        self.cursor.execute(query)
+
+        result = self.cursor.fetchall()[0]
+        return result
+

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+<div class="container">
+    <div class="row" style="padding-top: 35px">
+        <div class="col">
+            <h4>Create new: {{ asset_type.asset_name }}</h4>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+        <form class="col">
+
+            {% for column in asset_type.columns %}
+            <div class="row" style="padding-top: 10px">
+                <div class="col-4">
+                    <label>{{ column.name }}:</label>
+                </div>
+                <div class="col-8">
+                    <input type="text" class="form-control" name="{{ column.name }}">
+                </div>
+            </div>
+            {% endfor %}
+
+            <hr/>
+
+            <div class="row justify-content-end">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-block btn-dark">Create</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
