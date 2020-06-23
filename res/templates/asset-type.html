@@ -14,21 +14,22 @@
             <div class="row">
 
                 <div class="col">
-                    <h4>{{ asset_type.asset_name }}</h4>
+                    <h4>{{ asset_type_page.asset_type.asset_name }}</h4>
                 </div>
 
                 <div class="col">
                     <div class="row justify-content-end">
                         <div class="col-3">
-                            <form action="/asset-type/{{ asset_type.asset_type_id }}/create-asset" method="GET">
+                            <form action="/asset-type/{{ asset_type_page.asset_type.asset_type_id }}/create-asset"
+                                  method="GET">
                                 <button type="submit" name="createAsset" class="btn btn-block btn-dark">
                                     Create
                                 </button>
                             </form>
                         </div>
                         <div class="col-3">
-                            <form action="/asset-type/{{ asset_type.asset_type_id }}" method="DELETE">
-                                <button type="submit" name="deleteAsset" class="btn btn-block btn-danger">
+                            <form action="/asset-type/{{ asset_type_page.asset_type.asset_type_id }}" method="POST">
+                                <button type="submit" name="deleteAsset" class="btn btn-block btn-danger" value="True">
                                     Delete
                                 </button>
                             </form>
@@ -42,16 +43,9 @@
 
     <hr/>
 
-    <div class="row">
-        <div class="col-sm">
-            <ul class="list-group list-group-flush">
-                {% for asset in assets %}
-                <li class="list-group-item row">
-                    <p>{{ asset.asset_id }}</p>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+    <!-- Import Layout Macro and apply it -->
+    {% from asset_type_page.page_layout.macro_path import layout_macro %}
+    {{ layout_macro(assets, asset_type_page.page_layout.plugins) }}
+
 </div>
 {% endblock %}

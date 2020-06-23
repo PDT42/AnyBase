@@ -5,16 +5,17 @@
 This is the package for all frontend creating stuff.
 # TODO
 """
-from typing import List, NamedTuple
+from typing import NamedTuple, Sequence
 
 from asset import Asset, AssetType
-from plugin.plugin import Plugin
+from plugins import Plugin
 
 
 class PageLayout(NamedTuple):
     """This is a ``PageLayout``."""
-    format: int  # TODO: Datatype for Format?
-    plugins: List[Plugin]
+    number_of_fields: int
+    macro_path: str
+    plugins: Sequence[Plugin]  # TODO: Make this a Mapping?
 
 
 class AssetDetailPage(NamedTuple):
@@ -23,7 +24,8 @@ class AssetDetailPage(NamedTuple):
     page_layout: PageLayout
 
 
-class AssetPage(NamedTuple):
-    """This is an ``AssetPage``."""
+class AssetTypePage(NamedTuple):
+    """This is an ``AssetTypePage``."""
     asset_type: AssetType
+    assets: Sequence[Asset]
     page_layout: PageLayout

@@ -17,7 +17,7 @@
     <hr/>
 
     <div class="row">
-        <form class="col">
+        <form class="col" action="/asset-type/{{ asset_type.asset_type_id }}/create-asset" method="POST">
 
             {% for column in asset_type.columns %}
             <div class="row" style="padding-top: 10px">

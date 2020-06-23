@@ -20,7 +20,9 @@ class DataTypes:
     """The available data types."""
 
     TEXT = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
+    VARCHAR = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
     NUMBER = DataType(typename='NUMBER', db_type='REAL', convert=float)
+    REAL = DataType(typename='NUMBER', db_type='REAL', convert=float)
     # TODO: Add additional required types
     # TODO: Update sqlite connection using this
 

@@ -46,7 +46,7 @@ class SqliteConnection(DbConnection):
         if self.connection:
             return
 
-        self.connection = sqlite3.connect(self.db_path)
+        self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
         self.connection.row_factory = SqliteConnection._dict_factory
         self.cursor = self.connection.cursor()
 
@@ -151,7 +151,6 @@ class SqliteConnection(DbConnection):
 
         self.cursor.execute(query)
 
-
     def write_dict(
             self, table_name: str,
             values: Mapping[str, Any]
@@ -210,7 +209,7 @@ class SqliteConnection(DbConnection):
         for column in columns:
 
             # Adding columns
-            query = f"{query}{column.name} {column.datatype}"
+            query = f"{query}{column.name} {column.datatype.db_type}"
 
             if column.required:
                 query = f"{query} NOT NULL"
@@ -225,7 +224,6 @@ class SqliteConnection(DbConnection):
 
         self.cursor.execute(query)
 
-
     def delete_table(self, table_name: str):
         """Delete a table from the database."""
 
@@ -237,9 +235,7 @@ class SqliteConnection(DbConnection):
         # If a table doesn't exist, we can't delete it
         try:
             self.cursor.execute(query)
-            self.close()
         except sqlite3.OperationalError:
-            self.close()
             pass
 
     def get_table_info(self, table_name: str):
@@ -277,4 +273,3 @@ class SqliteConnection(DbConnection):
 
         result = self.cursor.fetchall()[0]
         return result
-

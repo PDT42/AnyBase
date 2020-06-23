@@ -31,11 +31,11 @@ def create_asset(asset_type_id: int):
             for column in asset_type.columns:
 
                 # Column is missing in form but is required
-                if column.required and column not in request.form.keys():
+                if column.required and column.name not in request.form.keys():
                     return 1  # TODO: Validation
 
                 # Column is missing and isn't required
-                elif not column.required and column not in request.form.keys():
+                elif not column.required and column.name not in request.form.keys():
                     continue
 
                 # Column is present
@@ -44,8 +44,7 @@ def create_asset(asset_type_id: int):
 
             asset = Asset(asset_id=None, asset_type=asset_type, data=asset_data)
             asset_manager.create_asset(asset)
-            asset_manager.goodbye()
 
-            return redirect(f'/asset-types/{asset_type_id}')
+            return redirect(f'/asset-type/{asset_type_id}')
 
     return render_template("create-asset.html", asset_type=asset_type)

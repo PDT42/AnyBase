@@ -23,7 +23,7 @@ app.add_url_rule('/', 'index', server.index, methods=['GET'])
 
 app.add_url_rule('/create-asset-type', 'create-asset-type', create_asset_type, methods=['GET', 'POST'])
 app.add_url_rule('/asset-types', 'asset-types', asset_types, methods=['GET'])
-app.add_url_rule('/asset-type/<int:asset_type_id>', 'asset-type', asset_type, methods=['GET', 'DELETE'])
+app.add_url_rule('/asset-type/<int:asset_type_id>', 'asset-type', asset_type, methods=['GET', 'POST'])
 
 app.add_url_rule('/asset-type/<int:asset_type_id>/create-asset', 'create-asset', create_asset, methods=['GET', 'POST'])
 

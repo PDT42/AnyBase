@@ -1,0 +1,12 @@
+{% macro layout_macro(assets, plugins) %}
+<div class="row">
+    <div class="col-sm">
+
+        {% for plugin in plugins %}
+            {% from plugin.macro_path import plugin_macro %}
+            {{ plugin_macro(assets, plugin.columns) }}
+        {% endfor %}
+
+    </div>
+</div>
+{% endmacro %}

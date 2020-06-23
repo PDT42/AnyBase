@@ -4,14 +4,17 @@
 
 These are the routes for the ``AssetTypeManager``.
 """
-from threading import Lock
+
 from typing import List
+
+from flask import redirect, render_template, request
 
 from asset import AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
-from flask import redirect, render_template, request
+from pages import AssetTypePage, PageLayout
+from plugins import Plugin
 
 
 def create_asset_type():
@@ -27,7 +30,7 @@ def create_asset_type():
             if column_name in request.form.keys():
                 columns.append(Column(
                     name=request.form.get(column_name),
-                    datatype=request.form.get(DataTypes.__dict__[column_datatype]),
+                    datatype=DataTypes.__dict__[request.form.get(column_datatype)],
                     required=request.form.get(column_required) == 'checkboxTrue'
                 ))
             else:
@@ -38,11 +41,8 @@ def create_asset_type():
             columns=columns
         )
 
-        thread_lock = Lock()
-        with thread_lock:
-            asset_type_manager = AssetTypeManager()
-            asset_type_manager.create_asset_type(new_asset_type)
-            asset_type_manager.goodbye()
+        asset_type_manager = AssetTypeManager()
+        asset_type_manager.create_asset_type(new_asset_type)
 
         return redirect('/asset-types')
 
@@ -52,12 +52,8 @@ def create_asset_type():
 def asset_types():
     """This is a FlaskAppRoute that shows ``AssetTypes`` available using asset-types.html."""
 
-    thread_lock = Lock()
-
-    with thread_lock:
-        asset_type_manager = AssetTypeManager()
-        asset_t = asset_type_manager.get_all()
-        asset_type_manager.goodbye()
+    asset_type_manager = AssetTypeManager()
+    asset_t = asset_type_manager.get_all()
 
     return render_template("asset-types.html", asset_types=asset_t)
 
@@ -65,19 +61,32 @@ def asset_types():
 def asset_type(asset_type_id):
     """Show the Detail Page for an ``AssetType``."""
 
-    thread_lock = Lock()
+    asset_type_manager = AssetTypeManager()
+    asset_t = asset_type_manager.get_one(asset_type_id)
 
-    with thread_lock:
-        asset_type_manager = AssetTypeManager()
-        asset_t = asset_type_manager.get_one(asset_type_id)
+    if request.method == 'POST' and request.form.get('deleteAsset') == 'True':
+        asset_type_manager.delete_asset_type(asset_t)
+        return redirect('/asset-types')
 
-        if request.method == 'DELETE':
-            asset_type_manager.delete_asset_type(asset_t)
-            return redirect('/asset-types')
+    asset_manager = AssetManager()
+    assets = asset_manager.get_all(asset_t)
 
-        asset_manager = AssetManager()
-        assets = asset_manager.get_all(asset_t)
-        asset_type_manager.goodbye()
-        asset_manager.goodbye()
+    asset_type_page = AssetTypePage(
+        asset_type=asset_t,
+        assets=assets,
+        page_layout=PageLayout(
+            number_of_fields=1,  # TODO: implement some kind of validation for this
+            macro_path='layouts/one_one_layout.html',
+            plugins=[
+                Plugin(
+                    macro_path='plugins/list_assets_plugin.html',
+                    columns={
+                        0: 'TestTest',
+                        1: 'TestNumber'
+                    }
+                )
+            ]
+        )
+    )
 
-    return render_template("asset-type.html", asset_type=asset_t, assets=assets)
+    return render_template("asset-type.html", asset_type_page=asset_type_page, assets=assets)

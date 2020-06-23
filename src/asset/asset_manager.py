@@ -6,11 +6,11 @@ This is the the module for the resource manager.
 """
 from typing import Any, MutableMapping, Optional, Sequence
 
+from asset import Asset, AssetType
 from asset.asset_type_manager import AssetTypeManager
 from database import Column
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from asset import Asset, AssetType
 
 
 class AssetManager:
@@ -31,6 +31,7 @@ class AssetManager:
         asset.data.update({'primary_key': None})
 
         self.db_connection.write_dict(asset.asset_type.asset_table_name, asset.data)
+        self.db_connection.commit()
 
     def delete_asset(self, asset: Asset):
         """Delete an asset from the system."""
@@ -39,6 +40,7 @@ class AssetManager:
             self.asset_type_manager.generate_asset_table_name(asset.asset_type),
             [f"primary_key = {asset.asset_id}"]
         )
+        self.db_connection.commit()
 
     def update_asset(self, asset: Asset):
         """Update the information on an asset in the database."""
@@ -84,18 +86,13 @@ class AssetManager:
         )
         return asset
 
-    def goodbye(self):
-        """Say goodbye to the ``AssetManager``."""
-
-        self.db_connection.close()
-        self.db_connection.kill()
-
     ###################
     # private methods #
     ###################
 
+    @staticmethod
     def _convert_row_to_data(
-            self, row: MutableMapping[str, Any],
+            row: MutableMapping[str, Any],
             columns: Sequence[Column]) \
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""

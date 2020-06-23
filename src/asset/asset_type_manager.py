@@ -6,7 +6,7 @@ This is the module for the AssetTypeManager.
 """
 from typing import Any, Mapping, Optional, Sequence
 
-from database import Column
+from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from asset import AssetType
@@ -23,16 +23,14 @@ class AssetTypeManager:
 
         self.db_connection: DbConnection = SqliteConnection.get()
 
-    def create_asset_type(self, asset_type: AssetType) -> int:
+    def create_asset_type(self, asset_type: AssetType):
         """Create a new ``asset_type`` in the asset type registry."""
 
         # Ensuring the table to store the asset types in exists
         self._init_asset_types_table()
 
-        # Return 0
         if self.check_asset_type_exists(asset_type):
             self.db_connection.reset()
-            return 0
 
         # Creating a query dict as required by write_dict
         query_dict = {
@@ -40,7 +38,7 @@ class AssetTypeManager:
             'asset_name': asset_type.asset_name,
             'asset_table_name': AssetTypeManager.generate_asset_table_name(asset_type),
             'asset_columns': ' '.join([
-                f"{column.name} {column.datatype} {int(column.required)}"
+                f"{column.name} {column.datatype.db_type} {int(column.required)}"
                 for column in asset_type.columns
             ])
         }
@@ -53,14 +51,14 @@ class AssetTypeManager:
             AssetTypeManager.generate_asset_table_name(asset_type),
             asset_type.columns
         )
-
-        return 1
+        self.db_connection.commit()
 
     def delete_asset_type(self, asset_type: AssetType):
         """Delete ``asset_type`` and all it's assets from the system."""
 
         self.db_connection.delete(self._asset_types_table_name, [f"primary_key = {asset_type.asset_type_id}"])
         self.db_connection.delete_table(self.generate_asset_table_name(asset_type))
+        self.db_connection.commit()
 
     def update_asset_type(self, asset_type: AssetType):
         """Update an ``asset_type`` in the database."""
@@ -130,13 +128,6 @@ class AssetTypeManager:
 
         return asset_type
 
-    def goodbye(self):
-        """Say goodbye to the ``AssetTypeManager``."""
-
-        self.db_connection.close()
-        self.db_connection.kill()
-
-
     ######################
     #   STATIC METHODS   #
     ######################
@@ -157,7 +148,7 @@ class AssetTypeManager:
             asset_name=asset_name,
             asset_table_name=asset_table_name,
             columns=[
-                Column(name, datatype, bool(int(required)))
+                Column(name, DataTypes.__dict__[datatype], bool(int(required)))
                 for name, datatype, required in [
                     asset_columns[i:i + 3] for i in range(0, len(asset_columns), 3)
                 ]
