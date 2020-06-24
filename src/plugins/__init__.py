@@ -4,10 +4,12 @@
 
 This is the module for the plugins, the functional components of the software.
 """
-from typing import Any, Mapping, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Mapping
 
 
-class Plugin(NamedTuple):
+@dataclass
+class Plugin:
     """This is a plugin."""
-    macro_path: str
+    plugin_macro_path: str
     columns: Mapping[Any, str]

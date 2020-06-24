@@ -5,27 +5,29 @@
 This is the package for all frontend creating stuff.
 # TODO
 """
+from dataclasses import dataclass
 from typing import NamedTuple, Sequence
 
 from asset import Asset, AssetType
 from plugins import Plugin
 
 
-class PageLayout(NamedTuple):
+@dataclass
+class PageLayout:
     """This is a ``PageLayout``."""
     number_of_fields: int
-    macro_path: str
+    layout_macro_path: str
     plugins: Sequence[Plugin]  # TODO: Make this a Mapping?
 
 
-class AssetDetailPage(NamedTuple):
+@dataclass
+class AssetDetailPage(PageLayout):
     """This is an ``AssetDetailPage``."""
     asset: Asset
-    page_layout: PageLayout
 
 
-class AssetTypePage(NamedTuple):
+@dataclass
+class AssetTypePage(PageLayout):
     """This is an ``AssetTypePage``."""
     asset_type: AssetType
     assets: Sequence[Asset]
-    page_layout: PageLayout

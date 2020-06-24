@@ -74,19 +74,17 @@ def asset_type(asset_type_id):
     asset_type_page = AssetTypePage(
         asset_type=asset_t,
         assets=assets,
-        page_layout=PageLayout(
-            number_of_fields=1,  # TODO: implement some kind of validation for this
-            macro_path='layouts/one_one_layout.html',
-            plugins=[
-                Plugin(
-                    macro_path='plugins/list_assets_plugin.html',
-                    columns={
-                        0: 'TestTest',
-                        1: 'TestNumber'
-                    }
-                )
-            ]
-        )
+        number_of_fields=1,  # TODO: implement some kind of validation for this
+        layout_macro_path='layouts/one_one_layout.html',
+        plugins=[
+            Plugin(
+                plugin_macro_path='plugins/list_assets_plugin.html',
+                columns={
+                    0: 'TestTest',
+                    1: 'TestNumber'
+                }
+            )
+        ]
     )
 
     return render_template("asset-type.html", asset_type_page=asset_type_page, assets=assets)
