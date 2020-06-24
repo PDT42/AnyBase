@@ -79,7 +79,7 @@ def asset_type(asset_type_id):
         plugins=[
             Plugin(
                 plugin_macro_path='plugins/list_assets_plugin.html',
-                columns={
+                employed_columns={
                     0: 'TestTest',
                     1: 'TestNumber'
                 }

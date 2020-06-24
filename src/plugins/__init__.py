@@ -12,4 +12,4 @@ from typing import Any, Mapping
 class Plugin:
     """This is a plugin."""
     plugin_macro_path: str
-    columns: Mapping[Any, str]
+    employed_columns: Mapping[Any, str]
