@@ -22,22 +22,22 @@ class AssetManager:
         self.db_connection: DbConnection = SqliteConnection.get()
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-    def create_asset(self, asset: Asset):
+    def create_asset(self, asset_type: AssetType, asset: Asset):
         """Create an asset in the database."""
 
-        if not self.asset_type_manager.check_asset_type_exists(asset.asset_type):
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
             return 0
 
         asset.data.update({'primary_key': None})
 
-        self.db_connection.write_dict(asset.asset_type.asset_table_name, asset.data)
+        self.db_connection.write_dict(asset_type.asset_table_name, asset.data)
         self.db_connection.commit()
 
-    def delete_asset(self, asset: Asset):
+    def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
 
         self.db_connection.delete(
-            self.asset_type_manager.generate_asset_table_name(asset.asset_type),
+            self.asset_type_manager.generate_asset_table_name(asset_type),
             [f"primary_key = {asset.asset_id}"]
         )
         self.db_connection.commit()
@@ -61,7 +61,6 @@ class AssetManager:
         for asset_row in result:
             assets.append(Asset(
                 asset_id=asset_row.pop('primary_key'),
-                asset_type=asset_type,
                 data=self._convert_row_to_data(asset_row, asset_type.columns)
             ))
 
@@ -81,7 +80,6 @@ class AssetManager:
 
         asset = Asset(
             asset_id=result[0].pop('primary_key'),
-            asset_type=asset_type,
             data=self._convert_row_to_data(result[0], asset_type.columns)
         )
         return asset

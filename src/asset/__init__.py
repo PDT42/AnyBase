@@ -22,5 +22,4 @@ class Asset(NamedTuple):
     """This is an ``Asset``."""
 
     asset_id: Optional[int]
-    asset_type: AssetType
     data: MutableMapping[Any, Any]

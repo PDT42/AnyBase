@@ -44,8 +44,8 @@
     <hr/>
 
     <!-- Import Layout Macro and apply it -->
-    {% from asset_type_page.page_layout.macro_path import layout_macro %}
-    {{ layout_macro(assets, asset_type_page.page_layout.plugins) }}
+    {% from asset_type_page.layout_macro_path import layout_macro %}
+    {{ layout_macro(assets, asset_type_page.plugins) }}
 
 </div>
 {% endblock %}

@@ -42,8 +42,8 @@ def create_asset(asset_type_id: int):
                 else:
                     asset_data[column.name] = column.datatype.convert(request.form[column.name])
 
-            asset = Asset(asset_id=None, asset_type=asset_type, data=asset_data)
-            asset_manager.create_asset(asset)
+            asset = Asset(asset_id=None, data=asset_data)
+            asset_manager.create_asset(asset_type, asset)
 
             return redirect(f'/asset-type/{asset_type_id}')
 
