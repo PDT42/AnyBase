@@ -28,8 +28,6 @@ class AssetTypePageManager:
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
 
-        
-
         # TODO
         pass
 
