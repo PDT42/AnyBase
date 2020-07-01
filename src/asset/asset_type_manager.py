@@ -169,9 +169,10 @@ class AssetTypeManager:
 
         if not self.db_connection.check_table_exists(self._asset_types_table_name):
             columns = [
-                Column('asset_name', 'VARCHAR', True),
-                Column('asset_table_name', 'VARCHAR', True),
-                Column('asset_columns', 'VARCHAR', True)
+                # The column primary_key will be created automatically
+                Column('asset_name', DataTypes.VARCHAR, True),
+                Column('asset_table_name', DataTypes.VARCHAR, True),
+                Column('asset_columns', DataTypes.VARCHAR, True)
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 
