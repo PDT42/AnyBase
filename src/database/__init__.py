@@ -5,7 +5,7 @@
 This is the database package.
 """
 
-from enum import Enum
+from datetime import datetime
 from typing import NamedTuple
 
 
@@ -23,6 +23,8 @@ class DataTypes:
     VARCHAR = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
     NUMBER = DataType(typename='NUMBER', db_type='REAL', convert=float)
     REAL = DataType(typename='NUMBER', db_type='REAL', convert=float)
+    INTEGER = DataType(typename='INTEGER', db_type='INTEGER', convert=int)
+    DATETIME = DataType(typename='DATETIME', db_type='INTEGER', convert=datetime.utcfromtimestamp)
     # TODO: Add additional required types
     # TODO: Update sqlite connection using this
 
