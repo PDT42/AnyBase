@@ -20,9 +20,9 @@ class DataTypes:
     """The available data types."""
 
     TEXT = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
-    VARCHAR = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
+    VARCHAR = TEXT
     NUMBER = DataType(typename='NUMBER', db_type='REAL', convert=float)
-    REAL = DataType(typename='NUMBER', db_type='REAL', convert=float)
+    REAL = NUMBER
     INTEGER = DataType(typename='INTEGER', db_type='INTEGER', convert=int)
     DATETIME = DataType(typename='DATETIME', db_type='INTEGER', convert=datetime.utcfromtimestamp)
     # TODO: Add additional required types
