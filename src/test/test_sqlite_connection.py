@@ -29,6 +29,7 @@ class TestSqliteConnection(TestCase):
         rmtree(self.tempdir)
 
     def test_read(self):
+        # TODO: Add tests fpr filters, limit and offset
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.db_connection.write_dict(self.table_name, self.row_values)
