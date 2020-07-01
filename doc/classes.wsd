@@ -83,17 +83,17 @@ class AssetPage {
 ' Page Managers
 ' #############
 
-class AssetTypePageManager {
+class AssetDetailPageManager {
     DbConnection db_connection
-    create_page(AssetPage: asset_page)
+    create_page(AssetTypePage: asset_type_page)
     delete_page(AssetType: asset_type)
     update_page(AssetPage: asset_page)
-    check_page_exists(AssetType: asset_type)
+    check_page_exists(AssetTypePage: asset_type_page)
     get_page(AssetType: asset_type)
     get_editor(AssetType: asset_type)
 }
 
-class AssetPageManager {
+class AssetTypePageManager {
     AssetType: asset_type
     DbConnection: db_connection
     create_page(AssetPage: asset_page)
@@ -131,7 +131,7 @@ AssetTypeManager .. AssetType
 
 AssetManager .. Asset
 
-AssetType --o AssetPageManager
+AssetType --o AssetTypePageManager
 AssetType .. Asset
 
 DataType --o Column
@@ -139,7 +139,7 @@ Column --o AssetType
 
 AssetTypePageManager .. AssetTypePage
 
-AssetPageManager .. AssetPage
+AssetDetailPageManager .. AssetPage
 
 AssetTypePage --|> PageLayout
 AssetPage --|> PageLayout
@@ -151,6 +151,6 @@ DbConnection .> database
 DbConnection --o AssetManager
 DbConnection --o AssetTypeManager
 DbConnection --o AssetTypePageManager
-DbConnection --o AssetPageManager
+DbConnection --o AssetDetailPageManager
 
 @enduml
