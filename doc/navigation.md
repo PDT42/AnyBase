@@ -4,7 +4,12 @@ Die Navigation stellt im Projekt offensichtlich eine Schwierigkeit dar. Die Navi
 
 Bei der Navigation sollte berücksichtigt werden, dass Routen zur Verfügung stehen, mit denen die Manager Funktionen direkt zur Verfügung stehen. So können speziell angepasste Frontends auf dem Framework entwickelt werden und nachträglich auf die bestehende Software aufgesetzt werden. 
 
-## AssetType Übersicht ``/asset-types/{asset_type.asset_type_id}``
+## AssetTypes Listenansicht ``/asset-types``
+Eine Listenansicht aller im System registrierten AssetTypes. 
+
+## AssetType Übersicht ``/asset-type/{asset_type.asset_type_id}``
 Eine Übersichtsseite für einen AssetType. Hier stehen alle Assets mit besagtem AssetType zur Verfügung. Diese Seite muss mit Plugins vom User ausgestaltet werden.
+
+## Asset von AssetType erstellen ``/asset-type/{asset_type.asset_type_id}/create-asse``
 
 ## Asset Detail Ansicht ``/{asset_type.asset_name}/{asset_id}
