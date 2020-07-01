@@ -8,6 +8,7 @@ import sqlite3
 from typing import Any, Mapping, Sequence
 
 from exceptions.common import IllegalStateException
+from exceptions.database import TableDoesNotExistException
 from src.config import Config
 from src.database.db_connection import Column, DbConnection
 
@@ -184,7 +185,7 @@ class SqliteConnection(DbConnection):
         table_info = self.get_table_info(table_name)
 
         if not self.check_table_exists(table_name):
-            raise Exception(f"Table {table_name} does not exist!")
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
 
         # Creating Query
         # --------------
