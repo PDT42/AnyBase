@@ -28,11 +28,11 @@ Ein PageLayout ist eine bestimmte Seitenaufteilung, die der Nutzer für eine Ass
 ## AssetPage
 Eine AssetPage ist die Übersichtsseite für einen bestimmten AssetType.
 
-## AssetPageManager
-Der AssetPageManager sorgt dafür, dass im System initialisierte AssetTypes eine Route zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetPageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
+## AssetTypePageManager
+Der AssetTypePageManager sorgt dafür, dass im System initialisierte AssetTypes eine Route zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
 
 ## AssetDetailPage
 Eine AssetDetailPage ist die Übersichtsseite für eine Asset eines bestimmten AssetTypes.
 
 ## AssetDetailPageManager
-Der AssetDetailPageManager sorgt dafür, dass im System initialisierte Assets eine 'Route' zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetPageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
+Der AssetDetailPageManager sorgt dafür, dass im System initialisierte Assets eine 'Route' zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
