@@ -7,6 +7,7 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 import sqlite3
 from typing import Any, Mapping, Sequence
 
+from exceptions.common import IllegalStateException
 from src.config import Config
 from src.database.db_connection import Column, DbConnection
 
@@ -24,14 +25,21 @@ class SqliteConnection(DbConnection):
             SqliteConnection._instance = SqliteConnection()
         return SqliteConnection._instance
 
-    def __init__(self):
+    def __init__(self, db_path: str = None):
         """Create a new SqliteConnection."""
+
+        if SqliteConnection._instance:
+            raise IllegalStateException(
+                "This singleton already exists. Use SqliteConnection.get() to get the instance!")
 
         self.connection = None
         self.cursor = None
 
-        self.db_path = Config.get().read('local database', 'path', '../res/database.db')
-        self.connect()
+        if db_path is None:
+            self.db_path = Config.get().read('local database', 'path', '../res/database.db')
+        else:
+            self.db_path = db_path
+        self._connect()
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -40,7 +48,19 @@ class SqliteConnection(DbConnection):
             result[column[0]] = row[index]
         return result
 
-    def connect(self):
+    @staticmethod
+    def initialize(db_path: str):
+        """Initialize a sqlite connection using a custom path. This is mainly
+        for testing purposes. For deployment its advised to set the database
+        path in the config."""
+
+        if not SqliteConnection._instance:
+            SqliteConnection._instance = SqliteConnection(db_path=db_path)
+        else:
+            raise IllegalStateException("This singleton already exists, can't change the db path during runtime.")
+        return SqliteConnection._instance
+
+    def _connect(self):
         """Connect to the database."""
 
         if self.connection:
@@ -64,7 +84,7 @@ class SqliteConnection(DbConnection):
             return
         self.connection.close()
         self.connection = None
-        self.connect()
+        self._connect()
 
     def close(self):
         """Commit changes and close the database connection."""
@@ -75,7 +95,7 @@ class SqliteConnection(DbConnection):
         self.connection.close()
 
     def kill(self):
-        """Close and delete the database connection."""
+        """Close the connection and kill the singleton."""
         if self.connection:
             self.connection.close()
         SqliteConnection._instance = None
@@ -101,7 +121,7 @@ class SqliteConnection(DbConnection):
         """
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         headers = set(headers)
         headers.add('primary_key')
@@ -145,7 +165,7 @@ class SqliteConnection(DbConnection):
         """Delete from ``table_name`` where filters apply."""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         query = f"DELETE FROM {table_name} WHERE {' AND '.join(and_filters)}"
 
@@ -158,7 +178,7 @@ class SqliteConnection(DbConnection):
         """Write ``values`` to ``table_name``."""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         # Get info on ``table_name`` from database
         table_info = self.get_table_info(table_name)
@@ -200,7 +220,7 @@ class SqliteConnection(DbConnection):
         # TODO: Make sure to ignore spaces in column names
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         # Creating Query
         # --------------
@@ -228,7 +248,7 @@ class SqliteConnection(DbConnection):
         """Delete a table from the database."""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         query = f"DROP TABLE {table_name}"
 
@@ -242,7 +262,7 @@ class SqliteConnection(DbConnection):
         """Get information on ``table_name``."""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         query = f"PRAGMA table_info('{table_name}')"
         self.cursor.execute(query)
@@ -254,7 +274,7 @@ class SqliteConnection(DbConnection):
         """Check if a table ``table_name`` already exists in the database"""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name}'"
         self.cursor.execute(query)
@@ -266,10 +286,10 @@ class SqliteConnection(DbConnection):
         """Count the number of items in ``table_name``."""
 
         # Initialize connection
-        self.connect()
+        self._connect()
 
         query = f"SELECT COUNT(*) FROM {table_name}"
         self.cursor.execute(query)
 
-        result = self.cursor.fetchall()[0]
+        result = self.cursor.fetchall()[0]['COUNT(*)']
         return result
