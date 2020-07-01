@@ -21,7 +21,7 @@ app = Flask(__name__, template_folder=template_folder)
 # Adding Routes provided in server to app
 app.add_url_rule('/', 'index', server.index, methods=['GET'])
 
-app.add_url_rule('/create-asset-type', 'create-asset-type', create_asset_type, methods=['GET', 'POST'])
+app.add_url_rule('/asset-type/create', 'create-asset-type', create_asset_type, methods=['GET', 'POST'])
 app.add_url_rule('/asset-types', 'asset-types', asset_types, methods=['GET'])
 app.add_url_rule('/asset-type/<int:asset_type_id>', 'asset-type', asset_type, methods=['GET', 'POST'])
 
