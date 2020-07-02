@@ -57,6 +57,16 @@ class TestSqliteConnection(TestCase):
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
 
+    def test_update(self):
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+        self.db_connection.write_dict(self.table_name, self.row_values)
+        self.assertEqual(1, self.db_connection.count(self.table_name))
+        self.row_values["primary_key"] = 1
+        self.row_values["TextColumn"] = "Updated Text"
+        self.db_connection.update(self.table_name, self.row_values)
+        self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
+
     def test_create_table(self):
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
@@ -90,3 +100,22 @@ class TestSqliteConnection(TestCase):
         self.assertEqual(10, self.db_connection.count(self.table_name))
         self.db_connection.delete(self.table_name, [f"NumberColumn = 0"])
         self.assertEqual(9, self.db_connection.count(self.table_name))
+
+    def test_update_table_name(self):
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+        self.db_connection.update_table_name(self.table_name, "UpdatedTableName")
+        self.assertTrue(self.db_connection.check_table_exists("UpdatedTableName"))
+        self.assertFalse(self.db_connection.check_table_exists(self.table_name))
+
+    def test_update_table_columns(self):
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+        self.db_columns.append(Column("appended_column", DataTypes.VARCHAR, False))
+        self.db_connection.update_table_columns(self.table_name, self.db_columns)
+        self.assertEqual(
+            [{'cid': 0, 'name': 'TextColumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+             {'cid': 1, 'name': 'NumberColumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+             {'cid': 2, 'name': 'appended_column', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+             {'cid': 3, 'name': 'primary_key', 'type': 'INTEGER', 'notnull': 0, 'dflt_value': None, 'pk': 1}],
+            (self.db_connection.get_table_info(self.table_name)))
