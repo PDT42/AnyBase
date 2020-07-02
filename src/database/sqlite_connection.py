@@ -7,10 +7,12 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 import sqlite3
 from typing import Any, Mapping, Sequence
 
+from database import DataTypes
 from exceptions.common import IllegalStateException
 from exceptions.database import TableDoesNotExistException
 from src.config import Config
 from src.database.db_connection import Column, DbConnection
+from exceptions.database import TableAlreadyExistsException
 
 
 class SqliteConnection(DbConnection):
@@ -191,16 +193,19 @@ class SqliteConnection(DbConnection):
         # --------------
         query = f"INSERT INTO {table_name} VALUES ("
 
-        for column in table_info:
+        for column_info in table_info:
 
-            if column['name'] == 'primary_key':
+            column_name = column_info['name']
+            column_type = DataTypes.get(column_info['type'])
+
+            if column_name == 'primary_key':
                 query = f'''{query} null,'''
                 continue
 
-            if isinstance(values[column['name']], str):
-                query = f'''{query}"{values[column['name']]}", '''
+            if isinstance(values[column_name], str):
+                query = f'''{query}"{column_type.convert(values[column_name])}", '''
             else:
-                query = f'''{query}{values[column['name']]}, '''
+                query = f'''{query}{column_type.convert(values[column_name])}, '''
 
         query = f"{''.join(query[:-1])})"
         # --------------
@@ -209,6 +214,83 @@ class SqliteConnection(DbConnection):
         result = self.cursor.lastrowid
 
         return result
+
+    def update(self, table_name: str, values: Mapping[str, Any]):
+        """Update an entry in the database."""
+
+        # Initialize connection
+        self._connect()
+
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
+        # Get info on ``table_name`` from database
+        table_info = self.get_table_info(table_name)
+
+        # Creating Query
+        # --------------
+        query = f"UPDATE {table_name} SET "
+
+        for column_info in table_info:
+
+            column_name = column_info['name']
+            data_type = DataTypes.get(column_info['type'])
+
+            if isinstance(values[column_name], str):
+                query += f'{column_name} = "{data_type.convert(values[column_name])}", '
+            else:
+                query += f'{column_name} = {data_type.convert(values[column_name])}, '
+
+        query = f"{''.join(query[:-2])} "
+
+        query += f"WHERE primary_key = {values['primary_key']}"
+        # --------------
+        self.cursor.execute(query)
+
+    def update_table_name(self, table_name: str, new_table_name: str):
+        """Update the name of a table in the database."""
+
+        # Initialize connection
+        self._connect()
+
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
+        if self.check_table_exists(new_table_name):
+            raise TableAlreadyExistsException(f"Table {new_table_name} does already exist!")
+
+        query = f"ALTER TABLE {table_name} RENAME TO {new_table_name}"
+        self.cursor.execute(query)
+
+    def update_table_columns(self, table_name: str, columns: Sequence[Column]):
+        """Update the columns of a table in the database."""
+
+        # Initialize connection
+        self._connect()
+
+        # Making sure table exists
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
+        # Get info on ``table_name`` from database
+        table_info = self.get_table_info(table_name)
+
+        # Making sure any columns we create have required = False
+        remote_columns = [column['name'] for column in table_info]
+        for column in columns:
+            if column.name not in remote_columns:
+                column.required = False
+
+        temp_table_name = f"temp_{table_name}"
+
+        self.create_table(temp_table_name, columns)
+
+        column_str = ', '.join([column.name for column in columns[:len(remote_columns)-1]]) + ', primary_key'
+        query = f"INSERT INTO {temp_table_name}({column_str}) SELECT {', '.join(remote_columns)} FROM {table_name}"
+        self.cursor.execute(query)
+
+        self.delete_table(table_name)
+        self.update_table_name(temp_table_name, table_name)
 
     def create_table(
             self, table_name: str,
@@ -225,7 +307,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
-        query = f"CREATE TABLE {table_name} ("
+        query = f"CREATE TABLE IF NOT EXISTS {table_name} ("
 
         for column in columns:
 

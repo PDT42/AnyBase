@@ -68,6 +68,21 @@ class DbConnection:
         pass
 
     @abstractmethod
+    def update(self, table_name: str, values: Mapping[str, Any]):
+        """Update database entry."""
+        pass
+
+    @abstractmethod
+    def update_table_name(self, table_name: str, new_table_name: str):
+        """Update the name of a table in the database."""
+        pass
+
+    @abstractmethod
+    def update_table_columns(self, table_name: str, columns: Sequence[Column]):
+        """Update the columns of a table in the database."""
+        pass
+
+    @abstractmethod
     def create_table(
             self, table_name: str,
             columns: Sequence[Column]
