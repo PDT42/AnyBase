@@ -4,21 +4,24 @@
 
 The package contains the AssetManager and the AssetTypeManager.
 """
-from typing import Any, Mapping, MutableMapping, NamedTuple, Optional, Sequence
+from dataclasses import dataclass
+from typing import Any, List, MutableMapping, Optional
 
 from database import Column
 
 
-class AssetType(NamedTuple):
+@dataclass
+class AssetType:
     """This is a ``AssetType``, it defines an asset."""
 
     asset_name: str
-    columns: Sequence[Column]
+    columns: List[Column]
     asset_table_name: str = None
     asset_type_id: int = None
 
 
-class Asset(NamedTuple):
+@dataclass
+class Asset():
     """This is an ``Asset``."""
 
     asset_id: Optional[int]
