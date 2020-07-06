@@ -11,6 +11,7 @@ from asset.asset_type_manager import AssetTypeManager
 from database import Column
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
+from exceptions.asset import AssetTypeDoesNotExistException
 
 
 class AssetManager:
@@ -28,9 +29,10 @@ class AssetManager:
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             return 0
 
-        asset.data.update({'primary_key': None})
+        values = asset.data
+        values.update({'primary_key': None})
 
-        self.db_connection.write_dict(asset_type.asset_table_name, asset.data)
+        self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
 
     def delete_asset(self, asset_type: AssetType, asset: Asset):
@@ -42,10 +44,23 @@ class AssetManager:
         )
         self.db_connection.commit()
 
-    def update_asset(self, asset: Asset):
+    def update_asset(self, asset_type: AssetType, asset: Asset):
         """Update the information on an asset in the database."""
-        # TODO
-        pass
+
+        # Making sure the asset exists in the database
+        if not asset.asset_id:
+            raise AttributeError("The asset_id parameter of the asset you try to update must be set!")
+
+        # Making sure the asset_type table is set
+        if not asset_type.asset_table_name:
+            raise AttributeError("The asset_type_table parameter of asset_type must be set!")
+
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
+            raise AssetTypeDoesNotExistException(f"The asset type {asset_type} does not exist!")
+
+        asset.data.update({'primary_key': asset.asset_id})
+
+        self.db_connection.update(asset_type.asset_table_name, asset.data)
 
     def get_all(self, asset_type: AssetType) -> Sequence[Asset]:
         """Get all assets of ``AssetType`` from the database."""
