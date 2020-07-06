@@ -21,7 +21,7 @@ class AssetType:
 
 
 @dataclass
-class Asset():
+class Asset:
     """This is an ``Asset``."""
 
     asset_id: Optional[int]
