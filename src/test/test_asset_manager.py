@@ -1,3 +1,10 @@
+"""
+:Author: PDT
+:Since: 2020/07/05
+
+These are tests for the asset manager.
+"""
+
 from shutil import rmtree
 from unittest import TestCase
 
