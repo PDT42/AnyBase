@@ -10,7 +10,7 @@ from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from asset import AssetType
-from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeDoesNotExistException
+from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
 
 
 class AssetTypeManager:
@@ -209,8 +209,11 @@ class AssetTypeManager:
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 
-    def _check_resource_type_consistency(self):
+    def _check_asset_type_consistency(self):
         """Check if a database table exists for all the AssetTypes
-        stored in ``abintern_asset_types`` and vice versa."""
-        # TODO: implement
-        pass
+        stored in ``abintern_asset_types``."""
+
+        asset_types: Sequence[AssetType] = self.get_all()
+
+        if not all([self.check_asset_type_exists(asset_type) for asset_type in asset_types]):
+            raise AssetTypeInconsistencyException()
