@@ -12,3 +12,7 @@ class AssetTypeAlreadyExistsException(Exception):
 
 class AssetTypeDoesNotExistException(Exception):
     pass
+
+
+class AssetTypeInconsistencyException(Exception):
+    pass
