@@ -66,7 +66,7 @@ class AssetManager:
         """Get all assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
-            return []
+            raise AssetTypeDoesNotExistException()
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             self.asset_type_manager.generate_asset_table_name(asset_type),
