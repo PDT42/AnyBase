@@ -12,6 +12,7 @@ from asset import Asset, AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
+from exceptions.asset import AssetTypeDoesNotExistException
 from test.test_util import init_test_db
 
 
@@ -89,6 +90,10 @@ class TestAssetManager(TestCase):
         self.assertEqual(asset, self.test_asset)
 
     def test_get_all(self):
+        # Creating new asset type to
+        asset_type: AssetType = AssetType("DoesNotExist", [Column("test", DataTypes.VARCHAR, False)])
+        self.assertRaises(AssetTypeDoesNotExistException, self.asset_manager.get_all, asset_type)
+
         # Creating 10 assets in the database
         for iterator in range(0, 10):
             self.test_asset.data["TestNumber"] = iterator
@@ -108,4 +113,3 @@ class TestAssetManager(TestCase):
         # Checking if asset exists in database
         asset = self.asset_manager.get_one(1, self.asset_type)
         self.assertEqual(asset, self.test_asset)
-
