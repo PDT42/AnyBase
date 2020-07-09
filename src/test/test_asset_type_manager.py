@@ -4,7 +4,7 @@ from unittest import TestCase
 from asset import AssetType
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
-from exceptions.asset import AssetTypeAlreadyExistsException
+from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
 from test.test_util import init_test_db
 
 
@@ -65,7 +65,6 @@ class TestAssetTypeManager(TestCase):
         update_asset_type.asset_type_id = 2
         self.assertRaises(AssetTypeAlreadyExistsException, self.asset_type_manager.update_asset_type, update_asset_type)
 
-
     def test_check_asset_type_exists(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
         self.asset_type = self.asset_type_manager.get_one(1)
@@ -86,3 +85,12 @@ class TestAssetTypeManager(TestCase):
         self.asset_type.asset_type_id = 1
         self.asset_type.asset_table_name = 'abasset_table_TestAsset'
         self.assertEqual(self.asset_type, asset_type)
+
+    def test__check_asset_type_consistency(self):
+        self.asset_type_manager.create_asset_type(self.asset_type)
+        asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type.asset_type_id = 1
+        self.asset_type.asset_table_name = 'abasset_table_TestAsset'
+        self.assertEqual(self.asset_type, asset_type)
+        self.db_connection.delete_table(self.asset_type.asset_table_name)
+        self.assertRaises(AssetTypeInconsistencyException, self.asset_type_manager._check_asset_type_consistency)
