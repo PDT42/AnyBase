@@ -7,7 +7,7 @@ This is the package for all frontend creating stuff.
 """
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Sequence
+from typing import Sequence
 
 from asset import Asset, AssetType
 from plugins import Plugin

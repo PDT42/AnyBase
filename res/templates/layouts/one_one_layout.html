@@ -3,8 +3,8 @@
     <div class="col-sm">
 
         {% for plugin in plugins %}
-            {% from plugin.plugin_macro_path import plugin_macro %}
-            {{ plugin_macro(assets, plugin.employed_columns) }}
+        {% from plugin.plugin_macro_path import plugin_macro %}
+        {{ plugin_macro(assets, plugin.employed_columns) }}
         {% endfor %}
 
     </div>

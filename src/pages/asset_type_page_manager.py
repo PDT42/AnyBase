@@ -6,7 +6,6 @@ This is the module for the ``AssetTypePageManager``.
 """
 from asset import AssetType
 from database import Column, DataTypes
-from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from pages import AssetTypePage
 

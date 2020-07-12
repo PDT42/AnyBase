@@ -4,7 +4,6 @@
 
 These are the routes for the ``AssetTypeManager``.
 """
-from threading import Lock
 
 from flask import redirect, render_template, request
 
