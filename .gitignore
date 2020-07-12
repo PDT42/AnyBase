@@ -2,3 +2,5 @@
 /.idea/
 *.pyc
 .db
+res/config.ini
+*.db
