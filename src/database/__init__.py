@@ -43,5 +43,6 @@ class DataTypes:
 class Column:
     """This is a column, as required to create database column."""
     name: str
+    db_name: str
     datatype: DataType
     required: bool
