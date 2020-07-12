@@ -9,10 +9,10 @@ from typing import Any, Mapping, Sequence
 
 from database import DataTypes
 from exceptions.common import IllegalStateException
+from exceptions.database import TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
 from src.config import Config
 from src.database.db_connection import Column, DbConnection
-from exceptions.database import TableAlreadyExistsException
 
 
 class SqliteConnection(DbConnection):
@@ -278,14 +278,14 @@ class SqliteConnection(DbConnection):
         # Making sure any columns we create have required = False
         remote_columns = [column['name'] for column in table_info]
         for column in columns:
-            if column.name not in remote_columns:
+            if column.db_name not in remote_columns:
                 column.required = False
 
         temp_table_name = f"temp_{table_name}"
 
         self.create_table(temp_table_name, columns)
 
-        column_str = ', '.join([column.name for column in columns[:len(remote_columns)-1]]) + ', primary_key'
+        column_str = ', '.join([column.db_name for column in columns[:len(remote_columns) - 1]]) + ', primary_key'
         query = f"INSERT INTO {temp_table_name}({column_str}) SELECT {', '.join(remote_columns)} FROM {table_name}"
         self.cursor.execute(query)
 
@@ -312,7 +312,7 @@ class SqliteConnection(DbConnection):
         for column in columns:
 
             # Adding employed_columns
-            query = f"{query}{column.name} {column.datatype.db_type}"
+            query = f"{query}{column.db_name} {column.datatype.db_type}"
 
             if column.required:
                 query = f"{query} NOT NULL"

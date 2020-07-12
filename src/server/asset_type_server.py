@@ -13,7 +13,7 @@ from asset import AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
-from pages import AssetTypePage, PageLayout
+from pages import AssetTypePage
 from plugins import Plugin
 
 
@@ -30,6 +30,7 @@ def create_asset_type():
             if column_name in request.form.keys():
                 columns.append(Column(
                     name=request.form.get(column_name),
+                    db_name=request.form.get(column_name).replace(' ', '_'),
                     datatype=DataTypes.__dict__[request.form.get(column_datatype)],
                     required=request.form.get(column_required) == 'checkboxTrue'
                 ))
@@ -80,8 +81,8 @@ def asset_type(asset_type_id):
             Plugin(
                 plugin_macro_path='plugins/list_assets_plugin.html',
                 employed_columns={
-                    0: 'TestTest',
-                    1: 'TestNumber'
+                    0: 'Test Column 1',
+                    1: 'Test Column 2'
                 }
             )
         ]

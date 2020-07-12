@@ -27,8 +27,8 @@ class TestAssetManager(TestCase):
         self.asset_type = AssetType(
             'TestAsset',
             [
-                Column('TestText', DataTypes.VARCHAR, True),
-                Column('TestNumber', DataTypes.NUMBER, True)
+                Column('TestText', 'TestText', DataTypes.VARCHAR, True),
+                Column('TestNumber', 'TestNumber', DataTypes.NUMBER, True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
         self.asset_type = self.asset_type_manager.get_one(1)
@@ -48,7 +48,6 @@ class TestAssetManager(TestCase):
 
         # Updating asset data
         self.test_asset.asset_id = 1
-        self.test_asset.data.pop('primary_key')
 
         # Checking if asset exists in the databased
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -60,7 +59,6 @@ class TestAssetManager(TestCase):
 
         # Updating asset data
         self.test_asset.asset_id = 1
-        self.test_asset.data.pop('primary_key')
 
         # Checking if asset exists in the database
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -74,8 +72,6 @@ class TestAssetManager(TestCase):
         # Creating an asset
         self.asset_manager.create_asset(self.asset_type, self.test_asset)
         self.test_asset.asset_id = 1
-
-        self.test_asset.data.pop('primary_key')
 
         # Getting the asset from the database
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -91,7 +87,7 @@ class TestAssetManager(TestCase):
 
     def test_get_all(self):
         # Creating new asset type to
-        asset_type: AssetType = AssetType("DoesNotExist", [Column("test", DataTypes.VARCHAR, False)])
+        asset_type: AssetType = AssetType("DoesNotExist", [Column("test", 'test', DataTypes.VARCHAR, False)])
         self.assertRaises(AssetTypeDoesNotExistException, self.asset_manager.get_all, asset_type)
 
         # Creating 10 assets in the database
@@ -108,7 +104,6 @@ class TestAssetManager(TestCase):
 
         # Updating asset data
         self.test_asset.asset_id = 1
-        self.test_asset.data.pop('primary_key')
 
         # Checking if asset exists in database
         asset = self.asset_manager.get_one(1, self.asset_type)

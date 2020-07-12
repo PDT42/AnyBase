@@ -19,8 +19,8 @@ class TestSqliteConnection(TestCase):
 
         self.table_name = "test_table"
         self.db_columns = [
-            Column(name="TextColumn", datatype=DataTypes.VARCHAR, required=False),
-            Column(name="NumberColumn", datatype=DataTypes.NUMBER, required=False)
+            Column("TextColumn", "TextColumn", DataTypes.VARCHAR, False),
+            Column("NumberColumn", "NumberColumn", DataTypes.NUMBER, False)
         ]
         self.row_values = {"TextColumn": "TestText", "NumberColumn": 42}
 
@@ -111,7 +111,7 @@ class TestSqliteConnection(TestCase):
     def test_update_table_columns(self):
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
-        self.db_columns.append(Column("appended_column", DataTypes.VARCHAR, False))
+        self.db_columns.append(Column("appended_column", "appended_column", DataTypes.VARCHAR, False))
         self.db_connection.update_table_columns(self.table_name, self.db_columns)
         self.assertEqual(
             [{'cid': 0, 'name': 'TextColumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},

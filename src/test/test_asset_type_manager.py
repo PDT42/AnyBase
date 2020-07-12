@@ -17,8 +17,8 @@ class TestAssetTypeManager(TestCase):
         self.asset_type = AssetType(
             'TestAsset',
             [
-                Column('TestText', DataTypes.VARCHAR, True),
-                Column('TextNumber', DataTypes.NUMBER, True)
+                Column('TestText', 'TestText', DataTypes.VARCHAR, True),
+                Column('TextNumber', 'TextNumber', DataTypes.NUMBER, True)
             ])
 
     def tearDown(self) -> None:
@@ -47,9 +47,9 @@ class TestAssetTypeManager(TestCase):
         update_asset_type = AssetType(
             asset_name='UpdatedAssetType',
             columns=[
-                Column('TestText', DataTypes.VARCHAR, True),
-                Column('TextNumber', DataTypes.NUMBER, True),
-                Column("AppendedColumn", DataTypes.VARCHAR, False)
+                Column('TestText', 'TestText', DataTypes.VARCHAR, True),
+                Column('TextNumber', 'TextNumber', DataTypes.NUMBER, True),
+                Column("AppendedColumn", "AppendedColumn", DataTypes.VARCHAR, False)
             ],
             asset_type_id=1
         )

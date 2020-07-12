@@ -29,8 +29,10 @@ class AssetManager:
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             return 0
 
-        values = asset.data
-        values.update({'primary_key': None})
+        values = {'primary_key': None}
+
+        for column in asset_type.columns:
+            values.update({column.db_name: asset.data[column.name]})
 
         self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
@@ -70,7 +72,7 @@ class AssetManager:
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.name for column in asset_type.columns])
+            [column.name.replace(' ', '_') for column in asset_type.columns])
 
         assets = []
         for asset_row in result:
@@ -110,6 +112,6 @@ class AssetManager:
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
 
-        data: MutableMapping[str, Any] = {column.name: row[column.name] for column in columns}
+        data: MutableMapping[str, Any] = {column.name: row[column.db_name] for column in columns}
 
         return data
