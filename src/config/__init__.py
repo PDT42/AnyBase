@@ -15,7 +15,7 @@ class Config:
     """This is an adapter to access a config.ini file."""
 
     _instance = None
-    _path = "../res/config.ini"
+    _path = "res/config.ini"
 
     @staticmethod
     def get():
