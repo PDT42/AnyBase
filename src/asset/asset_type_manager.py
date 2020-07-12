@@ -4,12 +4,12 @@
 
 This is the module for the AssetTypeManager.
 """
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
 
+from asset import AssetType
 from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from asset import AssetType
 from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
 
 
@@ -98,6 +98,7 @@ class AssetTypeManager:
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
         """Check if ``asset_type`` with that name already exists."""
 
+        # TODO: Upper Lowercase names
         db_response = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=['primary_key', 'asset_name'],
@@ -169,29 +170,34 @@ class AssetTypeManager:
     ):
         """Create a ``AssetType`` object from parameters."""
 
-        asset_columns = asset_columns.split(' ')
+        columns: List[Column] = []
+
+        for str_column in asset_columns.split(';'):
+            str_column = str_column.split(' ')
+            columns.append(Column(
+                name=' '.join(str_column[:-2]),
+                db_name='_'.join(str_column[:-2]),
+                datatype=DataTypes.__dict__[str_column[-2]],
+                required=bool(int(str_column[-1]))
+            ))
 
         return AssetType(
             asset_type_id=asset_type_id,
             asset_name=asset_name,
             asset_table_name=asset_table_name,
-            columns=[
-                Column(name, DataTypes.__dict__[datatype], bool(int(required)))
-                for name, datatype, required in [
-                    asset_columns[i:i + 3] for i in range(0, len(asset_columns), 3)
-                ]
-            ]
+            columns=columns
         )
 
     @staticmethod
     def generate_str_column_from_columns(columns: Sequence[Column]):
         """Generate a column str from a list of Columns."""
-        return ' '.join([f"{column.name} {column.datatype.db_type} {int(column.required)}" for column in columns])
+        return ';'.join([f"{column.name} {column.datatype.db_type} {int(column.required)}" for column in columns])
 
     @staticmethod
     def generate_asset_table_name(asset_type: AssetType) -> str:
         """Generate an ``asset_table_name`` from the ``asset type``."""
-        return f"abasset_table_{asset_type.asset_name}"
+        asset_name = asset_type.asset_name.replace(' ', '_')
+        return f"abasset_table_{asset_name}"
 
     #####################
     #  PRIVATE METHODS  #
@@ -203,9 +209,9 @@ class AssetTypeManager:
         if not self.db_connection.check_table_exists(self._asset_types_table_name):
             columns = [
                 # The column primary_key will be created automatically
-                Column('asset_name', DataTypes.VARCHAR, True),
-                Column('asset_table_name', DataTypes.VARCHAR, True),
-                Column('asset_columns', DataTypes.VARCHAR, True)
+                Column('asset_name', 'asset_name', DataTypes.VARCHAR, True),
+                Column('asset_table_name', 'asset_table_name', DataTypes.VARCHAR, True),
+                Column('asset_columns', 'asset_columns', DataTypes.VARCHAR, True)
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 
