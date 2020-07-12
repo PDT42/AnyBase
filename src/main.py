@@ -6,14 +6,12 @@
 from flask import Flask
 
 import server
-
-from server.asset_type_server import create_asset_type, asset_types, asset_type
-from server.asset_server import create_asset
-
 from config import Config
+from server.asset_server import create_asset
+from server.asset_type_server import asset_type, asset_types, create_asset_type
 
 # Getting config values
-template_folder = Config.get().read('frontend', 'template_folder', '../res/templates')
+template_folder = Config.get().read('frontend', 'template_folder', '/res/templates')
 
 # Creating Flask Application
 app = Flask(__name__, template_folder=template_folder)
