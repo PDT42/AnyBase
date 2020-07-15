@@ -50,7 +50,7 @@ def create_asset_type():
     return render_template("create-asset-type.html")
 
 
-def asset_types():
+def get_all_asset_types():
     """This is a FlaskAppRoute that shows ``AssetTypes`` available using asset-types.html."""
 
     asset_type_manager = AssetTypeManager()
@@ -59,7 +59,7 @@ def asset_types():
     return render_template("asset-types.html", asset_types=asset_t)
 
 
-def asset_type(asset_type_id):
+def get_one_asset_type(asset_type_id):
     """Show the Detail Page for an ``AssetType``."""
 
     asset_type_manager = AssetTypeManager()
