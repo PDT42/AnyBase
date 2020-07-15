@@ -40,8 +40,15 @@
                         </div>
                         <div class="col-md-2">
                             <select class="form-control custom-select" name="columnDataType_0" id="columnDataType_0">
-                                <option selected value="VARCHAR">Text</option>
-                                <option value="NUMBER">Number</option>
+
+                                {% for data_type in data_types %}
+                                <option selected value="{{ data_type.typename }}">{{ data_type.fe_name }}</option>
+                                {% endfor %}
+
+                                {% for asset_type in asset_types %}
+                                <option selected value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
+                                {% endfor %}
+
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -87,8 +94,15 @@
 
                 '                <div class="col-md-2">\n' +
                 '                    <select class="form-control custom-select" name="columnDataType_' + column_no + '">\n' +
-                '                        <option selected value="VARCHAR">Text</option>\n' +
-                '                        <option value="NUMBER">Number</option>\n' +
+
+                                '{% for data_type in data_types %}' +
+                                '<option selected value="{{ data_type.typename }}">{{ data_type.fe_name }}</option>' +
+                                '{% endfor %}' +
+
+                                '{% for asset_type in asset_types %}' +
+                                '<option selected value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>' +
+                                '{% endfor %}' +
+
                 '                    </select>\n' +
                 '                </div>\n' +
 
