@@ -54,26 +54,26 @@ def get_all_asset_types():
     """This is a FlaskAppRoute that shows ``AssetTypes`` available using asset-types.html."""
 
     asset_type_manager = AssetTypeManager()
-    asset_t = asset_type_manager.get_all()
+    asset_types = asset_type_manager.get_all()
 
-    return render_template("asset-types.html", asset_types=asset_t)
+    return render_template("asset-types.html", asset_types=asset_types)
 
 
 def get_one_asset_type(asset_type_id):
     """Show the Detail Page for an ``AssetType``."""
 
     asset_type_manager = AssetTypeManager()
-    asset_t = asset_type_manager.get_one(asset_type_id)
+    asset_type = asset_type_manager.get_one(asset_type_id)
 
     if request.method == 'POST' and request.form.get('deleteAsset') == 'True':
-        asset_type_manager.delete_asset_type(asset_t)
+        asset_type_manager.delete_asset_type(asset_type)
         return redirect('/asset-types')
 
     asset_manager = AssetManager()
-    assets = asset_manager.get_all(asset_t)
+    assets = asset_manager.get_all(asset_type)
 
     asset_type_page = AssetTypePage(
-        asset_type=asset_t,
+        asset_type=asset_type,
         assets=assets,
         number_of_fields=1,  # TODO: implement some kind of validation for this
         layout_macro_path='layouts/one_one_layout.html',
