@@ -196,7 +196,7 @@ class SqliteConnection(DbConnection):
         for column_info in table_info:
 
             column_name = column_info['name']
-            column_type = DataTypes.get(column_info['type'])
+            column_type = DataTypes[column_info['type']].value
 
             if column_name == 'primary_key':
                 query = f'''{query} null,'''
@@ -234,7 +234,7 @@ class SqliteConnection(DbConnection):
         for column_info in table_info:
 
             column_name = column_info['name']
-            data_type = DataTypes.get(column_info['type'])
+            data_type = DataTypes[column_info['type']].value
 
             if isinstance(values[column_name], str):
                 query += f'{column_name} = "{data_type.convert(values[column_name])}", '

@@ -27,8 +27,8 @@ class TestAssetManager(TestCase):
         self.asset_type = AssetType(
             'TestAsset',
             [
-                Column('TestText', 'TestText', DataTypes.VARCHAR, True),
-                Column('TestNumber', 'TestNumber', DataTypes.NUMBER, True)
+                Column('TestText', 'TestText', DataTypes.VARCHAR.value, True),
+                Column('TestNumber', 'TestNumber', DataTypes.NUMBER.value, True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
         self.asset_type = self.asset_type_manager.get_one(1)
@@ -87,7 +87,7 @@ class TestAssetManager(TestCase):
 
     def test_get_all(self):
         # Creating new asset type to
-        asset_type: AssetType = AssetType("DoesNotExist", [Column("test", 'test', DataTypes.VARCHAR, False)])
+        asset_type: AssetType = AssetType("DoesNotExist", [Column("test", 'test', DataTypes.VARCHAR.value, False)])
         self.assertRaises(AssetTypeDoesNotExistException, self.asset_manager.get_all, asset_type)
 
         # Creating 10 assets in the database

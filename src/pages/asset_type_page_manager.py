@@ -85,19 +85,19 @@ class AssetTypePageManager:
         if not self.db_connection.check_table_exists(self.asset_type_layout_table_name):
             columns = [
                 # The column primary_key will be created automatically
-                Column('asset_type_id', DataTypes.INTEGER, True),
-                Column('page_layout_macro', DataTypes.VARCHAR, True),
-                Column('created', DataTypes.DATETIME, True)
+                Column('asset_type_id', 'asset_type_id', DataTypes.INTEGER.value, True),
+                Column('page_layout_macro', 'page_layout_macro', DataTypes.VARCHAR.value, True),
+                Column('created', 'created', DataTypes.DATETIME.value, True)
             ]
             self.db_connection.create_table(self.asset_type_layout_table_name, columns)
 
         if not self.db_connection.check_table_exists(self.asset_type_plugin_table_name):
             columns = [
                 # The column primary_key will be created automatically
-                Column('page_layout_id', DataTypes.INTEGER, True),
-                Column('plugin_macro', DataTypes.VARCHAR, True),
-                Column('position_in_layout', DataTypes.INTEGER, True),
-                Column('employed_columns', DataTypes.VARCHAR, True),
-                Column('created', DataTypes.VARCHAR, True)
+                Column('page_layout_id', 'page_layout_id', DataTypes.INTEGER.value, True),
+                Column('plugin_macro', 'plugin_macro', DataTypes.VARCHAR.value, True),
+                Column('position_in_layout', 'position_in_layout', DataTypes.INTEGER.value, True),
+                Column('employed_columns', 'employed_columns', DataTypes.VARCHAR.value, True),
+                Column('created', 'created', DataTypes.VARCHAR.value, True)
             ]
             self.db_connection.create_table(self.asset_type_plugin_table_name, columns)

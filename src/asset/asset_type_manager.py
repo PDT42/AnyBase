@@ -177,7 +177,7 @@ class AssetTypeManager:
             columns.append(Column(
                 name=' '.join(str_column[:-2]),
                 db_name='_'.join(str_column[:-2]),
-                datatype=DataTypes.__dict__[str_column[-2]],
+                datatype=DataTypes[str_column[-2]].value,
                 required=bool(int(str_column[-1]))
             ))
 
@@ -209,9 +209,9 @@ class AssetTypeManager:
         if not self.db_connection.check_table_exists(self._asset_types_table_name):
             columns = [
                 # The column primary_key will be created automatically
-                Column('asset_name', 'asset_name', DataTypes.VARCHAR, True),
-                Column('asset_table_name', 'asset_table_name', DataTypes.VARCHAR, True),
-                Column('asset_columns', 'asset_columns', DataTypes.VARCHAR, True)
+                Column('asset_name', 'asset_name', DataTypes.VARCHAR.value, True),
+                Column('asset_table_name', 'asset_table_name', DataTypes.VARCHAR.value, True),
+                Column('asset_columns', 'asset_columns', DataTypes.VARCHAR.value, True)
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 

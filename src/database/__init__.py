@@ -4,39 +4,35 @@
 
 This is the database package.
 """
+
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import NamedTuple
-
-from exceptions.database import DataTypeDoesNotExistException
 
 
 class DataType(NamedTuple):
     """This is a possible datatype."""
     typename: str
+    fe_name: str
     db_type: str
     convert: callable
 
 
-class DataTypes:
+class DataTypes(Enum):
     """The available data types."""
 
-    TEXT = DataType(typename='TEXT', db_type='VARCHAR', convert=str)
+    TEXT = DataType(typename='TEXT', fe_name='Text', db_type='VARCHAR', convert=str)
     VARCHAR = TEXT
-    NUMBER = DataType(typename='NUMBER', db_type='REAL', convert=float)
+    NUMBER = DataType(typename='NUMBER', fe_name='Number', db_type='REAL', convert=float)
     REAL = NUMBER
-    INTEGER = DataType(typename='INTEGER', db_type='INTEGER', convert=int)
-    DATETIME = DataType(typename='DATETIME', db_type='INTEGER', convert=datetime.utcfromtimestamp)
+    INTEGER = DataType(typename='INTEGER', fe_name='Integer', db_type='INTEGER', convert=int)
+    DATETIME = DataType(typename='DATETIME', fe_name='Date', db_type='INTEGER', convert=datetime.utcfromtimestamp)
 
-    # TODO: Add additional required types
-    # TODO: Update sqlite connection using this
-
-    @staticmethod
-    def get(type_name: str):
-        data_type = DataTypes.__dict__.get(type_name, None)
-        if data_type:
-            return data_type
-        raise DataTypeDoesNotExistException(f"The datatype {type_name} does not exist!")
+    @classmethod
+    def get_all(cls):
+        """Get all fields."""
+        return set([data_type.value for data_type in cls.__members__.values()])
 
 
 @dataclass
