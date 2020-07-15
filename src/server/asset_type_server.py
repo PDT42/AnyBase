@@ -20,6 +20,12 @@ from plugins import Plugin
 def create_asset_type():
     """This is a FlaskAppRoute that lets you create ``AssetType`` dialog."""
 
+    asset_type_manager = AssetTypeManager()
+    asset_types = {
+        asset_type.asset_name: asset_type.asset_type_id
+        for asset_type in asset_type_manager.get_all()
+    }
+
     if request.method == 'POST':
 
         asset_name = request.form.get('assetName')
@@ -28,10 +34,15 @@ def create_asset_type():
         for column_name, column_datatype, column_required in \
                 [(f'columnName_{i}', f'columnDataType_{i}', f'columnRequired_{i}') for i in range(0, 26)]:
             if column_name in request.form.keys():
+
+                datatype_str = request.form.get(column_datatype)
+
+
+
                 columns.append(Column(
                     name=request.form.get(column_name),
                     db_name=request.form.get(column_name).replace(' ', '_'),
-                    datatype=DataTypes.__dict__[request.form.get(column_datatype)],
+                    datatype=DataTypes[datatype_str].value,
                     required=request.form.get(column_required) == 'checkboxTrue'
                 ))
             else:
@@ -47,7 +58,13 @@ def create_asset_type():
 
         return redirect('/asset-types')
 
-    return render_template("create-asset-type.html")
+    data_types = DataTypes.get_all()
+
+    return render_template(
+        "create-asset-type.html",
+        data_types=data_types,
+        asset_types=asset_types
+    )
 
 
 def get_all_asset_types():
