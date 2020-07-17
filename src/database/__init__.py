@@ -31,7 +31,7 @@ class DataTypes(Enum):
 
     @classmethod
     def get_all(cls):
-        """Get all fields."""
+        """Get all distinct field values from enum."""
         return set([data_type.value for data_type in cls.__members__.values()])
 
 
