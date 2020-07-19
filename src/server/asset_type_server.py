@@ -32,7 +32,7 @@ def create_asset_type():
 
         columns: List[Column] = []
         for column_name, column_datatype, column_required in \
-                [(f'columnName_{i}', f'columnDataType_{i}', f'columnRequired_{i}') for i in range(0, 26)]:
+                [(f'columnName_{i}', f'columnDataType_{i}', f'columnRequired_{i}') for i in range(0, 15)]:
             if column_name in request.form.keys():
 
                 datatype_str = request.form.get(column_datatype)
