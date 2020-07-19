@@ -1,4 +1,4 @@
-@startuml
+@startuml anybase-classes
 
 ' Check /out/classes for a .png version of this diagram
 
@@ -20,6 +20,7 @@ class DataType {
 class Column {
     str: name
     DataType: datatype
+    asset_type: int
     bool: required
 }
 
