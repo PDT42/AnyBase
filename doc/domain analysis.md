@@ -11,12 +11,12 @@ Ein AssetType definiert die Felder eines Assets. AssetTypes müssen in einer eig
 Im AssetType wird festgehalten, wie die Tabelle heißt, in die Assets des AssetTypes gespeichert werden. Er verknüpft das Asset mit den zu ihr gehörenden PageLayouts.
 
 ## AssetTypeManager
-Der AssetTypeManager verwaltet die AssetTypes. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn können AssetTypes erstellt und verwaltet werden.
+Der AssetTypeManager verwaltet die AssetTypes. Er stellt das Interface zwischen der Datenbank und dem Backend dar. Über ihn können AssetTypes abgerufen, erstellt und verwaltet werden.
 
 ## User (?)
 Nutzer im System. Nutzer haben einen UserType, mit dem ihr Accesslevel angegeben wird. 
 
-## UserType
+## UserType (?)
 Wird an User vergeben. Vom UserType ist das Accesslevel von Nutzern abhängig.
 
 ## Plugin
@@ -29,10 +29,10 @@ Ein PageLayout ist eine bestimmte Seitenaufteilung, die der Nutzer für eine Ass
 Eine AssetPage ist die Übersichtsseite für einen bestimmten AssetType.
 
 ## AssetTypePageManager
-Der AssetTypePageManager sorgt dafür, dass im System initialisierte AssetTypes eine Route zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
+Der AssetTypePageManager sorgt dafür, dass im System initialisierte AssetTypes eine Route zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen, eine Ansicht, die dem User gezeigt wird, wenn er die Route aufruft. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
 
 ## AssetDetailPage
 Eine AssetDetailPage ist die Übersichtsseite für eine Asset eines bestimmten AssetTypes.
 
 ## AssetDetailPageManager
-Der AssetDetailPageManager sorgt dafür, dass im System initialisierte Assets eine 'Route' zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
+Der AssetDetailPageManager sorgt dafür, dass im System initialisierte Assets eine 'Route' zur Verfügung gestellt bekommen, auf der etwas zu sehen ist. Er erzeugt aus den in der Datenbank gespeicherten Nutzereinstellungen, in denen ein PageLayout enthalten sein muss, dessen mögliche Felder mit Plugins gefüllt werden, die gespeichert werden müssen, eine Ansicht, die dem User gezeigt wird, wenn er die Route aufruft. Außerdem muss der AssetTypePageManager die Funktionalität der Frontend Einstellbarkeit zur Verfügung stellen. 
