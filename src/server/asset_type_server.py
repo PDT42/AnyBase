@@ -13,6 +13,7 @@ from asset import AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
+from exceptions.asset import AssetTypeDoesNotExistException
 from pages import AssetTypePage
 from plugins import Plugin
 
