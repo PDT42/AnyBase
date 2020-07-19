@@ -41,4 +41,5 @@ class Column:
     name: str
     db_name: str
     datatype: DataType
-    required: bool
+    asset_type: int = 0
+    required: bool = False

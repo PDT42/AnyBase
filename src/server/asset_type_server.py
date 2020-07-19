@@ -35,14 +35,28 @@ def create_asset_type():
                 [(f'columnName_{i}', f'columnDataType_{i}', f'columnRequired_{i}') for i in range(0, 15)]:
             if column_name in request.form.keys():
 
+                # Get the columns datatype from the form
                 datatype_str = request.form.get(column_datatype)
 
+                # Checking if the set data type is know to the system
+                if datatype_str in DataTypes.get_all_type_names():
+                    asset_type = 0
+                    datatype = DataTypes[datatype_str].value
 
+                # If not, the only possible valid entry into this field
+                # is another asset_type -> Check if it exists
+                elif asset_type_manager.get_one(int(datatype_str)):
+                    asset_type = int(datatype_str)
+                    datatype = DataTypes.INTEGER.value
+
+                else:
+                    raise AssetTypeDoesNotExistException("The asset type you referenced does not exist!")
 
                 columns.append(Column(
                     name=request.form.get(column_name),
                     db_name=request.form.get(column_name).replace(' ', '_'),
-                    datatype=DataTypes[datatype_str].value,
+                    datatype=datatype,
+                    asset_type=asset_type,
                     required=request.form.get(column_required) == 'checkboxTrue'
                 ))
             else:

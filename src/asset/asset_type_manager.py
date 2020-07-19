@@ -172,13 +172,15 @@ class AssetTypeManager:
 
         columns: List[Column] = []
 
-        for str_column in asset_columns.split(';'):
-            str_column = str_column.split(' ')
+        for column_str in asset_columns.split(';'):
+            column_str = column_str.split(' ')
+
             columns.append(Column(
-                name=' '.join(str_column[:-2]),
-                db_name='_'.join(str_column[:-2]),
-                datatype=DataTypes[str_column[-2]].value,
-                required=bool(int(str_column[-1]))
+                name=' '.join(column_str[:-3]),
+                db_name='_'.join(column_str[:-3]),
+                datatype=DataTypes[column_str[-3]].value,
+                asset_type=int(column_str[-2]),
+                required=bool(int(column_str[-1]))
             ))
 
         return AssetType(
@@ -191,7 +193,11 @@ class AssetTypeManager:
     @staticmethod
     def generate_str_column_from_columns(columns: Sequence[Column]):
         """Generate a column str from a list of Columns."""
-        return ';'.join([f"{column.name} {column.datatype.db_type} {int(column.required)}" for column in columns])
+        return ';'.join(
+            [
+                f"{column.name} {column.datatype.db_type} {int(column.asset_type)} {int(column.required)}"
+                for column in columns
+            ])
 
     @staticmethod
     def generate_asset_table_name(asset_type: AssetType) -> str:
@@ -209,9 +215,9 @@ class AssetTypeManager:
         if not self.db_connection.check_table_exists(self._asset_types_table_name):
             columns = [
                 # The column primary_key will be created automatically
-                Column('asset_name', 'asset_name', DataTypes.VARCHAR.value, True),
-                Column('asset_table_name', 'asset_table_name', DataTypes.VARCHAR.value, True),
-                Column('asset_columns', 'asset_columns', DataTypes.VARCHAR.value, True)
+                Column('asset_name', 'asset_name', DataTypes.VARCHAR.value, required=True),
+                Column('asset_table_name', 'asset_table_name', DataTypes.VARCHAR.value, required=True),
+                Column('asset_columns', 'asset_columns', DataTypes.VARCHAR.value, required=True)
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 
