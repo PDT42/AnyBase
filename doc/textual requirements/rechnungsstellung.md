@@ -1,0 +1,4 @@
+# Dokumentenerstellung
+Ein weiterer offensichtlicher Usercase von Backoffice Anwendungen ist die Rechnungsstellung bzw. der automatische Dokumentenversand an einen oder meherere Empfänger. Die versendeten Dokumente sollten sich dabei aus den zugrunde liegenden Datensätzen automatisiert aufbauen lassen. Einmal erstellte Formate müssen sich persistieren lassen. 
+
+Dezeit ist mein Vorschlag an einen bestimmten AssetType Dokumente zu speichern, die für diesen AssetType erstellt werden können. Diese Formate müssen offensichtlich die Information enthalten, welche AssetDaten zu ihrer Erstellung benötigt werden. Beispielsweise könnte es zu einem AssetType "Kunde" das Format "Rechnung" geben, das ein Asset Requirement "Kunde" und ["Posten", ..] hat. In das erstellte Dokument werden dann die Daten des Kunden und die einzelnen Posten auf die Art und Weise eingefügt, die der Nutzer bei der Erstellung des Formats angibt. 

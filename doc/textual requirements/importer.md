@@ -1,0 +1,6 @@
+# Importer
+Ein offensichtlich wichtiges Useability Feature, wäre ein Importer, der in der Lage ist einen existierenden Datensatz in AnyBase zu importieren. Per Hand gepflegte Datensätze aus Excel Sheets, CSV oder einer Access Datenbank sind erfahrungsgemäß häufig sehr dirty. Das muss beim Import behoben werden. 
+
+!!! DIESES FEATURE IST NOCH NICHT FEASABILITY PROOFEN !!!
+
+Gehen wir zunächst von einem Datensatz aus, der in Excel also .xlsx vorliegt. Alle anderen Formen der Speicherung sollten analog zu einem solchen importierbar sein. Der Importer muss in der Laage sein, zu verifizieren, dass in einer bestimmten Zelle des Excel Sheets auch etwas steht, was zumindest in "Form und Farbe" dem entspricht, was in dieser Zelle stehen soll. Dazu muss der Importer eine "Input-Datei" analysieren können und auf dieser Basis einen AssetType vorschlagen, der dem Format entspricht (Uff). Dann sollte der Importer den vorliegenden Datensatz durchlaufen und vollständig aussehende Zeilen importieren. Mit nicht vollständigen oder scheinbar dirty Lines muss der Importer umgehen können. Vorstellbar ist, dass der User jede dieser Zeilen "angeboten" bekommt und händisch bestimmt was damit passieren soll. 
