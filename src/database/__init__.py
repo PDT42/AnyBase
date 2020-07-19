@@ -30,9 +30,14 @@ class DataTypes(Enum):
     DATETIME = DataType(typename='DATETIME', fe_name='Date', db_type='INTEGER', convert=datetime.utcfromtimestamp)
 
     @classmethod
-    def get_all(cls):
+    def get_all_data_types(cls):
         """Get all distinct field values from enum."""
         return set([data_type.value for data_type in cls.__members__.values()])
+
+    @classmethod
+    def get_all_type_names(cls):
+        """Get the names of all available data types."""
+        return cls.__members__.keys()
 
 
 @dataclass
