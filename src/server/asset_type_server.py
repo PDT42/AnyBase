@@ -72,7 +72,7 @@ def create_asset_type():
 
         return redirect('/asset-types')
 
-    data_types = DataTypes.get_all()
+    data_types = DataTypes.get_all_data_types()
 
     return render_template(
         "create-asset-type.html",
