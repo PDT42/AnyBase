@@ -8,15 +8,21 @@
         {% endfor %}
     </tr>
     </thead>
+
     <tbody>
     {% for asset in assets %}
+
     <tr>
         <th scope="row">{{ asset.asset_id|string }}</th>
+
         {% for column in columns %}
         <td>{{ asset.data[columns[column]]|string }}</td>
         {% endfor %}
+
     </tr>
+
     {% endfor %}
     </tbody>
+
 </table>
 {% endmacro %}
