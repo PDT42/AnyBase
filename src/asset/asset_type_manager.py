@@ -202,7 +202,7 @@ class AssetTypeManager:
     @staticmethod
     def generate_asset_table_name(asset_type: AssetType) -> str:
         """Generate an ``asset_table_name`` from the ``asset type``."""
-        asset_name = asset_type.asset_name.replace(' ', '_')
+        asset_name = asset_type.asset_name.replace(' ', '_').lower()
         return f"abasset_table_{asset_name}"
 
     #####################
