@@ -76,21 +76,21 @@ class TestAssetTypeManager(TestCase):
         self.asset_type_manager.create_asset_type(self.asset_type)
         all_asset_types = self.asset_type_manager.get_all()
         self.asset_type.asset_type_id = 1
-        self.asset_type.asset_table_name = 'abasset_table_TestAsset'
+        self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual([self.asset_type], all_asset_types)
 
     def test_get_one(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
         asset_type = self.asset_type_manager.get_one(1)
         self.asset_type.asset_type_id = 1
-        self.asset_type.asset_table_name = 'abasset_table_TestAsset'
+        self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual(self.asset_type, asset_type)
 
     def test__check_asset_type_consistency(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
         asset_type = self.asset_type_manager.get_one(1)
         self.asset_type.asset_type_id = 1
-        self.asset_type.asset_table_name = 'abasset_table_TestAsset'
+        self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual(self.asset_type, asset_type)
         self.db_connection.delete_table(self.asset_type.asset_table_name)
         self.assertRaises(AssetTypeInconsistencyException, self.asset_type_manager._check_asset_type_consistency)
