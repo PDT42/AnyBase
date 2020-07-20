@@ -1,0 +1,7 @@
+{% macro ui_button(action, name, text) %}
+<form action="{{ action|string }}" method="GET">
+                <button type="submit" name="{{ name|string }}" class="btn btn-block btn-dark">
+                    {{ text|string }}
+                </button>
+            </form>
+{% endmacro %}

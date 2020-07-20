@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+<div class="container">
+    <div class="row" style="margin-top:20px">
+        <div class="col-md-12">
+            <h4>Configurations</h4>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+        <div class="col-md-6">
+
+            {% for asset_type in asset_types %}
+            <a href="{{ '/asset-type/' + asset_type.asset_type_id|string }}">
+                <li class="list-group-item row" style="margin-top: 10px">
+                    <p>{{ asset_type.asset_name }}</p>
+                </li>
+            </a>
+            {% endfor %}
+
+        </div>
+
+        <div class="col-md-6">
+
+            {% from "interface_elements/basics.html" import ui_button %}
+            {{ ui_button("/asset-type/create", "Create AssetType") }}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
