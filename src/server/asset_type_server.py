@@ -71,7 +71,7 @@ def create_asset_type():
         asset_type_manager = AssetTypeManager()
         asset_type_manager.create_asset_type(new_asset_type)
 
-        return redirect('/asset-types')
+        return redirect('/configuration')
 
     data_types = DataTypes.get_all_data_types()
 
