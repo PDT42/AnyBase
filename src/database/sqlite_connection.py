@@ -73,6 +73,10 @@ class SqliteConnection(DbConnection):
         self.connection.row_factory = SqliteConnection._dict_factory
         self.cursor = self.connection.cursor()
 
+    ##########################
+    # Connection Interaction #
+    ##########################
+
     def commit(self):
         """Commit Changes."""
 
