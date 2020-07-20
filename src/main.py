@@ -5,7 +5,7 @@
 
 from flask import Flask
 
-import server
+from server import index, configuration
 from config import Config
 from server.asset_server import create_asset
 from server.asset_type_server import get_one_asset_type, get_all_asset_types, create_asset_type
@@ -17,7 +17,8 @@ template_folder = Config.get().read('frontend', 'template_folder', '/res/templat
 app = Flask(__name__, template_folder=template_folder)
 
 # Adding Routes provided in server to app
-app.add_url_rule('/', 'index', server.index, methods=['GET'])
+app.add_url_rule('/', 'index', index, methods=['GET'])
+app.add_url_rule('/configuration', 'configuration', configuration, methods=['GET'])
 
 app.add_url_rule('/asset-type/create', 'create-asset-type', create_asset_type, methods=['GET', 'POST'])
 app.add_url_rule('/asset-types', 'asset-types', get_all_asset_types, methods=['GET'])
