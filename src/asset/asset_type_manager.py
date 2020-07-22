@@ -98,11 +98,14 @@ class AssetTypeManager:
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
         """Check if ``asset_type`` with that name already exists."""
 
-        # TODO: Upper Lowercase names
+        or_filters = [f"asset_name = '{asset_type.asset_name}'"]
+        if asset_type.asset_type_id:
+            or_filters = [f"primary_key = {asset_type.asset_type_id}"]
+
         db_response = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=['primary_key', 'asset_name'],
-            or_filters=[f"asset_name = '{asset_type.asset_name}'"]
+            or_filters=or_filters
         )
 
         table_exists = self.db_connection.check_table_exists(
