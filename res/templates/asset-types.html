@@ -8,19 +8,25 @@
 <!-- Extend Block 'body' in base.html -->
 {% block body %}
 <div class="container">
-    <div class="row" style="padding-top: 35px">
+
+    <div class="row" style="margin-top: 20px">
+        <div class="col-md-12">
+            <h4>Asset Types</h4>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
         <div class="col">
-            <ul class="list-group list-group-flush">
 
                 {% for asset_type in asset_types %}
                 <a href="{{ '/asset-type/' + asset_type.asset_type_id|string }}">
-                    <li class="list-group-item row" style="margin-top: 10px">
+                    <li class="list-group-item" style="margin-top: 10px; margin-left: 0px">
                         <p>{{ asset_type.asset_name }}</p>
                     </li>
                 </a>
                 {% endfor %}
-
-            </ul>
 
         </div>
     </div>
