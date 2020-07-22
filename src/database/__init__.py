@@ -15,6 +15,7 @@ class DataType(NamedTuple):
     """This is a possible datatype."""
     typename: str
     fe_name: str
+    fe_type: str
     db_type: str
     convert: callable
 
@@ -22,12 +23,25 @@ class DataType(NamedTuple):
 class DataTypes(Enum):
     """The available data types."""
 
-    TEXT = DataType(typename='TEXT', fe_name='Text', db_type='VARCHAR', convert=str)
+    TEXT = DataType(typename='TEXT', fe_name='Text', fe_type='text', db_type='VARCHAR', convert=str)
     VARCHAR = TEXT
-    NUMBER = DataType(typename='NUMBER', fe_name='Number', db_type='REAL', convert=float)
+
+    NUMBER = DataType(typename='NUMBER', fe_name='Number', fe_type='number', db_type='REAL', convert=float)
     REAL = NUMBER
-    INTEGER = DataType(typename='INTEGER', fe_name='Integer', db_type='INTEGER', convert=int)
-    DATETIME = DataType(typename='DATETIME', fe_name='Date', db_type='INTEGER', convert=datetime.utcfromtimestamp)
+
+    INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER', convert=int)
+
+    DATETIME = DataType(
+        typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER',
+        convert=lambda dt_str: datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+    )
+
+    DATE = DataType(
+        typename='DATE', fe_name='Date', fe_type='date', db_type='INTEGER',
+        convert=lambda d_str: datetime.strptime(d_str, '%Y-%m-%d')
+    )
+
+    # --
 
     @classmethod
     def get_all_data_types(cls):

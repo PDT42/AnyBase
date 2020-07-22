@@ -21,12 +21,15 @@
 
             {% for column in asset_type.columns %}
             <div class="row" style="padding-top: 10px">
+
                 <div class="col-4">
                     <label>{{ column.name }}:</label>
                 </div>
+
                 <div class="col-8">
-                    <input type="text" class="form-control" name="{{ column.name }}">
+                    <input type="{{ column.datatype.fe_type }}" step="any" class="form-control" name="{{ column.db_name }}">
                 </div>
+
             </div>
             {% endfor %}
 
