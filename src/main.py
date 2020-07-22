@@ -25,7 +25,8 @@ app.add_url_rule('/configuration', 'configuration', configuration, methods=['GET
 
 app.add_url_rule('/asset-type/create', 'create-asset-type', create_asset_type, methods=['GET', 'POST'])
 app.add_url_rule('/asset-types', 'asset-types', get_all_asset_types, methods=['GET'])
-app.add_url_rule('/asset-type/<int:asset_type_id>', 'asset-type', get_one_asset_type, methods=['GET', 'POST'])
+app.add_url_rule('/asset-type/<int:asset_type_id>', 'asset-type', get_one_asset_type, methods=['GET'])
+app.add_url_rule('/asset-type/<int:asset_type_id>', 'delete-asset-type', delete_asset_type, methods=['POST'])
 
 app.add_url_rule('/asset-type/<int:asset_type_id>/create-asset', 'create-asset', create_asset, methods=['GET', 'POST'])
 
