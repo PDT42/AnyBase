@@ -11,5 +11,12 @@ from typing import Any, Mapping
 @dataclass
 class Plugin:
     """This is a plugin."""
+    plugin_name: str
     plugin_macro_path: str
+
+
+@dataclass
+class PluginSettings:
+    """This is as set of plugin settings."""
+    plugin: Plugin
     employed_columns: Mapping[Any, str]
