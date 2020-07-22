@@ -105,10 +105,6 @@ def get_one_asset_type(asset_type_id):
     asset_type_manager = AssetTypeManager()
     asset_type = asset_type_manager.get_one(asset_type_id)
 
-    if request.method == 'POST' and request.form.get('deleteAsset') == 'True':
-        asset_type_manager.delete_asset_type(asset_type)
-        return redirect('/asset-types')
-
     asset_manager = AssetManager()
     assets = asset_manager.get_all(asset_type)
 
@@ -121,11 +117,22 @@ def get_one_asset_type(asset_type_id):
             Plugin(
                 plugin_macro_path='plugins/list_assets_plugin.html',
                 employed_columns={
-                    0: 'Test Column 1',
-                    1: 'Test Column 2'
+                    0: 'Column 1',
+                    1: 'Column 2'
                 }
             )
         ]
     )
 
     return render_template("asset-type.html", asset_type_page=asset_type_page, assets=assets)
+
+
+def delete_asset_type(asset_type_id):
+    """Delete the ``AssetType`` with id ``asset_type_id``."""
+
+    asset_type_manager = AssetTypeManager()
+    asset_type = asset_type_manager.get_one(asset_type_id)
+
+    if request.form.get('deleteAsset') == 'True':
+        asset_type_manager.delete_asset_type(asset_type)
+        return redirect('/configuration')
