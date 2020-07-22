@@ -19,10 +19,10 @@ class TestSqliteConnection(TestCase):
 
         self.table_name = "test_table"
         self.db_columns = [
-            Column("TextColumn", "TextColumn", DataTypes.VARCHAR.value),
-            Column("NumberColumn", "NumberColumn", DataTypes.NUMBER.value)
+            Column("TextColumn", "textcolumn", DataTypes.VARCHAR.value),
+            Column("NumberColumn", "numbercolumn", DataTypes.NUMBER.value)
         ]
-        self.row_values = {"TextColumn": "TestText", "NumberColumn": 42}
+        self.row_values = {"textcolumn": "testtext", "numbercolumn": 42}
 
     def tearDown(self) -> None:
         self.db_connection.kill()
@@ -42,10 +42,10 @@ class TestSqliteConnection(TestCase):
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
         for iterator in range(0, 10):
-            self.row_values["NumberColumn"] = iterator
+            self.row_values["numbercolumn"] = iterator
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
-        self.db_connection.delete(self.table_name, [f"NumberColumn = 0"])
+        self.db_connection.delete(self.table_name, [f"numbercolumn = 0"])
         self.assertEqual(9, self.db_connection.count(self.table_name))
 
     def test_write_dict(self):
@@ -53,7 +53,7 @@ class TestSqliteConnection(TestCase):
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
         for iterator in range(0, 10):
-            self.row_values["NumberColumn"] = iterator
+            self.row_values["numbercolumn"] = iterator
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
 
@@ -63,7 +63,7 @@ class TestSqliteConnection(TestCase):
         self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(1, self.db_connection.count(self.table_name))
         self.row_values["primary_key"] = 1
-        self.row_values["TextColumn"] = "Updated Text"
+        self.row_values["textcolumn"] = "Updated Text"
         self.db_connection.update(self.table_name, self.row_values)
         self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
 
@@ -81,8 +81,8 @@ class TestSqliteConnection(TestCase):
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.assertEqual(
-            [{'cid': 0, 'name': 'TextColumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
-             {'cid': 1, 'name': 'NumberColumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+            [{'cid': 0, 'name': 'textcolumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+             {'cid': 1, 'name': 'numbercolumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
              {'cid': 2, 'name': 'primary_key', 'type': 'INTEGER', 'notnull': 0, 'dflt_value': None, 'pk': 1}],
             self.db_connection.get_table_info(self.table_name))
 
@@ -95,10 +95,10 @@ class TestSqliteConnection(TestCase):
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
         for iterator in range(0, 10):
-            self.row_values["NumberColumn"] = iterator
+            self.row_values["numbercolumn"] = iterator
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
-        self.db_connection.delete(self.table_name, [f"NumberColumn = 0"])
+        self.db_connection.delete(self.table_name, [f"numbercolumn = 0"])
         self.assertEqual(9, self.db_connection.count(self.table_name))
 
     def test_update_table_name(self):
@@ -114,8 +114,8 @@ class TestSqliteConnection(TestCase):
         self.db_columns.append(Column("appended_column", "appended_column", DataTypes.VARCHAR.value))
         self.db_connection.update_table_columns(self.table_name, self.db_columns)
         self.assertEqual(
-            [{'cid': 0, 'name': 'TextColumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
-             {'cid': 1, 'name': 'NumberColumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+            [{'cid': 0, 'name': 'textcolumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
+             {'cid': 1, 'name': 'numbercolumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
              {'cid': 2, 'name': 'appended_column', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
              {'cid': 3, 'name': 'primary_key', 'type': 'INTEGER', 'notnull': 0, 'dflt_value': None, 'pk': 1}],
             (self.db_connection.get_table_info(self.table_name)))

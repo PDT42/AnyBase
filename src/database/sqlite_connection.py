@@ -5,6 +5,7 @@
 This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
+from datetime import datetime
 from typing import Any, Mapping, Sequence
 
 from database import DataTypes
@@ -135,7 +136,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
-        query = f"SELECT {', '.join(headers)} FROM {table_name}"
+        query = f"SELECT {', '.join(headers)} FROM {table_name.replace(' ', '_')}"
 
         # Adding Filters
         if and_filters or or_filters:
@@ -188,6 +189,7 @@ class SqliteConnection(DbConnection):
         self._connect()
 
         # Get info on ``table_name`` from database
+        table_name = table_name.replace(' ', '_')
         table_info = self.get_table_info(table_name)
 
         if not self.check_table_exists(table_name):
@@ -208,6 +210,9 @@ class SqliteConnection(DbConnection):
 
             if isinstance(values[column_name], str):
                 query = f'''{query}"{column_type.convert(values[column_name])}", '''
+            elif isinstance(values[column_name], datetime):
+                timestamp = int(values[column_name].timestamp())
+                query = f'''{query}"{timestamp}", '''
             else:
                 query = f'''{query}{column_type.convert(values[column_name])}, '''
 
@@ -224,6 +229,8 @@ class SqliteConnection(DbConnection):
 
         # Initialize connection
         self._connect()
+
+        table_name = table_name.replace(' ', '_')
 
         if not self.check_table_exists(table_name):
             raise TableDoesNotExistException(f"Table {table_name} does not exist!")
@@ -242,6 +249,9 @@ class SqliteConnection(DbConnection):
 
             if isinstance(values[column_name], str):
                 query += f'{column_name} = "{data_type.convert(values[column_name])}", '
+            elif isinstance(values[column_name], datetime):
+                timestamp = int(values[column_name].timestamp())
+                query += f'''{query}"{timestamp}", '''
             else:
                 query += f'{column_name} = {data_type.convert(values[column_name])}, '
 
@@ -257,6 +267,8 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
+        table_name = table_name.replace(' ', '_')
+
         if not self.check_table_exists(table_name):
             raise TableDoesNotExistException(f"Table {table_name} does not exist!")
 
@@ -271,6 +283,8 @@ class SqliteConnection(DbConnection):
 
         # Initialize connection
         self._connect()
+
+        table_name = table_name.replace(' ', '_')
 
         # Making sure table exists
         if not self.check_table_exists(table_name):
@@ -311,7 +325,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
-        query = f"CREATE TABLE IF NOT EXISTS {table_name} ("
+        query = f"CREATE TABLE IF NOT EXISTS {table_name.replace(' ', '_')} ("
 
         for column in columns:
 
@@ -337,7 +351,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"DROP TABLE {table_name}"
+        query = f"DROP TABLE {table_name.replace(' ', '_')}"
 
         # If a table doesn't exist, we can't delete it
         try:
@@ -351,7 +365,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"PRAGMA table_info('{table_name}')"
+        query = f"PRAGMA table_info('{table_name.replace(' ', '_')}')"
         self.cursor.execute(query)
 
         result = sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
@@ -363,7 +377,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name.replace(' ', '_')}'"
         self.cursor.execute(query)
 
         result = bool(self.cursor.fetchall()[0]['exists'])
@@ -375,7 +389,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"SELECT COUNT(*) FROM {table_name}"
+        query = f"SELECT COUNT(*) FROM {table_name.replace(' ', '_')}"
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()[0]['COUNT(*)']

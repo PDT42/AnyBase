@@ -27,14 +27,14 @@ class TestAssetManager(TestCase):
         self.asset_type = AssetType(
             'TestAsset',
             [
-                Column('TestText', 'TestText', DataTypes.VARCHAR.value, required=True),
-                Column('TestNumber', 'TestNumber', DataTypes.NUMBER.value, required=True)
+                Column('TestText', 'testtext', DataTypes.VARCHAR.value, required=True),
+                Column('TestNumber', 'testnumber', DataTypes.NUMBER.value, required=True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
         self.asset_type = self.asset_type_manager.get_one(1)
 
         self.test_asset = Asset(
-            asset_id=None, data={"TestText": "Test Asset Test", "TestNumber": 5}
+            asset_id=None, data={"testtext": "Test Asset Test", "testnumber": 5}
         )
 
     def tearDown(self) -> None:
@@ -77,8 +77,8 @@ class TestAssetManager(TestCase):
         asset = self.asset_manager.get_one(1, self.asset_type)
 
         # Updating data
-        asset.data["TestText"] = "Updated Text"
-        self.test_asset.data["TestText"] = "Updated Text"
+        asset.data["testtext"] = "Updated Text"
+        self.test_asset.data["testtext"] = "Updated Text"
 
         # Writing changes to database
         self.asset_manager.update_asset(self.asset_type, asset)
@@ -92,7 +92,7 @@ class TestAssetManager(TestCase):
 
         # Creating 10 assets in the database
         for iterator in range(0, 10):
-            self.test_asset.data["TestNumber"] = iterator
+            self.test_asset.data["testnumber"] = iterator
             self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         # Check if 10 assets exist in the database

@@ -177,7 +177,7 @@ class AssetTypeManager:
 
             columns.append(Column(
                 name=' '.join(column_str[:-3]),
-                db_name='_'.join(column_str[:-3]),
+                db_name='_'.join(column_str[:-3]).lower(),
                 datatype=DataTypes[column_str[-3]].value,
                 asset_type=int(column_str[-2]),
                 required=bool(int(column_str[-1]))
@@ -195,7 +195,7 @@ class AssetTypeManager:
         """Generate a column str from a list of Columns."""
         return ';'.join(
             [
-                f"{column.name} {column.datatype.db_type} {int(column.asset_type)} {int(column.required)}"
+                f"{column.name} {column.datatype.typename} {int(column.asset_type)} {int(column.required)}"
                 for column in columns
             ])
 

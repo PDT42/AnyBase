@@ -27,16 +27,17 @@ def create_asset(asset_type_id: int):
         for column in asset_type.columns:
 
             # Column is missing in form but is required
-            if column.required and column.name not in request.form.keys():
+            if column.required and column.db_name not in request.form.keys():
                 return 1  # TODO: Validation
 
             # Column is missing and isn't required
-            elif not column.required and column.name not in request.form.keys():
+            elif not column.required and column.db_name not in request.form.keys():
                 continue
 
             # Column is present
             else:
-                asset_data[column.name] = column.datatype.convert(request.form[column.name])
+                # TODO: Validate input
+                asset_data[column.db_name] = column.datatype.convert(request.form[column.db_name])
 
         asset = Asset(asset_id=None, data=asset_data)
         asset_manager.create_asset(asset_type, asset)

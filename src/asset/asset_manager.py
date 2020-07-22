@@ -2,7 +2,7 @@
 :Author: PDT
 :Since: 2020/05/28
 
-This is the the module for the resource manager.
+This is the the module for the AssetManager.
 """
 from typing import Any, MutableMapping, Optional, Sequence
 
@@ -32,7 +32,7 @@ class AssetManager:
         values = {'primary_key': None}
 
         for column in asset_type.columns:
-            values.update({column.db_name: asset.data[column.name]})
+            values.update({column.db_name: asset.data[column.db_name]})
 
         self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
@@ -72,7 +72,7 @@ class AssetManager:
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.name.replace(' ', '_') for column in asset_type.columns])
+            [column.db_name for column in asset_type.columns])
 
         assets = []
         for asset_row in result:
@@ -88,7 +88,7 @@ class AssetManager:
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=[column.name for column in asset_type.columns],
+            headers=[column.db_name for column in asset_type.columns],
             and_filters=[f'primary_key = {asset_id}']
         )
 
@@ -112,6 +112,6 @@ class AssetManager:
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
 
-        data: MutableMapping[str, Any] = {column.name: row[column.db_name] for column in columns}
+        data: MutableMapping[str, Any] = {column.db_name: row[column.db_name] for column in columns}
 
         return data

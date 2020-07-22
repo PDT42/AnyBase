@@ -50,15 +50,23 @@ def create_asset_type():
                     asset_type = int(datatype_str)
                     datatype = DataTypes.INTEGER.value
 
+                # If the datatype is unknown an exception is raised
+                # this should never be the case, since the drop down
+                # menu of available data types is filled from the BE
                 else:
-                    raise AssetTypeDoesNotExistException("The asset type you referenced does not exist!")
+                    raise AssetTypeDoesNotExistException("The data type you referenced does not exist!")
+
+                column_name = request.form.get(column_name)
+                column_db_name = column_name.replace(' ', '_').lower()
+
+                required = request.form.get(column_required) == 'checkboxTrue'
 
                 columns.append(Column(
-                    name=request.form.get(column_name),
-                    db_name=request.form.get(column_name).replace(' ', '_'),
+                    name=column_name,
+                    db_name=column_db_name,
                     datatype=datatype,
                     asset_type=asset_type,
-                    required=request.form.get(column_required) == 'checkboxTrue'
+                    required=required
                 ))
             else:
                 break
