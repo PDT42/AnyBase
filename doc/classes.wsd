@@ -62,14 +62,14 @@ class AssetManager  {
 ' Layouts and Pages
 ' #################
 
-interface Plugin {
+interface PluginSettings {
     str: plugin_macro_path
     Mapping: columns
 }
 
 abstract class PageLayout {
     format
-    Plugin[]: plugins
+    PluginSettings[]: plugins
 }
 
 class AssetTypePage {
@@ -146,7 +146,7 @@ AssetTypePage --|> PageLayout
 AssetPage --|> PageLayout
 Asset --o AssetTypePage
 
-Plugin --o PageLayout
+PluginSettings --o PageLayout
 
 DbConnection .> database
 DbConnection --o AssetManager
