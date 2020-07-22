@@ -1,11 +1,11 @@
-{% macro layout_macro(assets, plugins) %}
+{% macro layout_macro(assets, plugin_settings) %}
 <div class="row">
     <div class="col-sm">
 
-        {% for plugin in plugins %}
+        {% for setting in plugin_settings %}
 
-        {% from plugin.plugin_macro_path import plugin_macro %}
-        {{ plugin_macro(assets, plugin.employed_columns) }}
+        {% from setting.plugin.plugin_macro_path import plugin_macro %}
+        {{ plugin_macro(assets, setting.employed_columns) }}
 
         {% endfor %}
 

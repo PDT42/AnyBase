@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Sequence
 
 from asset import Asset, AssetType
-from plugins import Plugin
+from plugins import PluginSettings
 
 
 @dataclass
@@ -18,7 +18,7 @@ class PageLayout:
     """This is a ``PageLayout``."""
     number_of_fields: int
     layout_macro_path: str
-    plugins: Sequence[Plugin]  # TODO: Make this a Mapping?
+    plugin_settings: Sequence[PluginSettings]
 
 
 class LayoutMacros(Enum):

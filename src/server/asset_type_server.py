@@ -15,7 +15,7 @@ from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from pages import AssetTypePage
-from plugins import Plugin
+from plugins import Plugin, PluginSettings
 
 
 def create_asset_type():
@@ -111,11 +111,11 @@ def get_one_asset_type(asset_type_id):
     asset_type_page = AssetTypePage(
         asset_type=asset_type,
         assets=assets,
-        number_of_fields=1,  # TODO: implement some kind of validation for this
+        number_of_fields=1,
         layout_macro_path='layouts/one_one_layout.html',
-        plugins=[
-            Plugin(
-                plugin_macro_path='plugins/list_assets_plugin.html',
+        plugin_settings=[
+            PluginSettings(
+                plugin=Plugin('list_assets', 'plugins/list_assets_plugin.html'),
                 employed_columns={
                     0: 'Column 1',
                     1: 'Column 2'
