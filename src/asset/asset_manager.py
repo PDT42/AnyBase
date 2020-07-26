@@ -4,18 +4,27 @@
 
 This is the the module for the AssetManager.
 """
-from typing import Any, MutableMapping, Optional, Sequence
+
+from typing import Any, List, MutableMapping, Optional, Sequence
 
 from asset import Asset, AssetType
+from asset.abstract_asset_manager import AAssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeDoesNotExistException
+from exceptions.common import KeyConstraintException
 
 
-class AssetManager:
+class AssetManager(AAssetManager):
     """This is the ``AssetManager``."""
+
+    # TODO: Make this a singleton? Might be necessary for db concurrency.
+
+    # Required fields
+    asset_type_manager: AssetTypeManager = None
+    db_connection: DbConnection = None
 
     def __init__(self):
         """Create a new ``AssetManager``."""
@@ -64,7 +73,7 @@ class AssetManager:
 
         self.db_connection.update(asset_type.asset_table_name, asset.data)
 
-    def get_all(self, asset_type: AssetType) -> Sequence[Asset]:
+    def get_all(self, asset_type: AssetType) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -94,6 +103,12 @@ class AssetManager:
 
         if len(result) < 1:
             return None
+
+        if len(result) > 1:
+            raise KeyConstraintException(
+                "There is a real big problem here! Real biggy - trust me." +
+                "The primary key constraint is broken!"
+            )
 
         asset = Asset(
             asset_id=result[0].pop('primary_key'),
