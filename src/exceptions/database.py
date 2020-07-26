@@ -16,3 +16,7 @@ class TableAlreadyExistsException(Exception):
 
 class DataTypeDoesNotExistException(Exception):
     pass
+
+
+class MissingValueException(Exception):
+    pass
