@@ -4,17 +4,28 @@
 
 This is the module for the AssetTypeManager.
 """
+
 from typing import Any, List, Mapping, Optional, Sequence
 
 from asset import AssetType
+from asset.abstract_asset_type_manager import AAssetTypeManager
 from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
+from exceptions.common import KeyConstraintException
 
 
-class AssetTypeManager:
+class AssetTypeManager(AAssetTypeManager):
     """This is the ``AssetTypeManager``."""
+
+    # TODO: Make this a singleton? Might be necessary for db concurrency.
+
+    # Required fields
+    db_connection: DbConnection = None
+
+    _asset_headers: Sequence[str] = None
+    _asset_types_table_name: str = None
 
     def __init__(self):
         """Create a new ``AssetTypeManager``."""
@@ -22,9 +33,9 @@ class AssetTypeManager:
         self._asset_headers = ['asset_name', 'asset_columns', 'asset_table_name', 'primary_key']
         self._asset_types_table_name = 'abintern_asset_types'
 
-        self.db_connection: DbConnection = SqliteConnection.get()
+        self.db_connection = SqliteConnection.get()
 
-    def create_asset_type(self, asset_type: AssetType):
+    def create_asset_type(self, asset_type: AssetType) -> None:
         """Create a new ``asset_type`` in the asset type registry."""
 
         # Ensuring the table to store the asset types in exists
@@ -40,7 +51,7 @@ class AssetTypeManager:
             'primary_key': asset_type.asset_type_id,
             'asset_name': asset_type.asset_name,
             'asset_table_name': asset_table_name,
-            'asset_columns': self.generate_str_column_from_columns(asset_type.columns)
+            'asset_columns': self._generate_str_column_from_columns(asset_type.columns)
         }
 
         # Storing the type information in the appropriate table
@@ -50,14 +61,14 @@ class AssetTypeManager:
         self.db_connection.create_table(asset_table_name, asset_type.columns)
         self.db_connection.commit()
 
-    def delete_asset_type(self, asset_type: AssetType):
+    def delete_asset_type(self, asset_type: AssetType) -> None:
         """Delete ``asset_type`` and all it's assets from the system."""
 
         self.db_connection.delete(self._asset_types_table_name, [f"primary_key = {asset_type.asset_type_id}"])
         self.db_connection.delete_table(self.generate_asset_table_name(asset_type))
         self.db_connection.commit()
 
-    def update_asset_type(self, asset_type: AssetType):
+    def update_asset_type(self, asset_type: AssetType) -> None:
         """Update an ``asset_type`` in the database."""
 
         # Making sure one is not trying to update an asset type without an id
@@ -91,7 +102,7 @@ class AssetTypeManager:
             'primary_key': asset_type.asset_type_id,
             'asset_name': asset_type.asset_name,
             'asset_table_name': updated_table_name,
-            'asset_columns': self.generate_str_column_from_columns(asset_type.columns)
+            'asset_columns': self._generate_str_column_from_columns(asset_type.columns)
         }
         self.db_connection.update(self._asset_types_table_name, values)
 
@@ -112,7 +123,7 @@ class AssetTypeManager:
             AssetTypeManager.generate_asset_table_name(asset_type))
         return bool(db_response) and table_exists
 
-    def get_all(self) -> Sequence[AssetType]:
+    def get_all(self) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
 
         # Ensuring the table to store the asset types in exists
@@ -126,7 +137,7 @@ class AssetTypeManager:
 
         assets_types = []
         for asset_type_row in result:
-            assets_types.append(self.generate_asset_type_from_str(
+            assets_types.append(self._generate_asset_type_from_str(
                 asset_name=asset_type_row['asset_name'],
                 asset_columns=asset_type_row['asset_columns'],
                 asset_table_name=asset_type_row['asset_table_name'],
@@ -151,7 +162,13 @@ class AssetTypeManager:
         if len(result) < 1:
             return None
 
-        asset_type = self.generate_asset_type_from_str(
+        if len(result) > 1:
+            raise KeyConstraintException(
+                "There is a real big problem here! Real biggy - trust me." +
+                "The primary key constraint is broken!"
+            )
+
+        asset_type = self._generate_asset_type_from_str(
             asset_name=result[0]['asset_name'],
             asset_columns=result[0]['asset_columns'],
             asset_table_name=result[0]['asset_table_name'],
@@ -165,12 +182,12 @@ class AssetTypeManager:
     ######################
 
     @staticmethod
-    def generate_asset_type_from_str(
+    def _generate_asset_type_from_str(
             asset_type_id: int,
             asset_name: str,
             asset_table_name: str,
             asset_columns: str
-    ):
+    ) -> AssetType:
         """Create a ``AssetType`` object from parameters."""
 
         columns: List[Column] = []
@@ -194,7 +211,7 @@ class AssetTypeManager:
         )
 
     @staticmethod
-    def generate_str_column_from_columns(columns: Sequence[Column]):
+    def _generate_str_column_from_columns(columns: Sequence[Column]) -> str:
         """Generate a column str from a list of Columns."""
         return ';'.join(
             [
@@ -202,17 +219,11 @@ class AssetTypeManager:
                 for column in columns
             ])
 
-    @staticmethod
-    def generate_asset_table_name(asset_type: AssetType) -> str:
-        """Generate an ``asset_table_name`` from the ``asset type``."""
-        asset_name = asset_type.asset_name.replace(' ', '_').lower()
-        return f"abasset_table_{asset_name}"
-
     #####################
     #  PRIVATE METHODS  #
     #####################
 
-    def _init_asset_types_table(self):
+    def _init_asset_types_table(self) -> None:
         """Initialize the required table ``abintern_asset_types``."""
 
         if not self.db_connection.check_table_exists(self._asset_types_table_name):
@@ -224,7 +235,7 @@ class AssetTypeManager:
             ]
             self.db_connection.create_table(self._asset_types_table_name, columns)
 
-    def _check_asset_type_consistency(self):
+    def _check_asset_type_consistency(self) -> None:
         """Check if a database table exists for all the AssetTypes
         stored in ``abintern_asset_types``."""
 
