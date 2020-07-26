@@ -38,11 +38,51 @@ class AAssetTypeManager:
         pass
 
     @staticmethod
+    def generate_column_str_from_columns(columns: Sequence[Column]) -> str:
+        """Generate a column str from a list of Columns. This method
+        is part of the abstract asset type manager, to ensure
+        interoperability of different implementations of asset type
+        managers. The way an asset type store the columns of an asset
+        is a basic concept of the software and should be the same
+        everywhere."""
+
+        column_str: str = ';'.join([
+            f"{column.name} {column.datatype.typename} " +
+            f"{int(column.asset_type)} " +
+            f"{int(column.required)}"
+            for column in columns
+        ])
+
+        return column_str
+
+    @staticmethod
+    def generate_columns_from_columns_str(column_str: str) -> List[Column]:
+        """Create a ``AssetType`` object from parameters. This function
+        is part of the abstract asset type manager for the same reasons
+        as for generate_str_column_from_columns. This it's counterpart.
+        """
+
+        columns: List[Column] = []
+
+        for column_str in column_str.split(';'):
+            column_str = column_str.split(' ')
+
+            columns.append(Column(
+                name=' '.join(column_str[:-3]),
+                db_name='_'.join(column_str[:-3]).lower(),
+                datatype=DataTypes[column_str[-3]].value,
+                asset_type=int(column_str[-2]),
+                required=bool(int(column_str[-1]))
+            ))
+
+        return columns
+
+    @staticmethod
     def generate_asset_table_name(asset_type: AssetType) -> str:
         """Generate an ``asset_table_name`` from the ``asset type``.
         This method is part of the abstract asset type manager, to
         ensure, that future implementations still support the same
         naming convention."""
 
-        asset_name = asset_type.asset_name.replace(' ', '_').lower()
-        return f"abasset_table_{asset_name}"
+        asset_table_name = f"abasset_table_{asset_type.asset_name.replace(' ', '_').lower()}"
+        return asset_table_name
