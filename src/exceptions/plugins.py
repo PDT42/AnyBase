@@ -6,5 +6,3 @@ These are exceptions used in the plugins package.
 """
 
 
-class KeyConstraintException(Exception):
-    pass

@@ -11,7 +11,7 @@ from typing import Any, List, Mapping, Optional, Sequence
 from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.plugins import KeyConstraintException
+from exceptions.common import KeyConstraintException
 from plugins import Plugin
 
 

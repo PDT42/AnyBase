@@ -8,3 +8,7 @@ These are exceptions common throughout the whole project.
 
 class IllegalStateException(Exception):
     pass
+
+
+class KeyConstraintException(Exception):
+    pass
