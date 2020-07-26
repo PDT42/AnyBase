@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import List, Optional
 
 from asset import AssetType
 
@@ -7,32 +8,32 @@ class AAssetTypeManager:
     """This is the abstract class for AssetTypeManagers."""
 
     @abstractmethod
-    def create_asset_type(self, asset_type):
+    def create_asset_type(self, asset_type: AssetType) -> None:
         """Create a new ``asset_type`` in the asset type registry."""
         pass
 
     @abstractmethod
-    def delete_asset_type(self, asset_type):
+    def delete_asset_type(self, asset_type: AssetType) -> None:
         """Delete ``asset_type`` and all it's assets from the system."""
         pass
 
     @abstractmethod
-    def update_asset_type(self, asset_type):
+    def update_asset_type(self, asset_type: AssetType) -> None:
         """Update an ``asset_type`` in the database."""
         pass
 
     @abstractmethod
-    def check_asset_type_exists(self, asset_type):
+    def check_asset_type_exists(self, asset_type: AssetType) -> bool:
         """Check if ``asset_type`` with that name already exists."""
         pass
 
     @abstractmethod
-    def get_all(self):
+    def get_all(self) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
         pass
 
     @abstractmethod
-    def get_one(self, asset_type_id):
+    def get_one(self, asset_type_id: int) -> Optional[AssetType]:
         """Get the ``AssetType`` with id ``asset_type_id``."""
         pass
 
