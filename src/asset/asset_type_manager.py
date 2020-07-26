@@ -56,7 +56,7 @@ class AssetTypeManager(AAssetTypeManager):
             'primary_key': asset_type.asset_type_id,
             'asset_name': asset_type.asset_name,
             'asset_table_name': asset_table_name,
-            'asset_columns': self._generate_str_column_from_columns(asset_type.columns)
+            'asset_columns': self.generate_column_str_from_columns(asset_type.columns)
         }
 
         # Storing the type information in the appropriate table
@@ -69,6 +69,9 @@ class AssetTypeManager(AAssetTypeManager):
     def delete_asset_type(self, asset_type: AssetType) -> None:
         """Delete ``asset_type`` and all it's assets from the system."""
 
+        # Ensuring the table to delete the asset types from exists
+        self._init_asset_types_table()
+
         self.db_connection.delete(self._asset_types_table_name, [f"primary_key = {asset_type.asset_type_id}"])
         self.db_connection.delete_table(self.generate_asset_table_name(asset_type))
         self.db_connection.commit()
@@ -80,7 +83,7 @@ class AssetTypeManager(AAssetTypeManager):
         if not asset_type.asset_type_id:
             raise AttributeError("The asset_type_id parameter of an asset type you are trying to update must exist!")
 
-        # Ensuring the table, to store the asset types in, exists
+        # Ensuring the table, to update the asset types in exists
         self._init_asset_types_table()
 
         # getting the old asset type from the database
@@ -107,12 +110,15 @@ class AssetTypeManager(AAssetTypeManager):
             'primary_key': asset_type.asset_type_id,
             'asset_name': asset_type.asset_name,
             'asset_table_name': updated_table_name,
-            'asset_columns': self._generate_str_column_from_columns(asset_type.columns)
+            'asset_columns': self.generate_column_str_from_columns(asset_type.columns),
         }
         self.db_connection.update(self._asset_types_table_name, values)
 
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
         """Check if ``asset_type`` with that name already exists."""
+
+        # Making sure we aren't wandering blindly into the night
+        self._init_asset_types_table()
 
         or_filters = [f"asset_name = '{asset_type.asset_name}'"]
         if asset_type.asset_type_id:
@@ -131,7 +137,7 @@ class AssetTypeManager(AAssetTypeManager):
     def get_all(self) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
 
-        # Ensuring the table to store the asset types in exists
+        # Ensuring the table to get asset types from exists
         self._init_asset_types_table()
 
         # Reading asset types from the database
@@ -142,10 +148,10 @@ class AssetTypeManager(AAssetTypeManager):
 
         assets_types = []
         for asset_type_row in result:
-            assets_types.append(self._generate_asset_type_from_str(
+            assets_types.append(AssetType(
                 asset_name=asset_type_row['asset_name'],
-                asset_columns=asset_type_row['asset_columns'],
-                asset_table_name=asset_type_row['asset_table_name'],
+                columns=self.generate_columns_from_columns_str(asset_type_row['asset_columns']),
+                asset_table_name=asset_type_row.get('asset_table_name', None),
                 asset_type_id=asset_type_row['primary_key']
             ))
 
@@ -154,7 +160,7 @@ class AssetTypeManager(AAssetTypeManager):
     def get_one(self, asset_type_id: int) -> Optional[AssetType]:
         """Get the ``AssetType`` with id ``asset_type_id``."""
 
-        # Ensuring the table to store the asset types in exists
+        # Ensuring the table to get asset types from exists
         self._init_asset_types_table()
 
         # Reading asset types from the database
@@ -173,56 +179,14 @@ class AssetTypeManager(AAssetTypeManager):
                 "The primary key constraint is broken!"
             )
 
-        asset_type = self._generate_asset_type_from_str(
+        asset_type = AssetType(
             asset_name=result[0]['asset_name'],
-            asset_columns=result[0]['asset_columns'],
-            asset_table_name=result[0]['asset_table_name'],
+            columns=self.generate_columns_from_columns_str(result[0]['asset_columns']),
+            asset_table_name=result[0].get('asset_table_name', None),
             asset_type_id=result[0]['primary_key']
         )
 
         return asset_type
-
-    ######################
-    #   STATIC METHODS   #
-    ######################
-
-    @staticmethod
-    def _generate_asset_type_from_str(
-            asset_type_id: int,
-            asset_name: str,
-            asset_table_name: str,
-            asset_columns: str
-    ) -> AssetType:
-        """Create a ``AssetType`` object from parameters."""
-
-        columns: List[Column] = []
-
-        for column_str in asset_columns.split(';'):
-            column_str = column_str.split(' ')
-
-            columns.append(Column(
-                name=' '.join(column_str[:-3]),
-                db_name='_'.join(column_str[:-3]).lower(),
-                datatype=DataTypes[column_str[-3]].value,
-                asset_type=int(column_str[-2]),
-                required=bool(int(column_str[-1]))
-            ))
-
-        return AssetType(
-            asset_type_id=asset_type_id,
-            asset_name=asset_name,
-            asset_table_name=asset_table_name,
-            columns=columns
-        )
-
-    @staticmethod
-    def _generate_str_column_from_columns(columns: Sequence[Column]) -> str:
-        """Generate a column str from a list of Columns."""
-        return ';'.join(
-            [
-                f"{column.name} {column.datatype.typename} {int(column.asset_type)} {int(column.required)}"
-                for column in columns
-            ])
 
     #####################
     #  PRIVATE METHODS  #
