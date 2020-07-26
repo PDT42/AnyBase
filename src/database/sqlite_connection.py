@@ -120,13 +120,12 @@ class SqliteConnection(DbConnection):
             offset: int = None,
             limit: int = None
     ) -> Sequence[Mapping[str, Any]]:
-        """Read from database ``table`` calls ``table_name.
+        """Read headers from database ``table`` called ``table_name``.
 
-        This will read all ``headers`` from ``table_name`` combining the
-        ``and_filter`` and the ``or_filters`` in the query it runs on the
+        This will read all ``headers`` from ``table_name`` adding the
+        ``and_filters`` and the ``or_filters`` to the query it runs on the
         database and using ``offset`` and ``limit`` in the way the names
-        suggest.
-        """
+        suggest."""
 
         # Initialize connection
         self._connect()
@@ -182,7 +181,7 @@ class SqliteConnection(DbConnection):
     def write_dict(
             self, table_name: str,
             values: Mapping[str, Any]
-    ):
+    ) -> int:
         """Write ``values`` to ``table_name``."""
 
         # Initialize connection
