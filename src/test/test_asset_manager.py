@@ -21,6 +21,8 @@ class TestAssetManager(TestCase):
     def setUp(self) -> None:
         """Set up before tests."""
         self.tempdir, self.db_connection = init_test_db()
+        # print(f"Tempdir used in this tests: {self.tempdir}")
+
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
         self.asset_manager: AssetManager = AssetManager()
 

@@ -12,6 +12,8 @@ class TestAssetTypeManager(TestCase):
 
     def setUp(self) -> None:
         self.tempdir, self.db_connection = init_test_db()
+        # print(f"Tempdir used in this tests: {self.tempdir}")
+
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
         self.asset_type = AssetType(
