@@ -1,7 +1,20 @@
+"""
+:Author: PDT
+:Since: 2020/07/26
+
+This is the abstract implementation of an asset type manager. It is
+to be thought of as a template for what an asset type manager should
+look like. It also sets some standards of what such a manager must
+be capable of for it to be operated by the system and what certain
+infrastructural parts should be formed like, in order to maintain
+interoperability.
+"""
+
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from asset import AssetType
+from database import Column, DataTypes
 
 
 class AAssetTypeManager:
