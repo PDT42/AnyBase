@@ -97,10 +97,12 @@ class AssetTypeManager(AAssetTypeManager):
         # Ensuring the table, to update the asset types in exists
         self._init_asset_types_table()
 
-        # getting the old asset type from the database
+        # Getting the old asset type from the database
         db_asset_type = self.get_one(asset_type.asset_type_id)
 
+        # Generating the updated table name
         updated_table_name = self.generate_asset_table_name(asset_type)
+
         # Updating the "abasset.." tables name
         if db_asset_type.asset_name != asset_type.asset_name:
 
