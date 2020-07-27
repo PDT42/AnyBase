@@ -18,6 +18,7 @@ class AssetType:
     columns: List[Column]
     asset_table_name: str = None
     asset_type_id: int = None
+    is_subtype: bool = False
 
 
 @dataclass
