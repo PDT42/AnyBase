@@ -31,6 +31,8 @@ class DataTypes(Enum):
 
     INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER', convert=int)
 
+    BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER', convert=int)
+
     DATETIME = DataType(
         typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER',
         convert=lambda dt_str: datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
