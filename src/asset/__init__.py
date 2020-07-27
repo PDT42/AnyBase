@@ -24,5 +24,5 @@ class AssetType:
 class Asset:
     """This is an ``Asset``."""
 
-    asset_id: Optional[int]
     data: MutableMapping[Any, Any]
+    asset_id: Optional[int] = None
