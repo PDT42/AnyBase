@@ -4,7 +4,7 @@
 
 This is the module for the AssetTypeManager.
 """
-
+import warnings
 from typing import Any, List, Mapping, Optional, Sequence
 
 from asset import AssetType
@@ -155,14 +155,59 @@ class AssetTypeManager(AAssetTypeManager):
         # Reading asset types from the database
         result: Sequence[Mapping[str, Any]] = self.db_connection.read(
             table_name=self._asset_types_table_name,
-            headers=self._asset_headers
+            headers=self._asset_headers,
         )
+
+        return self._convert_result_to_asset_types(result)
+
+    def get_all_filtered(
+            self, and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None) \
+            -> List[AssetType]:
+        """Get all ``AssetTypes`` for which the given filters apply."""
+
+        if not and_filters and not or_filters:
+            warnings.warn("Call to 'get_all_filtered()' without any filters. Use 'get_all()'!")
+            return self.get_all()
+
+        # Ensuring the table to get asset types from exists
+        self._init_asset_types_table()
+
+        # Reading asset types from the database
+        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+            table_name=self._asset_types_table_name,
+            headers=self._asset_headers,
+            and_filters=and_filters,
+            or_filters=or_filters
+        )
+
+        return self._convert_result_to_asset_types(result)
+
+    def get_batch(self, offset: int, limit: int):
+        """Get a batch of ``AssetTypes`` from offset until limit."""
+
+        # Ensuring the table to get asset types from exists
+        self._init_asset_types_table()
+
+        # Reading asset types from the database
+        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+            table_name=self._asset_types_table_name,
+            headers=self._asset_headers,
+            limit=limit,
+            offset=offset
+        )
+
+        return self._convert_result_to_asset_types(result)
+
+    @staticmethod
+    def _convert_result_to_asset_types(result):
+        """Convert a db result to a list of AssetTypes."""
 
         assets_types = []
         for asset_type_row in result:
             assets_types.append(AssetType(
                 asset_name=asset_type_row['asset_name'],
-                columns=self.generate_columns_from_columns_str(asset_type_row['asset_columns']),
+                columns=AssetTypeManager.generate_columns_from_columns_str(asset_type_row['asset_columns']),
                 asset_table_name=asset_type_row.get('asset_table_name', None),
                 asset_type_id=asset_type_row['primary_key']
             ))
@@ -170,7 +215,7 @@ class AssetTypeManager(AAssetTypeManager):
         return assets_types
 
     def get_one(self, asset_type_id: int) -> Optional[AssetType]:
-        """Get the ``AssetType`` with id ``asset_type_id``."""
+        """Get the ``AssetType`` with ident ``asset_type_id``."""
 
         # Ensuring the table to get asset types from exists
         self._init_asset_types_table()

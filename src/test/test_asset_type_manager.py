@@ -1,3 +1,4 @@
+from copy import deepcopy
 from shutil import rmtree
 from unittest import TestCase
 
@@ -80,6 +81,44 @@ class TestAssetTypeManager(TestCase):
         self.asset_type.asset_type_id = 1
         self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual([self.asset_type], all_asset_types)
+
+    def test_get_all_filtered(self):
+
+        self.create_twenty_samples()
+        self.assertEqual(20, len(self.asset_type_manager.get_all()))
+
+        and_filters = ["is_subtype = 1"]
+        self.assertEqual(10, len(self.asset_type_manager.get_all_filtered(and_filters=and_filters)))
+
+        or_filters = [f'asset_name = "{self.asset_type.asset_name}_0"']
+
+        asset_names = ", ".join([f'"{self.asset_type.asset_name}_{i}"' for i in range(4, 12)])
+        or_filters.append(f'asset_name in ({asset_names})')
+        self.assertEqual(9, len(self.asset_type_manager.get_all_filtered(or_filters=or_filters)))
+
+    def test_get_batch(self):
+
+        self.create_twenty_samples()
+        self.assertEqual(20, len(self.asset_type_manager.get_all()))
+
+        asset_types = self.asset_type_manager.get_batch(10, 20)
+        self.assertEqual(10, len(asset_types))
+        self.assertEqual(11, asset_types[0].asset_type_id)
+
+    def create_twenty_samples(self):
+
+        for iterator in range(0, 10):
+            asset_type = deepcopy(self.asset_type)
+            asset_type.asset_name = f"{asset_type.asset_name}_{iterator}"
+            self.asset_type_manager.create_asset_type(asset_type)
+
+        self.assertEqual(10, len(self.asset_type_manager.get_all()))
+
+        for iterator in range(10, 20):
+            asset_type = deepcopy(self.asset_type)
+            asset_type.asset_name = f"{asset_type.asset_name}_{iterator}"
+            asset_type.is_subtype = True
+            self.asset_type_manager.create_asset_type(asset_type)
 
     def test_get_one(self):
         self.asset_type_manager.create_asset_type(self.asset_type)

@@ -46,8 +46,21 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
+    def get_all_filtered(
+            self, and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None) \
+            -> List[AssetType]:
+        """Get all ``AssetTypes`` for which the given filters apply."""
+        pass
+
+    @abstractmethod
+    def get_batch(self, offset: int, limit: int):
+        """Get a batch of ``AssetTypes`` from offset until limit."""
+        pass
+
+    @abstractmethod
     def get_one(self, asset_type_id: int) -> Optional[AssetType]:
-        """Get the ``AssetType`` with id ``asset_type_id``."""
+        """Get the ``AssetType`` with ident ``asset_type_id``."""
         pass
 
     @staticmethod
