@@ -118,6 +118,7 @@ class TestAssetTypeManager(TestCase):
             asset_type = deepcopy(self.asset_type)
             asset_type.asset_name = f"{asset_type.asset_name}_{iterator}"
             asset_type.is_subtype = True
+            asset_type.super_type_id = 1
             self.asset_type_manager.create_asset_type(asset_type)
 
     def test_get_one(self):

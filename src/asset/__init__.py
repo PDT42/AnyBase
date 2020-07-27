@@ -19,6 +19,7 @@ class AssetType:
     asset_table_name: str = None
     asset_type_id: int = None
     is_subtype: bool = False
+    super_type_id: int = 0
 
 
 @dataclass
