@@ -17,7 +17,7 @@ class TestPluginSettingsManager(TestCase):
 
     def setUp(self) -> None:
         self.tempdir, self.db_connection = init_test_db()
-        print(f"Tempdir used in this tests: {self.tempdir}")
+        # print(f"Tempdir used in this tests: {self.tempdir}")
 
         self.plugin_settings_manager: PluginSettingsManager = PluginSettingsManager()
         self.plugin_manager: PluginManager = PluginManager()
