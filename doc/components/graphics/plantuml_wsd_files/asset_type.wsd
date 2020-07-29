@@ -1,0 +1,12 @@
+@startuml asset_type_class
+
+class AssetType {
+    str: asset_name
+    Column[]: columns
+    str: asset_table_name
+    int: asset_type_id
+    bool: is_subtype
+    int: super_type_id
+}
+
+@enduml
