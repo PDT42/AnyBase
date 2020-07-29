@@ -202,34 +202,41 @@ class SqliteConnection(DbConnection):
 
             column_name = column_info['name']
             column_type = DataTypes[column_info['type']].value
+            column_required = column_info['notnull']
 
             # We gotta cover some different cases
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
             # We don't WRITE pks - pks are assigned by the db
             if column_name == 'primary_key':
                 query = f'''{query} null,'''
                 continue
 
+            # 'column_name' is not provided on values. Do we need it?
+            # Values for required columns must be present in 'values'
+            elif column_name not in values.keys() and bool(column_required):
+                raise MissingValueException(f"The required value {column_name} is missing. Please provide it!")
+
+            # It's not there, but we don't need it - so we don't care
+            elif column_name not in values.keys() and not bool(column_required):
+                query = f'''{query}null, '''
+
             # The most obvious other case: There are values for the column.
-            # Don't ever look a gift horse in the mouth!
             elif column_name in values.keys():
 
                 if isinstance(values[column_name], str):
+                    if column_required and not values[column_name]:
+                        MissingValueException("Required fields of type VARCHAR cannot contain an empty string!")
                     query = f'''{query}"{column_type.convert(values[column_name])}", '''
+
                 elif isinstance(values[column_name], datetime):
                     timestamp = int(values[column_name].timestamp())
                     query = f'''{query}"{timestamp}", '''
+
                 else:
                     query = f'''{query}{column_type.convert(values[column_name])}, '''
 
-            # 'column_name' is not provided on values. Do we need it?
-            # Values for required columns must be present in 'values'
-            elif column_name not in values.keys() and bool(column_info['notnull']):
-                raise MissingValueException(f"The required value {column_name} is missing. Please provide it!")
-
-            # It's there, but we don't need it - so we don't care
-            elif column_name not in values.keys() and not bool(column_info['notnull']):
-                query = f'''{query}null, '''
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # Removing the ', '.join artifacts
         query = f"{''.join(query[:-1])})"
