@@ -4,7 +4,7 @@
 
 These are tests for the asset manager.
 """
-
+from datetime import date, datetime
 from shutil import rmtree
 from unittest import TestCase
 
@@ -110,3 +110,39 @@ class TestAssetManager(TestCase):
         # Checking if asset exists in database
         asset = self.asset_manager.get_one(1, self.asset_type)
         self.assertEqual(asset, self.test_asset)
+
+    def test_data_types(self):
+        columns = [
+            Column("text_column", "text_column", DataTypes.TEXT.value, required=True),
+            Column("number_column", "number_column", DataTypes.NUMBER.value, required=True),
+            Column("integer_column", "integer_column", DataTypes.INTEGER.value, required=True),
+            Column("bool_column", "bool_column", DataTypes.BOOLEAN.value, required=True),
+            Column("datetime_col", "datetime_col", DataTypes.DATETIME.value, required=True),
+            Column("date_column", "date_column", DataTypes.DATE.value, required=True)
+        ]
+        asset_type = AssetType(
+            asset_name="DatatypeTestAsset",
+            columns=columns
+        )
+        self.asset_type_manager.create_asset_type(asset_type)
+        self.assertEqual(2, len(self.asset_type_manager.get_all()))
+        asset_type = self.asset_type_manager.get_one(2)
+        self.assertEqual("DatatypeTestAsset", asset_type.asset_name)
+        asset = Asset(data={
+            "text_column": "Test Text",
+            "number_column": 42.24,
+            "integer_column": 5,
+            "bool_column": True,
+            "datetime_col": datetime.now(),
+            "date_column": datetime.now().date()
+        })
+        self.asset_manager.create_asset(asset_type, asset)
+        self.assertEqual(1, len(self.asset_manager.get_all(asset_type)))
+        asset = self.asset_manager.get_one(1, asset_type)
+
+        self.assertTrue(isinstance(asset.data["text_column"], str))
+        self.assertTrue(isinstance(asset.data["number_column"], float))
+        self.assertTrue(isinstance(asset.data["integer_column"], int))
+        self.assertTrue(isinstance(asset.data["bool_column"], bool))
+        self.assertTrue(isinstance(asset.data["datetime_col"], datetime))
+        self.assertTrue(isinstance(asset.data["date_column"], date))
