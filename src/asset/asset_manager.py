@@ -38,10 +38,8 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             return 0
 
-        values = {'primary_key': None}
-
-        for column in asset_type.columns:
-            values.update({column.db_name: asset.data[column.db_name]})
+        values = (self.convert_data_to_row(asset.data, asset_type.columns))
+        values.update({'primary_key': None})
 
         self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
@@ -69,9 +67,10 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException(f"The asset type {asset_type} does not exist!")
 
-        asset.data.update({'primary_key': asset.asset_id})
+        data = self.convert_data_to_row(asset.data, asset_type.columns)
+        data.update({'primary_key': asset.asset_id})
 
-        self.db_connection.update(asset_type.asset_table_name, asset.data)
+        self.db_connection.update(asset_type.asset_table_name, data)
 
     def get_all(self, asset_type: AssetType) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
@@ -87,7 +86,7 @@ class AssetManager(AAssetManager):
         for asset_row in result:
             assets.append(Asset(
                 asset_id=asset_row.pop('primary_key'),
-                data=self._convert_row_to_data(asset_row, asset_type.columns)
+                data=self.convert_row_to_data(asset_row, asset_type.columns)
             ))
 
         return assets
@@ -112,21 +111,36 @@ class AssetManager(AAssetManager):
 
         asset = Asset(
             asset_id=result[0].pop('primary_key'),
-            data=self._convert_row_to_data(result[0], asset_type.columns)
+            data=self.convert_row_to_data(result[0], asset_type.columns)
         )
         return asset
 
-    ###################
-    # private methods #
-    ###################
+    # TODO: Move these to the abstract super class?
 
     @staticmethod
-    def _convert_row_to_data(
+    def convert_row_to_data(
             row: MutableMapping[str, Any],
             columns: Sequence[Column]) \
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
 
-        data: MutableMapping[str, Any] = {column.db_name: row[column.db_name] for column in columns}
+        data: MutableMapping[str, Any] = {
+            column.db_name: column.datatype.convert_from_db_type(row[column.db_name])
+            for column in columns
+        }
 
         return data
+
+    @staticmethod
+    def convert_data_to_row(
+            data: MutableMapping[str, Any],
+            columns: Sequence[Column]) \
+            -> MutableMapping[str, Any]:
+        """Convert a data mapping as contained in an asset to a valid database query input."""
+
+        row: MutableMapping[str, Any] = {
+            column.db_name: column.datatype.convert_to_dbtype(data[column.db_name])
+            for column in columns
+        }
+
+        return row
