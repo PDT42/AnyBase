@@ -17,31 +17,41 @@ class DataType(NamedTuple):
     fe_name: str
     fe_type: str
     db_type: str
-    convert: callable
+    convert_to_dbtype: callable
+    convert_from_db_type: callable
 
 
 class DataTypes(Enum):
     """The available data types."""
 
-    TEXT = DataType(typename='TEXT', fe_name='Text', fe_type='text', db_type='VARCHAR', convert=str)
+    TEXT = DataType(typename='TEXT', fe_name='Text', fe_type='text', db_type='VARCHAR',
+                    convert_to_dbtype=str, convert_from_db_type=str)
     VARCHAR = TEXT
 
-    NUMBER = DataType(typename='NUMBER', fe_name='Number', fe_type='number', db_type='REAL', convert=float)
+    NUMBER = DataType(typename='NUMBER', fe_name='Number', fe_type='number', db_type='REAL',
+                      convert_to_dbtype=float, convert_from_db_type=float)
     REAL = NUMBER
 
-    INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER', convert=int)
+    INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER',
+                       convert_to_dbtype=int, convert_from_db_type=int)
 
-    BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER', convert=int)
+    BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER',
+                       convert_to_dbtype=int, convert_from_db_type=bool)
 
+    # TODO: Move type -> db_type to sqlite module since it's sqlite specific
     DATETIME = DataType(
         typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER',
-        convert=lambda dt_str: datetime.strptime(dt_str, '%Y-%m-%dT%H:%M')
+        convert_to_dbtype=lambda dt: int(dt.timestamp()),
+        convert_from_db_type=lambda timestamp: datetime.fromtimestamp(timestamp)
     )
 
     DATE = DataType(
         typename='DATE', fe_name='Date', fe_type='date', db_type='INTEGER',
-        convert=lambda d_str: datetime.strptime(d_str, '%Y-%m-%d')
+        convert_to_dbtype=lambda d: int(datetime.combine(d, datetime.min.time()).timestamp()),
+        convert_from_db_type=lambda timestamp: datetime.fromtimestamp(timestamp).date()
     )
+
+    # TODO: Add Asset as datatype
 
     # --
 
