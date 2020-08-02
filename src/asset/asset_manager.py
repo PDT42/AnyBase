@@ -10,7 +10,7 @@ from typing import Any, List, MutableMapping, Optional, Sequence
 from asset import Asset, AssetType
 from asset.abstract_asset_manager import AAssetManager
 from asset.asset_type_manager import AssetTypeManager
-from database import Column
+from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeDoesNotExistException
@@ -72,7 +72,7 @@ class AssetManager(AAssetManager):
 
         self.db_connection.update(asset_type.asset_table_name, data)
 
-    def get_all(self, asset_type: AssetType) -> List[Asset]:
+    def get_all(self, asset_type: AssetType, depth: int = None) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -91,7 +91,7 @@ class AssetManager(AAssetManager):
 
         return assets
 
-    def get_one(self, asset_id: int, asset_type: AssetType) -> Optional[Asset]:
+    def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
@@ -111,7 +111,7 @@ class AssetManager(AAssetManager):
 
         asset = Asset(
             asset_id=result[0].pop('primary_key'),
-            data=self.convert_row_to_data(result[0], asset_type.columns)
+            data=self.convert_row_to_data(result[0], asset_type.columns, depth)
         )
         return asset
 
