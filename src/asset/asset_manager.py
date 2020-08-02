@@ -115,19 +115,33 @@ class AssetManager(AAssetManager):
         )
         return asset
 
-    # TODO: Move these to the abstract super class?
-
-    @staticmethod
     def convert_row_to_data(
-            row: MutableMapping[str, Any],
-            columns: Sequence[Column]) \
+            self, row: MutableMapping[str, Any],
+            columns: Sequence[Column],
+            depth: int = 0) \
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
 
-        data: MutableMapping[str, Any] = {
-            column.db_name: column.datatype.convert_from_db_type(row[column.db_name])
-            for column in columns
-        }
+        data: MutableMapping[str, Any] = {}
+        for column in columns:
+
+            field = column.datatype.convert_from_db_type(row[column.db_name])
+
+            if column.datatype is DataTypes.ASSET.value and depth > 0:
+                asset_type = self.asset_type_manager.get_one(column.asset_type)
+                asset = self.get_one(field, asset_type, depth - 1)
+
+                data[column.db_name] = asset
+
+            elif column.datatype is DataTypes.ASSETLIST.value and depth > 0:
+                asset_type = self.asset_type_manager.get_one(column.asset_type)
+
+                data[column.db_name] = [
+                    self.get_one(int(asset), asset_type, depth - 1) for asset in field
+                ]
+
+            else:
+                data[column.db_name] = field
 
         return data
 

@@ -10,6 +10,8 @@ from datetime import datetime
 from enum import Enum
 from typing import NamedTuple
 
+from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
+
 
 class DataType(NamedTuple):
     """This is a possible datatype."""
@@ -38,7 +40,6 @@ class DataTypes(Enum):
     BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER',
                        convert_to_dbtype=int, convert_from_db_type=bool)
 
-    # TODO: Move type -> db_type to sqlite module since it's sqlite specific
     DATETIME = DataType(
         typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER',
         convert_to_dbtype=lambda dt: int(dt.timestamp()),
@@ -51,7 +52,16 @@ class DataTypes(Enum):
         convert_from_db_type=lambda timestamp: datetime.fromtimestamp(timestamp).date()
     )
 
-    # TODO: Add Asset as datatype
+    ASSET = DataType(
+        typename='ASSET', fe_name="Asset", fe_type="number", db_type='INTEGER',
+        convert_to_dbtype=convert_asset_to_dbtype, convert_from_db_type=int
+    )
+
+    ASSETLIST = DataType(
+        typename='ASSETLIST', fe_name="Asset List", fe_type="text", db_type='VARCHAR',
+        convert_to_dbtype=convert_assetlist_to_dbtype,
+        convert_from_db_type=lambda al: [int(a) for a in al.split(';')]
+    )
 
     # --
 
