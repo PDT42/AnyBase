@@ -201,7 +201,6 @@ class SqliteConnection(DbConnection):
         for column_info in table_info:
 
             column_name = column_info['name']
-            column_type = DataTypes[column_info['type']].value
             column_required = column_info['notnull']
 
             # We gotta cover some different cases
@@ -209,12 +208,12 @@ class SqliteConnection(DbConnection):
 
             # We don't WRITE pks - pks are assigned by the db
             if column_name == 'primary_key':
-                query = f'''{query} null,'''
+                query = f'''{query}null, '''
                 continue
 
             # 'column_name' is not provided on values. Do we need it?
             # Values for required columns must be present in 'values'
-            elif column_name not in values.keys() and bool(column_required):
+            if column_name not in values.keys() and bool(column_required):
                 raise MissingValueException(f"The required value {column_name} is missing. Please provide it!")
 
             # It's not there, but we don't need it - so we don't care
@@ -223,23 +222,21 @@ class SqliteConnection(DbConnection):
 
             # The most obvious other case: There are values for the column.
             elif column_name in values.keys():
+                column_value = values[column_name]
 
-                if isinstance(values[column_name], str):
-                    if column_required and not values[column_name]:
+                # Checking if the value we want to enter is a string
+                # Strings are special -> They need an extra sausage
+                if isinstance(column_value, str):
+                    if column_required and not column_value:
                         MissingValueException("Required fields of type VARCHAR cannot contain an empty string!")
-                    query = f'''{query}"{column_type.convert(values[column_name])}", '''
-
-                elif isinstance(values[column_name], datetime):
-                    timestamp = int(values[column_name].timestamp())
-                    query = f'''{query}"{timestamp}", '''
-
+                    query = f'''{query}"{column_value}", '''
                 else:
-                    query = f'''{query}{column_type.convert(values[column_name])}, '''
+                    query = f'''{query}{column_value}, '''
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # Removing the ', '.join artifacts
-        query = f"{''.join(query[:-1])})"
+        query = f"{''.join(query[:-2])})"
         # --------------
         self.cursor.execute(query)
 
@@ -271,12 +268,12 @@ class SqliteConnection(DbConnection):
             data_type = DataTypes[column_info['type']].value
 
             if isinstance(values[column_name], str):
-                query += f'{column_name} = "{data_type.convert(values[column_name])}", '
+                query += f'{column_name} = "{data_type.convert_to_dbtype(values[column_name])}", '
             elif isinstance(values[column_name], datetime):
                 timestamp = int(values[column_name].timestamp())
                 query += f'''{query}"{timestamp}", '''
             else:
-                query += f'{column_name} = {data_type.convert(values[column_name])}, '
+                query += f'{column_name} = {data_type.convert_to_dbtype(values[column_name])}, '
 
         query = f"{''.join(query[:-2])} "
 
