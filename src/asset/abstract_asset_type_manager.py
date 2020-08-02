@@ -73,8 +73,9 @@ class AAssetTypeManager:
         everywhere."""
 
         column_str: str = ';'.join([
-            f"{column.name} {column.datatype.typename} " +
-            f"{int(column.asset_type)} " +
+            f"{column.name}," +
+            f"{column.datatype.typename}," +
+            f"{int(column.asset_type)}," +
             f"{int(column.required)}"
             for column in columns
         ])
@@ -91,7 +92,7 @@ class AAssetTypeManager:
         columns: List[Column] = []
 
         for column_str in column_str.split(';'):
-            column_str = column_str.split(' ')
+            column_str = column_str.split(',')
 
             columns.append(Column(
                 name=' '.join(column_str[:-3]),
