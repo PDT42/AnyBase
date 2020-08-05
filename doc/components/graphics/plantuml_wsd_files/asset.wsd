@@ -1,0 +1,8 @@
+@startuml
+
+class Asset {
+    int: asset_id
+    Mapping: data
+}
+
+@enduml
