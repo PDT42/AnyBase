@@ -12,8 +12,8 @@ column_db_name = column_name.replace(' ', '_').lower()
 The ``datatype`` field contains the DataType object, that describes the data type of the column. The field ``asset_type`` is set to zero by default and is only required if the ``datatype`` of the column is either ``ASSET`` or ``ASSETLIST``. In those cases it defines the [AssetType] of the [Asset] referenced or, in case of ``ASSETLIST`` the [AssetType] of each of the [Asset]s referenced in the list.
 
 [//]: # (LINKS)
-[AssetType]: asset_types.md
-[Asset]: asset.md
+[AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset_types.md
+[Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
 
 [//]: # (IMAGES)
 [column_class]: graphics/plantuml_rendered/column.png

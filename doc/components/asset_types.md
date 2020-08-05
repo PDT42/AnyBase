@@ -18,8 +18,8 @@ All of these asset types are stored in the database table ``abintern_asset_types
 The fieldnames suggest the content. The only interesting one being ``asset_columns``. Since the [Column] is also an item defined by AnyBase, in this field we store a string representation of the columns. This representation must be the formatted the same way in each future version to guarantee interoperability, which is why the generation of the representation is part of the abstracth implementation of the asset type manager.
 
 [//]: # (LINKS)
-[Column]: column.md
-[Asset]: asset.md
+[Column]: https://github.com/PDT420/AnyBase/blob/master/doc/components/column.md
+[Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset.md
 
 [//]: # (IMAGES)
 [asset_type_class]: graphics/plantuml_rendered/asset_type_class.png "Asset Type Class"
