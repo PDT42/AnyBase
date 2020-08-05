@@ -4,7 +4,7 @@ Assets are the entities that populate AnyBase. Every Asset is defined by its [As
 ![Asset Class][asset_class]
 
 [//]: # (LINKS)
-[AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
+[AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset_types.md
 [Column]: https://github.com/PDT420/AnyBase/blob/master/doc/components/column.md
 
 [//]: # (IMAGES)
