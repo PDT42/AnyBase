@@ -19,7 +19,7 @@ The fieldnames suggest the content. The only interesting one being ``asset_colum
 
 [//]: # (LINKS)
 [Column]: https://github.com/PDT420/AnyBase/blob/master/doc/components/column.md
-[Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset.md
+[Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
 
 [//]: # (IMAGES)
 [asset_type_class]: graphics/plantuml_rendered/asset_type_class.png "Asset Type Class"
