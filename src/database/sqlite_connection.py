@@ -264,15 +264,14 @@ class SqliteConnection(DbConnection):
         for column_info in table_info:
 
             column_name = column_info['name']
-            data_type = DataTypes[column_info['type']].value
 
             if isinstance(values[column_name], str):
-                query += f'{column_name} = "{data_type.convert_to_dbtype(values[column_name])}", '
+                query += f'{column_name} = "{values[column_name]}", '
             elif isinstance(values[column_name], datetime):
                 timestamp = int(values[column_name].timestamp())
                 query += f'''{query}"{timestamp}", '''
             else:
-                query += f'{column_name} = {data_type.convert_to_dbtype(values[column_name])}, '
+                query += f'{column_name} = {values[column_name]}, '
 
         query = f"{''.join(query[:-2])} "
 
