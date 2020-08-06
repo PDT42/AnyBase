@@ -11,7 +11,7 @@ interoperability.
 """
 
 from abc import abstractmethod
-from typing import List, Optional, Sequence
+from typing import Any, List, MutableMapping, Optional, Sequence
 
 from asset import AssetType
 from database import Column, DataTypes
@@ -56,6 +56,15 @@ class AAssetTypeManager:
     @abstractmethod
     def get_batch(self, offset: int, limit: int):
         """Get a batch of ``AssetTypes`` from offset until limit."""
+        pass
+
+    @abstractmethod
+    def convert_row_to_data(
+            self, row: MutableMapping[str, Any],
+            columns: Sequence[Column],
+            depth: int = 0) \
+            -> MutableMapping[str, Any]:
+        """Convert a row to a valid data entry of an ``Asset``."""
         pass
 
     @abstractmethod

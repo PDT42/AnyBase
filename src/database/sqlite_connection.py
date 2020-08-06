@@ -6,9 +6,8 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
 from datetime import datetime
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, MutableMapping, Sequence
 
-from database import DataTypes
 from exceptions.common import IllegalStateException
 from exceptions.database import MissingValueException, TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
@@ -414,3 +413,18 @@ class SqliteConnection(DbConnection):
 
         result = self.cursor.fetchall()[0]['COUNT(*)']
         return result
+
+    @staticmethod
+    def convert_data_to_row(
+            data: MutableMapping[str, Any],
+            columns: Sequence[Column]) \
+            -> MutableMapping[str, Any]:
+        """Convert a data mapping as contained in an asset to a valid
+        database query input."""
+
+        row: MutableMapping[str, Any] = {
+            column.db_name: column.datatype.convert_to_dbtype(data[column.db_name])
+            for column in columns
+        }
+
+        return row

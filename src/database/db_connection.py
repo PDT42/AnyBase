@@ -8,7 +8,7 @@ database.
 """
 
 from abc import abstractmethod
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, MutableMapping, Sequence
 
 from database import Column
 
@@ -107,4 +107,15 @@ class DbConnection:
     @abstractmethod
     def count(self, table_name: str) -> int:
         """Count the number ob items in ``table_name``."""
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def convert_data_to_row(
+            data: MutableMapping[str, Any],
+            columns: Sequence[Column]) \
+            -> MutableMapping[str, Any]:
+        """Convert a data mapping as contained in an asset to a valid
+        database query input.
+        """
         pass
