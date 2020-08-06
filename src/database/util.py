@@ -11,6 +11,7 @@ def convert_asset_to_dbtype(asset):
 
 
 def convert_assetlist_to_dbtype(assetlist):
+    # TODO: Think about removing this, this should never be the case
     if all(isinstance(a, int) for a in assetlist):
         return ';'.join([str(a) for a in assetlist])
     return ';'.join([str(a.asset_id) for a in assetlist])
