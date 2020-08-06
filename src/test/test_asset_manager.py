@@ -165,4 +165,3 @@ class TestAssetManager(TestCase):
         asset = self.asset_manager.get_one(1, asset_type, 1)
         self.assertTrue(isinstance(asset.data["asset_column"], Asset))
         self.assertTrue(all([isinstance(at, Asset) for at in asset.data["asset_list_col"]]))
-
