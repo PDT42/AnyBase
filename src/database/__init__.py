@@ -6,7 +6,6 @@ This is the database package.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
 from typing import NamedTuple
 
@@ -17,45 +16,28 @@ class DataType(NamedTuple):
     fe_name: str
     fe_type: str
     db_type: str
-    convert_from_db_type: callable
 
 
 class DataTypes(Enum):
     """The available data types."""
 
-    TEXT = DataType(typename='TEXT', fe_name='Text', fe_type='text', db_type='VARCHAR',
-                    convert_from_db_type=str)
+    TEXT = DataType(typename='TEXT', fe_name='Text', fe_type='text', db_type='VARCHAR')
     VARCHAR = TEXT
 
-    NUMBER = DataType(typename='NUMBER', fe_name='Number', fe_type='number', db_type='REAL',
-                      convert_from_db_type=float)
+    NUMBER = DataType(typename='NUMBER', fe_name='Number', fe_type='number', db_type='REAL')
     REAL = NUMBER
 
-    INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER',
-                       convert_from_db_type=int)
+    INTEGER = DataType(typename='INTEGER', fe_name='Integer', fe_type='number', db_type='INTEGER')
 
-    BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER',
-                       convert_from_db_type=bool)
+    BOOLEAN = DataType(typename='BOOLEAN', fe_name='Boolean', fe_type='boolean', db_type='INTEGER')
 
-    DATETIME = DataType(
-        typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER',
-        convert_from_db_type=lambda timestamp: datetime.fromtimestamp(timestamp)
-    )
+    DATETIME = DataType(typename='DATETIME', fe_name='Datetime', fe_type='datetime-local', db_type='INTEGER')
 
-    DATE = DataType(
-        typename='DATE', fe_name='Date', fe_type='date', db_type='INTEGER',
-        convert_from_db_type=lambda timestamp: datetime.fromtimestamp(timestamp).date()
-    )
+    DATE = DataType(typename='DATE', fe_name='Date', fe_type='date', db_type='INTEGER')
 
-    ASSET = DataType(
-        typename='ASSET', fe_name="Asset", fe_type="number", db_type='INTEGER',
-        convert_from_db_type=int
-    )
+    ASSET = DataType(typename='ASSET', fe_name="Asset", fe_type="number", db_type='INTEGER')
 
-    ASSETLIST = DataType(
-        typename='ASSETLIST', fe_name="Asset List", fe_type="text", db_type='VARCHAR',
-        convert_from_db_type=lambda al: [int(a) for a in al.split(';')]
-    )
+    ASSETLIST = DataType(typename='ASSETLIST', fe_name="Asset List", fe_type="text", db_type='VARCHAR')
 
     # --
 

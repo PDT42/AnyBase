@@ -8,10 +8,11 @@ by the system.
 """
 
 from abc import abstractmethod
-from typing import List, Optional
+from typing import Any, List, MutableMapping, Optional, Sequence
 
 from asset import Asset, AssetType
 from asset.asset_type_manager import AssetTypeManager
+from database import Column
 from database.db_connection import DbConnection
 
 
@@ -44,4 +45,13 @@ class AAssetManager:
     @abstractmethod
     def get_one(self, asset_id: int, asset_type: AssetType) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
+        pass
+
+    @abstractmethod
+    def convert_row_to_data(
+            self, row: MutableMapping[str, Any],
+            columns: Sequence[Column],
+            depth: int = 0) \
+            -> MutableMapping[str, Any]:
+        """Convert a row to a valid data entry of an ``Asset``."""
         pass

@@ -4,13 +4,13 @@
 
 This is the the module for the AssetManager.
 """
-
-from typing import Any, List, MutableMapping, Optional, Sequence
+from datetime import datetime
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from asset import Asset, AssetType
 from asset.abstract_asset_manager import AAssetManager
 from asset.asset_type_manager import AssetTypeManager
-from database import Column, DataTypes
+from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeDoesNotExistException
@@ -19,6 +19,17 @@ from exceptions.common import KeyConstraintException
 
 class AssetManager(AAssetManager):
     """This is the ``AssetManager``."""
+
+    _conversions: Mapping[DataType, callable] = {
+        DataTypes.TEXT.value: str,
+        DataTypes.NUMBER.value: float,
+        DataTypes.INTEGER.value: int,
+        DataTypes.BOOLEAN.value: bool,
+        DataTypes.DATETIME.value: lambda timestamp: datetime.fromtimestamp(timestamp),
+        DataTypes.DATE.value: lambda timestamp: datetime.fromtimestamp(timestamp).date(),
+        DataTypes.ASSET.value: int,
+        DataTypes.ASSETLIST.value: lambda al: [int(a) for a in al.split(';')]
+    }
 
     # Required fields
     asset_type_manager: AssetTypeManager = None
@@ -123,7 +134,7 @@ class AssetManager(AAssetManager):
         data: MutableMapping[str, Any] = {}
         for column in columns:
 
-            field = column.datatype.convert_from_db_type(row[column.db_name])
+            field = self._conversions[column.datatype](row[column.db_name])
 
             if column.datatype is DataTypes.ASSET.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one(column.asset_type)
@@ -140,5 +151,4 @@ class AssetManager(AAssetManager):
 
             else:
                 data[column.db_name] = field
-
         return data
