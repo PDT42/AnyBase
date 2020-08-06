@@ -109,10 +109,9 @@ class DbConnection:
         """Count the number ob items in ``table_name``."""
         pass
 
-    @staticmethod
     @abstractmethod
     def convert_data_to_row(
-            data: MutableMapping[str, Any],
+            self, data: MutableMapping[str, Any],
             columns: Sequence[Column]) \
             -> MutableMapping[str, Any]:
         """Convert a data mapping as contained in an asset to a valid

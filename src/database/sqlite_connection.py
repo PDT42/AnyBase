@@ -8,6 +8,8 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Mapping, MutableMapping, Sequence
 
+from database import DataType, DataTypes
+from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
 from exceptions.common import IllegalStateException
 from exceptions.database import MissingValueException, TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
@@ -19,6 +21,17 @@ class SqliteConnection(DbConnection):
     """This is a connection to an sqlite database."""
 
     _instance = None
+
+    _conversions: Mapping[DataType, callable] = {
+        DataTypes.TEXT.value: str,
+        DataTypes.NUMBER.value: float,
+        DataTypes.INTEGER.value: int,
+        DataTypes.BOOLEAN.value: int,
+        DataTypes.DATETIME.value: lambda dt: int(dt.timestamp()),
+        DataTypes.DATE.value: lambda d: int(datetime.combine(d, datetime.min.time()).timestamp()),
+        DataTypes.ASSET.value: convert_asset_to_dbtype,
+        DataTypes.ASSETLIST.value: convert_assetlist_to_dbtype
+    }
 
     @staticmethod
     def get():
@@ -413,16 +426,15 @@ class SqliteConnection(DbConnection):
         result = self.cursor.fetchall()[0]['COUNT(*)']
         return result
 
-    @staticmethod
     def convert_data_to_row(
-            data: MutableMapping[str, Any],
+            self, data: MutableMapping[str, Any],
             columns: Sequence[Column]) \
             -> MutableMapping[str, Any]:
         """Convert a data mapping as contained in an asset to a valid
         database query input."""
 
         row: MutableMapping[str, Any] = {
-            column.db_name: column.datatype.convert_to_dbtype(data[column.db_name])
+            column.db_name: self._conversions[column.datatype](data[column.db_name])
             for column in columns
         }
 
