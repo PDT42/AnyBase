@@ -8,16 +8,18 @@ by the system.
 """
 
 from abc import abstractmethod
-from typing import Any, List, MutableMapping, Optional, Sequence
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
 from asset import Asset, AssetType
 from asset.asset_type_manager import AssetTypeManager
-from database import Column
+from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 
 
 class AAssetManager:
     """This is the abstract class for asset managers."""
+
+    _conversions: Mapping[DataType, callable] = None
 
     asset_type_manager: AssetTypeManager = None
     db_connection: DbConnection = None
@@ -43,15 +45,35 @@ class AAssetManager:
         pass
 
     @abstractmethod
-    def get_one(self, asset_id: int, asset_type: AssetType) -> Optional[Asset]:
+    def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
         pass
 
-    @abstractmethod
     def convert_row_to_data(
             self, row: MutableMapping[str, Any],
             columns: Sequence[Column],
             depth: int = 0) \
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
-        pass
+
+        data: MutableMapping[str, Any] = {}
+        for column in columns:
+
+            field = self._conversions[column.datatype](row[column.db_name])
+
+            if column.datatype is DataTypes.ASSET.value and depth > 0:
+                asset_type = self.asset_type_manager.get_one(column.asset_type)
+                asset = self.get_one(field, asset_type, depth - 1)
+
+                data[column.db_name] = asset
+
+            elif column.datatype is DataTypes.ASSETLIST.value and depth > 0:
+                asset_type = self.asset_type_manager.get_one(column.asset_type)
+
+                data[column.db_name] = [
+                    self.get_one(int(asset), asset_type, depth - 1) for asset in field
+                ]
+
+            else:
+                data[column.db_name] = field
+        return data
