@@ -425,17 +425,3 @@ class SqliteConnection(DbConnection):
 
         result = self.cursor.fetchall()[0]['COUNT(*)']
         return result
-
-    def convert_data_to_row(
-            self, data: MutableMapping[str, Any],
-            columns: Sequence[Column]) \
-            -> MutableMapping[str, Any]:
-        """Convert a data mapping as contained in an asset to a valid
-        database query input."""
-
-        row: MutableMapping[str, Any] = {
-            column.db_name: self._conversions[column.datatype](data[column.db_name])
-            for column in columns
-        }
-
-        return row

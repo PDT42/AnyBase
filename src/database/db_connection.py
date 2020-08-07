@@ -10,11 +10,14 @@ database.
 from abc import abstractmethod
 from typing import Any, Mapping, MutableMapping, Sequence
 
-from database import Column
+from database import Column, DataType
 
 
 class DbConnection:
     """This is the DbConnection."""
+
+    _instance = None
+    _conversions: Mapping[DataType, callable] = None
 
     @staticmethod
     @abstractmethod
@@ -109,12 +112,16 @@ class DbConnection:
         """Count the number ob items in ``table_name``."""
         pass
 
-    @abstractmethod
     def convert_data_to_row(
             self, data: MutableMapping[str, Any],
             columns: Sequence[Column]) \
             -> MutableMapping[str, Any]:
         """Convert a data mapping as contained in an asset to a valid
-        database query input.
-        """
-        pass
+        database query input."""
+
+        row: MutableMapping[str, Any] = {
+            column.db_name: self._conversions[column.datatype](data[column.db_name])
+            for column in columns
+        }
+
+        return row
