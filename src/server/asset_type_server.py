@@ -6,7 +6,7 @@ These are the routes for the ``AssetTypeManager``.
 """
 from typing import List
 
-from flask import redirect, render_template, request
+from flask import jsonify, redirect, render_template, request
 
 from asset import AssetType
 from asset.asset_manager import AssetManager
@@ -28,13 +28,15 @@ class AssetTypeServer:
     @staticmethod
     def get():
         """Get the instance of this singleton."""
+
         if not AssetTypeServer._instance:
             AssetTypeServer._instance = AssetTypeServer()
         return AssetTypeServer._instance
 
     def __init__(self):
         """Create a new AssetTypeServer."""
-        self._json_response = bool(Config.get().read('frontend', 'json_response', False))
+
+        self._json_response = Config.get().read('frontend', 'json_response', False) in ["True", "true", 1]
 
     @staticmethod
     def create_asset_type():
@@ -58,16 +60,21 @@ class AssetTypeServer:
                 column_name = f'column-name-{column_number}'
                 column_datatype = f'column-data-type-{column_number}'
                 column_required = f'column-required-{column_number}'
+                column_asset_type = f'column-asset-type-{column_number}'
 
                 if column_name in request.form.keys():
 
                     # Get the columns datatype from the form
                     datatype_str = request.form.get(column_datatype)
+                    asset_type = request.form.get(column_asset_type)
 
                     # Checking if the set data type is know to the system
                     if datatype_str in DataTypes.get_all_type_names():
-                        asset_type = 0
+                        asset_type_id = 0
                         datatype = DataTypes[datatype_str].value
+
+                        if datatype in [DataTypes.ASSET.value, DataTypes.ASSETLIST.value]:
+                            asset_type_id = int(asset_type)
 
                     # If the datatype is unknown an exception is raised
                     # this should never be the case, since the drop down
@@ -85,7 +92,7 @@ class AssetTypeServer:
                         name=column_name,
                         db_name=column_db_name,
                         datatype=datatype,
-                        asset_type=asset_type,
+                        asset_type=asset_type_id,
                         required=required
                     ))
                 else:
@@ -105,6 +112,12 @@ class AssetTypeServer:
             return redirect('/configuration')
 
         data_types: List[DataType] = DataTypes.get_all_data_types()
+
+        if AssetTypeServer.get()._json_response:
+            return jsonify({
+                "data_types": data_types,
+                "asset_types": asset_types
+            })
 
         return render_template(
             "create-asset-type.html",

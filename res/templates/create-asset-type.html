@@ -9,7 +9,9 @@
 {% block body %}
 <div class="container">
     <div class="row" style="margin-top: 35px">
-        <form class="col-sm " action="/asset-type/create" method="post">
+        <form class="col-sm" action="/asset-type/create" method="post">
+
+            <!-- INPUT FOR ASSET TYPE NAME -->
 
             <div class="form-group row" style="padding-top: 20px">
                 <label for="assetName" class="col-md-2 col-form-label">Asset Name:</label>
@@ -20,11 +22,13 @@
 
             <hr/>
 
+            <!-- HEADER LINE -->
+
             <div class="row" style="margin-top: 10px">
-                <div class="col-md-8">
+                <div class="col-md-6">
                     <label>Column Name</label>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <label>Datatype</label>
                 </div>
                 <div class="col-md-2">
@@ -32,39 +36,60 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="columnList col">
-                    <div class="form-group row" style="padding-top: 5px">
-                        <div class="col-md-8">
-                            <input type="text" class="form-control" name="columnName_0" id="columnName_0">
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-control custom-select" name="columnDataType_0" id="columnDataType_0">
+            <!-- COLUMN INPUTS -->
 
-                                {% for data_type in data_types %}
-                                <option selected value="{{ data_type.typename }}">{{ data_type.fe_name }}</option>
-                                {% endfor %}
+            <div id="column-list">
+                <div name="column-entry-0" class="form-group row" style="padding-top: 5px">
 
-                                {% for asset_type in asset_types %}
-                                <option selected value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
-                                {% endfor %}
+                    <!-- COLUMN NAME -->
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="column-name-0">
+                    </div>
 
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="row justify-content-end">
-                                <div class="col-md-3">
-                                    <input type="checkbox" class="check-input" name="columnRequired_0"
-                                           id="columnRequired_0"
-                                           value="checkboxTrue">
-                                </div>
+                    <!-- COLUMN DATATYPE -->
+                    <div class="col-md-4">
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <select class="form-control custom-select" name="column-data-type-0"
+                                        onchange="dataTypeSelection(name, value)">
+
+                                    {% for data_type in data_types %}
+                                    <option value="{{ data_type.typename }}">
+                                        {{ data_type.fe_name }}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
                             </div>
+
+                            <div class="col-md-6">
+                                <select class="form-control custom-select" name="column-asset-type-0">
+
+                                    {% for asset_type in asset_types %}
+                                    <option value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+
                         </div>
+                    </div>
+
+                    <!-- COLUMN REQUIRED FLAG -->
+                    <div class="col-md-2">
+                        <input
+                                type="checkbox"
+                                class="check-input"
+                                name="column-required-0"
+                                value="checkboxTrue"
+                        >
                     </div>
                 </div>
             </div>
 
-            <button class="btn btn-block btn-secondary" name="addColumnButton" type="button" onclick="addColumn()">
+
+            <button class="btn btn-block btn-secondary" type="button" onclick="addColumn()">
                 +
             </button>
 
@@ -81,43 +106,46 @@
 </div>
 
 <script>
-    let column_no = 1;
+    let columnNumber = 1;
 
     function addColumn() {
-        // This is basically equal to the first Column defined above
-        if (column_no < 15) {
-            $(".columnList").append('<div class="form-group row" style="padding-top: 5px">\n' +
+        if (columnNumber < 15) {
+            const columnList = document.getElementById('column-list');
+            let columnEntry = document.getElementsByName('column-entry-0').item(0).cloneNode(true);
 
-                '                <div class="col-md-8">\n' +
-                '                    <input type="text" class="form-control" name="columnName_' + column_no + '">\n' +
-                '                </div>\n' +
+            // Updating identifiers
+            columnEntry.setAttribute('name', 'column-entry-' + columnNumber);
 
-                '                <div class="col-md-2">\n' +
-                '                    <select class="form-control custom-select" name="columnDataType_' + column_no + '">\n' +
+            let name = columnEntry.querySelector('div > input[name="column-name-0"]');
+            name.setAttribute("name", 'column-name-' + columnNumber);
+            name.value = "";
 
-                                '{% for data_type in data_types %}' +
-                                '<option selected value="{{ data_type.typename }}">{{ data_type.fe_name }}</option>' +
-                                '{% endfor %}' +
+            columnEntry.querySelector('div > select[name="column-data-type-0"]')
+                .setAttribute("name", 'column-data-type-' + columnNumber);
 
-                                '{% for asset_type in asset_types %}' +
-                                '<option selected value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>' +
-                                '{% endfor %}' +
+            columnEntry.querySelector('div > select[name="column-asset-type-0"]')
+                .setAttribute("name", 'column-asset-type-' + columnNumber);
 
-                '                    </select>\n' +
-                '                </div>\n' +
+            let required = columnEntry.querySelector('div > input[name="column-required-0"]');
+            required.setAttribute("name", 'column-required-' + columnNumber);
+            required.checked = false;
 
-                '                <div class="col-md-2">\n' +
-                '                    <div class="row justify-content-end">\n' +
-                '                        <div class="col-md-3">\n' +
-                '                            <input type="checkbox" class="check-input" name="columnRequired_' + column_no + '" value="checkboxTrue">\n' +
-                '                        </div>\n' +
-                '                    </div>\n' +
-                '                </div>\n' +
+            columnList.appendChild(columnEntry);
 
-                '            </div>');
-            column_no += 1;
+            columnNumber += 1;
         } else {
-            console.warn("Can't create more than 25 Columns!") // TODO: Create some kind of Notification
+            console.warn("Can't create more than 15 Columns!")
+        }
+    }
+
+    function dataTypeSelection(name, value) {
+        // TODO: Initialize hidden if not ASSET or ASSETLIST
+        const entryNumber = name.toString().slice(-1);
+        const dtSelection = document.getElementsByName('column-asset-type-' + entryNumber).item(0);
+        if (['ASSET', 'ASSETLIST'].includes(value)) {
+            dtSelection.style.visibility = "visible";
+        } else {
+            dtSelection.style.visibility = "hidden";
         }
     }
 </script>
