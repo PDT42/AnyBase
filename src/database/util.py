@@ -7,7 +7,7 @@ These are utility functions used in the database package.
 
 
 def convert_asset_to_dbtype(asset):
-    return int(asset) if isinstance(asset, int) else asset.asset_id
+    return int(asset) if isinstance(asset, (int, str)) else asset.asset_id
 
 
 def convert_assetlist_to_dbtype(assetlist):

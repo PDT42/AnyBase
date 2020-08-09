@@ -58,5 +58,5 @@ class Column:
     name: str
     db_name: str
     datatype: DataType
-    asset_type: int = 0
+    asset_type_id: int = 0
     required: bool = False

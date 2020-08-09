@@ -6,8 +6,10 @@
 from flask import Flask
 
 from config import Config
+from database.db_connection import DbConnection
+from database.sqlite_connection import SqliteConnection
 from server import configuration, index
-from server.asset_server import create_asset
+from server.asset_server import get_create_asset, post_create_asset
 from server.asset_type_server import AssetTypeServer
 
 # Getting config values
@@ -18,8 +20,15 @@ template_folder = Config.get().read('frontend', 'template_folder', '/res/templat
 # --------------------------
 app = Flask(__name__, template_folder=template_folder)
 
+# Initialization
+# --------------
+
+# Database
+# ~~~~~~~~
+db_connection: DbConnection = SqliteConnection.get()
+
 # Creating Servers
-# ----------------
+# ~~~~~~~~~~~~~~~~
 asset_type_server = AssetTypeServer.get()
 
 # Adding Routes provided in server to app
@@ -34,22 +43,32 @@ app.add_url_rule('/configuration', 'configuration', configuration, methods=['GET
 # ~~~~~~~~~~~~~~~~
 app.add_url_rule(
     '/asset-type/create',
-    'create-asset-type',
-    asset_type_server.create_asset_type,
-    methods=['GET', 'POST']
+    'get-create-asset-type',
+    asset_type_server.get_create_asset_type,
+    methods=['GET']
 )
+
+app.add_url_rule(
+    '/asset-type/create',
+    'post-create-asset-type',
+    asset_type_server.post_create_asset_type,
+    methods=['POST']
+)
+
 app.add_url_rule(
     '/asset-types',
     'asset-types',
     asset_type_server.get_all_asset_types,
     methods=['GET']
 )
+
 app.add_url_rule(
     '/asset-type/<int:asset_type_id>',
     'asset-type',
     asset_type_server.get_one_asset_type,
     methods=['GET']
 )
+
 app.add_url_rule(
     '/asset-type/<int:asset_type_id>',
     'delete-asset-type',
@@ -59,7 +78,19 @@ app.add_url_rule(
 
 # Asset Routes
 # ~~~~~~~~~~~~
-app.add_url_rule('/asset-type/<int:asset_type_id>/create-asset', 'create-asset', create_asset, methods=['GET', 'POST'])
+app.add_url_rule(
+    '/asset-type/<int:asset_type_id>/create-asset',
+    'get-create-asset',
+    get_create_asset,
+    methods=['GET']
+)
+
+app.add_url_rule(
+    '/asset-type/<int:asset_type_id>/create-asset',
+    'post-create-asset',
+    post_create_asset,
+    methods=['POST']
+)
 
 if __name__ == '__main__':
     app.run(debug=True)

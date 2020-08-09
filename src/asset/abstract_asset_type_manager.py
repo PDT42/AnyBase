@@ -11,7 +11,7 @@ interoperability.
 """
 
 from abc import abstractmethod
-from typing import Any, List, MutableMapping, Optional, Sequence
+from typing import List, Optional, Sequence
 
 from asset import AssetType
 from database import Column, DataTypes
@@ -22,22 +22,22 @@ class AAssetTypeManager:
 
     @abstractmethod
     def create_asset_type(self, asset_type: AssetType) -> None:
-        """Create a new ``asset_type`` in the asset type registry."""
+        """Create a new ``asset_type_id`` in the asset type registry."""
         pass
 
     @abstractmethod
     def delete_asset_type(self, asset_type: AssetType) -> None:
-        """Delete ``asset_type`` and all it's assets from the system."""
+        """Delete ``asset_type_id`` and all it's assets from the system."""
         pass
 
     @abstractmethod
     def update_asset_type(self, asset_type: AssetType) -> None:
-        """Update an ``asset_type`` in the database."""
+        """Update an ``asset_type_id`` in the database."""
         pass
 
     @abstractmethod
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
-        """Check if ``asset_type`` with that name already exists."""
+        """Check if ``asset_type_id`` with that name already exists."""
         pass
 
     @abstractmethod
@@ -59,15 +59,6 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def convert_row_to_data(
-            self, row: MutableMapping[str, Any],
-            columns: Sequence[Column],
-            depth: int = 0) \
-            -> MutableMapping[str, Any]:
-        """Convert a row to a valid data entry of an ``Asset``."""
-        pass
-
-    @abstractmethod
     def get_one(self, asset_type_id: int) -> Optional[AssetType]:
         """Get the ``AssetType`` with ident ``asset_type_id``."""
         pass
@@ -84,7 +75,7 @@ class AAssetTypeManager:
         column_str: str = ';'.join([
             f"{column.name}," +
             f"{column.datatype.typename}," +
-            f"{int(column.asset_type)}," +
+            f"{int(column.asset_type_id)}," +
             f"{int(column.required)}"
             for column in columns
         ])
@@ -105,9 +96,9 @@ class AAssetTypeManager:
 
             columns.append(Column(
                 name=' '.join(column_str[:-3]),
-                db_name='_'.join(column_str[:-3]).lower(),
+                db_name='_'.join(column_str[:-3][0].split(' ')).lower(),
                 datatype=DataTypes[column_str[-3]].value,
-                asset_type=int(column_str[-2]),
+                asset_type_id=int(column_str[-2]),
                 required=bool(int(column_str[-1]))
             ))
 

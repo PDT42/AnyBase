@@ -122,8 +122,8 @@ class TestAssetManager(TestCase):
             Column("datetime_col", "datetime_col", DataTypes.DATETIME.value, required=True),
             Column("date_column", "date_column", DataTypes.DATE.value, required=True),
             # --
-            Column("asset_column", "asset_column", DataTypes.ASSET.value, asset_type=1, required=True),
-            Column("asset_list_col", "asset_list_col", DataTypes.ASSETLIST.value, asset_type=1, required=True)
+            Column("asset_column", "asset_column", DataTypes.ASSET.value, asset_type_id=1, required=True),
+            Column("asset_list_col", "asset_list_col", DataTypes.ASSETLIST.value, asset_type_id=1, required=True)
         ]
 
         asset_type = AssetType(

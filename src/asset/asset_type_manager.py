@@ -43,7 +43,7 @@ class AssetTypeManager(AAssetTypeManager):
         self.db_connection = SqliteConnection.get()
 
     def create_asset_type(self, asset_type: AssetType) -> None:
-        """Create a new ``asset_type`` in the asset type registry."""
+        """Create a new ``asset_type_id`` in the asset type registry."""
 
         # Ensuring the table to store the asset types in exists
         self._init_asset_types_table()
@@ -79,12 +79,12 @@ class AssetTypeManager(AAssetTypeManager):
         # Storing the type information in the appropriate table
         self.db_connection.write_dict(self._asset_types_table_name, query_dict)
 
-        # Creating a table appropriate for the asset_type
+        # Creating a table appropriate for the asset_type_id
         self.db_connection.create_table(asset_table_name, asset_type.columns)
         self.db_connection.commit()
 
     def delete_asset_type(self, asset_type: AssetType) -> None:
-        """Delete ``asset_type`` and all it's assets from the system."""
+        """Delete ``asset_type_id`` and all it's assets from the system."""
 
         # Ensuring the table to delete the asset types from exists
         self._init_asset_types_table()
@@ -94,7 +94,7 @@ class AssetTypeManager(AAssetTypeManager):
         self.db_connection.commit()
 
     def update_asset_type(self, asset_type: AssetType) -> None:
-        """Update an ``asset_type`` in the database."""
+        """Update an ``asset_type_id`` in the database."""
 
         # Making sure one is not trying to update an asset type without an id
         if not asset_type.asset_type_id:
@@ -136,7 +136,7 @@ class AssetTypeManager(AAssetTypeManager):
         self.db_connection.update(self._asset_types_table_name, values)
 
     def check_asset_type_exists(self, asset_type: AssetType) -> bool:
-        """Check if ``asset_type`` with that name already exists."""
+        """Check if ``asset_type_id`` with that name already exists."""
 
         # Making sure we aren't wandering blindly into the night
         self._init_asset_types_table()

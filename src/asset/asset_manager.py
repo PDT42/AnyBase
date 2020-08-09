@@ -70,9 +70,9 @@ class AssetManager(AAssetManager):
         if not asset.asset_id:
             raise AttributeError("The asset_id parameter of the asset you try to update must be set!")
 
-        # Making sure the asset_type table is set
+        # Making sure the asset_type_id table is set
         if not asset_type.asset_table_name:
-            raise AttributeError("The asset_type_table parameter of asset_type must be set!")
+            raise AttributeError("The asset_type_table parameter of asset_type_id must be set!")
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException(f"The asset type {asset_type} does not exist!")

@@ -7,7 +7,7 @@ This is the package for all frontend creating stuff.
 """
 from dataclasses import dataclass
 from enum import Enum
-from typing import Sequence
+from typing import Sequence, Tuple
 
 from asset import Asset, AssetType
 from plugins import PluginSettings
@@ -17,8 +17,7 @@ from plugins import PluginSettings
 class PageLayout:
     """This is a ``PageLayout``."""
     number_of_fields: int
-    layout_macro_path: str
-    plugin_settings: Sequence[PluginSettings]
+    layout: Tuple[Tuple[Tuple[float, PluginSettings]]]
 
 
 class LayoutMacros(Enum):

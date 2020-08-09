@@ -31,7 +31,7 @@ class AssetTypePageManager:
         pass
 
     def delete_page(self, asset_type: AssetType):
-        """Delete the ``AssetPage`` of a given ``asset_type``."""
+        """Delete the ``AssetPage`` of a given ``asset_type_id``."""
 
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
@@ -49,7 +49,7 @@ class AssetTypePageManager:
         pass
 
     def check_page_exists(self, asset_type: AssetType):
-        """Check if an ``AssetPage`` for ``asset_type`` exists in the database."""
+        """Check if an ``AssetPage`` for ``asset_type_id`` exists in the database."""
 
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
@@ -58,7 +58,7 @@ class AssetTypePageManager:
         pass
 
     def get_page(self, asset_type: AssetType):
-        """Get the ``AssetPage`` for ``asset_type`` from the database"""
+        """Get the ``AssetPage`` for ``asset_type_id`` from the database"""
 
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
@@ -67,7 +67,7 @@ class AssetTypePageManager:
         pass
 
     def get_editor(self, asset_type: AssetType):
-        """Get the editor for a given ``asset_type``."""
+        """Get the editor for a given ``asset_type_id``."""
 
         # Ensuring the required database tables exist
         self._init_page_layout_tables()

@@ -5,9 +5,10 @@
 The package contains the AssetManager and the AssetTypeManager.
 """
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, List, MutableMapping, Optional
 
-from database import Column
+from database import Column, DataTypes
 
 
 @dataclass
@@ -20,6 +21,42 @@ class AssetType:
     asset_type_id: int = None
     is_subtype: bool = False
     super_type_id: int = 0
+
+
+@dataclass
+class AssetTypePrefab:
+    """This is an ``AssetTypePrefab``."""
+
+    prefab_name: str
+    columns: List[Column]
+
+
+@dataclass
+class AssetTypePrefabs(Enum):
+    """These are the available ``AssetTypePrefabs``."""
+
+    ADDRESS = AssetTypePrefab(
+        prefab_name="Address",
+        columns=[
+            Column("Country", "country", DataTypes.TEXT.value, required=True),
+            Column("City", "city", DataTypes.TEXT.value, required=True),
+            Column("Street", "street", DataTypes.TEXT.value, required=True),
+            Column("ZipCode", "zipcode", DataTypes.INTEGER.value, required=True),
+            Column("House Number", "house_number", DataTypes.INTEGER.value, required=True),
+        ],
+    )
+
+    # --
+
+    @classmethod
+    def get_all_asset_type_prefabs(cls):
+        """Get all distinct field values from enum."""
+        return list(set([prefab.value for prefab in cls.__members__.values()]))
+
+    @classmethod
+    def get_all_asset_type_prefab_names(cls):
+        """Get the names of all available asset type prefabs."""
+        return list(cls.__members__.keys())
 
 
 @dataclass
