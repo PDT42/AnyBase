@@ -1,3 +1,37 @@
-{% macro plugin_macro(asset_type, assets, employed_columns) %}
+{% macro plugin_macro(asset_type, assets, setting) %}
+<div id="plugin-{{ setting.plugin_settings_id }}">
+    <script>
+        const assets = JSON.parse('{{ assets|tojson }}');
+        const asset_type = JSON.parse('{{ asset_type|tojson }}');
+        const setting = JSON.parse('{{ setting|tojson }}');
 
+        const root = document.getElementById('plugin-' + setting['plugin_settings_id']);
+
+        let assetList = document.createElement('div');
+        assetList.setAttribute('class', 'list-group');
+        root.appendChild(assetList);
+
+        let employedColumns = setting['employed_columns'];
+
+        for (let asset_id in assets) {
+            let assetData = assets[asset_id]['data'];
+
+            let assetCard = document.createElement('a');
+            assetCard.setAttribute('class', 'list-group-item card');
+            assetCard.setAttribute('href', '#'); // TODO: Insert correct link
+            assetCard.setAttribute('style', 'margin-bottom: 15px');
+            assetList.appendChild(assetCard);
+
+            let assetCardBody = document.createElement('div');
+            assetCardBody.setAttribute('class', 'card-body');
+            assetCard.appendChild(assetCardBody);
+
+            let cardTitle = document.createElement('h5');
+            cardTitle.setAttribute('class', 'card-title');
+            cardTitle.innerText = assetData[employedColumns[0]];
+            assetCardBody.appendChild(cardTitle);
+        }
+
+    </script>
+</div>
 {% endmacro %}

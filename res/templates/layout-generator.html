@@ -1,13 +1,24 @@
-{% macro layout_macro(asset_type_page) %}
+{% macro layout_generator(asset_type_page) %}
+
+{% set asset_type = asset_type_page.asset_type %}
+{% set assets = asset_type_page.assets %}
+
+{% for row in asset_type_page.layout %}
 <div class="row">
-    <div class="col-sm">
-        {% for setting in asset_type_page.plugin_settings %}
+
+    {% for setting in row %}
+
+    {% set width = setting[0] %}
+    {% set setting = setting[1] %}
+
+    <div class="col-md-{{ width }}">
 
         {% from setting.plugin.plugin_macro_path import plugin_macro %}
-        {{ plugin_macro(asset_type_page.asset_type, asset_type_page.assets, setting.employed_columns) }}
-
-        {% endfor %}
+        {{ plugin_macro(asset_type, assets, setting) }}
 
     </div>
+    {% endfor %}
+
 </div>
+{% endfor %}
 {% endmacro %}

@@ -27,7 +27,19 @@
                 </div>
 
                 <div class="col-8">
-                    <input type="{{ column.datatype.fe_type }}" step="any" class="form-control" name="{{ column.db_name }}">
+
+                    {% if column.datatype.typename in ['ASSET', 'ASSETLIST']%}
+                    <select class="form-control custom-select" name="{{ column.db_name }}">
+
+                        {% for asset in assets[column.asset_type_id] %}
+                        <option value="{{ asset.asset_id|int }}">{{ asset|string }}</option>
+                        {% endfor %}
+
+                    </select>
+                    {% else %}
+                    <input type="{{ column.datatype.fe_type }}" step="any" class="form-control"
+                           name="{{ column.db_name }}">
+                    {% endif %}
                 </div>
 
             </div>

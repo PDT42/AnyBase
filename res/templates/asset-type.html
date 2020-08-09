@@ -48,8 +48,8 @@
     <hr/>
 
     <!-- Import Layout Macro and apply it -->
-    {% from asset_type_page.layout_macro_path import layout_macro %}
-    {{ layout_macro(assets, asset_type_page.plugin_settings) }}
+    {% from 'layout-generator.html' import layout_generator %}
+    {{ layout_generator(asset_type_page) }}
 
 </div>
 {% endblock %}
