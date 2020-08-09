@@ -1,0 +1,13 @@
+{% macro layout_macro(asset_type_page) %}
+<div class="row">
+    <div class="col-sm">
+        {% for setting in asset_type_page.plugin_settings %}
+
+        {% from setting.plugin.plugin_macro_path import plugin_macro %}
+        {{ plugin_macro(asset_type_page.asset_type, asset_type_page.assets, setting.employed_columns) }}
+
+        {% endfor %}
+
+    </div>
+</div>
+{% endmacro %}
