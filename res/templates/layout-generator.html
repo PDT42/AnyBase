@@ -1,20 +1,28 @@
 {% macro layout_generator(asset_type_page) %}
 
+{# shortening names #}
 {% set asset_type = asset_type_page.asset_type %}
 {% set assets = asset_type_page.assets %}
 
-{% for row in asset_type_page.layout %}
+<script>
+    // Constants that are used in all of the plugins
+    const assets = JSON.parse('{{ assets|tojson }}');
+    const asset_type = JSON.parse('{{ asset_type|tojson }}');
+</script>
+
+<!-- We use simple bootstrap for the layout for now -->
+
+{% for row_info in asset_type_page.layout %}
 <div class="row">
 
-    {% for setting in row %}
+    {% for column in row_info.columns %}
 
-    {% set width = setting[0] %}
-    {% set setting = setting[1] %}
+    {% set plugin_path = column.plugin_path %}
 
-    <div class="col-md-{{ width }}">
+    <div class="col-md-{{ column.column_width }}">
 
-        {% from setting.plugin.plugin_macro_path import plugin_macro %}
-        {{ plugin_macro(asset_type, assets, setting) }}
+        {% from plugin_path import plugin_macro %}
+        {{ plugin_macro(column) }}
 
     </div>
     {% endfor %}
