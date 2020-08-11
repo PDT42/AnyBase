@@ -9,6 +9,8 @@
 {% block body %}
 <div class="container" style="padding-top: 20px">
 
+    {% if asset_type_page %}
+
     <div class="row">
         <div class="col-sm">
 
@@ -50,6 +52,10 @@
     <!-- Import Layout Macro and apply it -->
     {% from 'layout-generator.html' import layout_generator %}
     {{ layout_generator(asset_type_page) }}
+
+    {% else %}
+    <h1>Error: Page Information is missing.</h1>
+    {% endif %}
 
 </div>
 {% endblock %}
