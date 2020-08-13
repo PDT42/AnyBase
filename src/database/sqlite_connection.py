@@ -252,7 +252,7 @@ class SqliteConnection(DbConnection):
         # --------------
         self.cursor.execute(query)
 
-        result = self.cursor.lastrowid
+        result: int = self.cursor.lastrowid
 
         return result
 
