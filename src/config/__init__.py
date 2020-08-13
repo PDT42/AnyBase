@@ -38,7 +38,7 @@ class Config:
             raise ValueError("You specified an unknown section of the config!")
 
         if key not in config[section]:
-            config[section][key] = default
+            config[section][key] = str(default)
         res = config[section][key]
 
         with open(self._path, 'w') as configfile:
@@ -54,7 +54,7 @@ class Config:
         if section not in config:
             config[section] = {}
 
-        config[section][key] = value
+        config[section][key] = str(value)
 
         with open(self._path, 'w') as configfile:
             config.write(configfile)
