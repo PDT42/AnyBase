@@ -5,24 +5,34 @@
 This is the package for all frontend creating stuff.
 # TODO
 """
+
 from dataclasses import dataclass
-from enum import Enum
-from typing import Sequence, Tuple
+from typing import List, Sequence
 
 from asset import Asset, AssetType
-from plugins import PluginSettings
+
+
+@dataclass
+class ColumnInfo:
+    """This is one column if a layout."""
+    column_width: int
+    plugin_name: str
+    plugin_path: str
+    employed_columns: Sequence[str]
+    column_id: int = None
+
+
+@dataclass
+class RowInfo:
+    """This is one row of a layout."""
+    columns: List[ColumnInfo]
 
 
 @dataclass
 class PageLayout:
     """This is a ``PageLayout``."""
-    number_of_fields: int
-    layout: Tuple[Tuple[Tuple[float, PluginSettings]]]
-
-
-class LayoutMacros(Enum):
-    """This is an enumeration of available ``PageLayouts``."""
-    ONE_ONE_LAYOUT = ('layouts/one_one_layout.html', 1)
+    layout: List[RowInfo]
+    layout_id: int
 
 
 @dataclass
@@ -35,4 +45,4 @@ class AssetDetailPage(PageLayout):
 class AssetTypePage(PageLayout):
     """This is an ``AssetTypePage``."""
     asset_type: AssetType
-    assets: Sequence[Asset]
+    assets: List[Asset]
