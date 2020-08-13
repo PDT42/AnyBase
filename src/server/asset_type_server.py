@@ -16,12 +16,14 @@ from config import Config
 from database import Column, DataType, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from exceptions.common import IllegalStateException
-from pages import AssetTypePage
-from plugins import Plugin, PluginSettings
+from pages import AssetTypePage, ColumnInfo, RowInfo
+from pages.asset_type_page_manager import AssetTypePageManager
+from server.asset_server import request_asset_data
 
 
 class AssetTypeServer:
-    """This is the AssetTypeServer."""
+    """This is the AssetTypeServer. This is created as a singleton
+    so we don't need to init all the constants again and again."""
 
     _instance = None
     json_response = None
@@ -42,7 +44,10 @@ class AssetTypeServer:
 
     @staticmethod
     def post_create_asset_type():
-        """This is a FlaskAppRoute that lets you create ``AssetType`` dialog."""
+        """Handle POST request to create-asset-type.
+
+        This will create the asset type defined by
+        the request parameters."""
 
         columns: List[Column] = []
         asset_name = request.form.get('assetName')
@@ -54,7 +59,7 @@ class AssetTypeServer:
             column_required = f'column-required-{column_number}'
             column_asset_type = f'column-asset-type-{column_number}'
 
-            r = request
+            r = request  # TODO: remove, debug
 
             if column_name in request.form.keys():
 
@@ -107,7 +112,11 @@ class AssetTypeServer:
 
     @staticmethod
     def get_create_asset_type():
-        """TODO"""
+        """Handle get requests to create-asset-type.
+
+        This will return a rendered template, containing
+        a create form, which can be used to defined a
+        new asset type in the system."""
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_types = {
