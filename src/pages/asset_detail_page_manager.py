@@ -6,45 +6,37 @@ This is the module for the ``AssetDetailPageManager``. It is responsible for sto
 information regarding the ``PageLayouts`` of AssetDetail Pages. It's supposed to translate AssetData into render ready
 html pages.
 """
-from asset import Asset
+
+from asset import Asset, AssetType
 from database.db_connection import DbConnection
-from pages import AssetDetailPage
+from pages import AssetDetailPage, AssetTypePage
+from pages.abstract_page_manager import APageManager
 
 
-class AssetDetailPageManager:
+class AssetDetailPageManager(APageManager):
     """This is the ``AssetDetailPageManager``."""
 
-    def __init__(self):
-        """Create a new ``AssetDetailPageManager``."""
-
-        self.db_connection = DbConnection.get()
-
-    def create_page(self, asset_detail_page: AssetDetailPage):
-        """Create an ``AssetDetailPage`` in the database."""
-        # TODO
+    def create_page(self, asset_page: AssetTypePage):
+        """Create a new ``AssetPage`` in the database."""
         pass
 
-    def delete_page(self, asset: Asset):
-        """Delete the ``AssetDetailPage`` of a give ``asset``."""
-        # TODO
+    def delete_page(self, asset_type: AssetType):
+        """Delete the ``AssetPage`` of a given ``asset_type_id``."""
         pass
 
-    def update_page(self, asset_detail_page: AssetDetailPage):
-        """Update the ``asset_detail_page`` in the database."""
-        # TODO
+    def update_page(self, asset_page: AssetTypePage):
+        """Update an ``AssetPage`` in the database."""
         pass
 
-    def check_page_exists(self, asset: Asset):
-        """Check if an ``AssetDetailPage`` exists for a given ``asset``."""
-        # TODO
+    def check_page_exists(self, asset_type: AssetType):
+        """Check if an ``AssetPage`` for ``asset_type_id`` exists in the database."""
         pass
 
-    def get_page(self, asset: Asset):
-        """Get the ``AssetDetailPage`` for a given ``asset``."""
-        # TODO
+    def get_page(self, asset_type: AssetType):
+        """Get the ``AssetPage`` for ``asset_type_id`` from the database"""
         pass
 
-    def get_editor(self, asset: Asset):
-        """Get the editor for ``AssetDetailPages``."""
-        # TODO
+    def get_editor(self, asset_type: AssetType):
+        """Get the editor for a given ``asset_type_id``."""
         pass
+
