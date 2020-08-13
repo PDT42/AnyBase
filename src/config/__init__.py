@@ -18,7 +18,7 @@ class Config:
     _path = "res/config.ini"
 
     @staticmethod
-    def get():
+    def get() -> 'Config':
         """Get the instance of this singleton."""
 
         if not Config._instance:
