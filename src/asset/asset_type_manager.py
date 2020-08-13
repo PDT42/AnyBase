@@ -162,12 +162,12 @@ class AssetTypeManager(AAssetTypeManager):
         self._init_asset_types_table()
 
         # Reading asset types from the database
-        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+        results: Sequence[Mapping[str, Any]] = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=self._asset_headers,
         )
 
-        return self._convert_result_to_asset_types(result)
+        return self._convert_result_to_asset_types(results)
 
     def get_all_filtered(
             self, and_filters: Sequence[str] = None,
@@ -209,11 +209,11 @@ class AssetTypeManager(AAssetTypeManager):
         return self._convert_result_to_asset_types(result)
 
     @staticmethod
-    def _convert_result_to_asset_types(result):
-        """Convert a db result to a list of AssetTypes."""
+    def _convert_result_to_asset_types(results):
+        """Convert the db results to a list of AssetTypes."""
 
         assets_types = []
-        for asset_type_row in result:
+        for asset_type_row in results:
             assets_types.append(AssetType(
                 asset_name=asset_type_row['asset_name'],
                 columns=AssetTypeManager.generate_columns_from_columns_str(asset_type_row['asset_columns']),
