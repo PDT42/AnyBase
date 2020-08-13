@@ -40,13 +40,36 @@ class AAssetManager:
         pass
 
     @abstractmethod
+    def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
+        """Get the ``Asset`` with ``asset_id`` from the database."""
+        pass
+
+    @abstractmethod
     def get_all(self, asset_type: AssetType) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
         pass
 
     @abstractmethod
-    def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
-        """Get the ``Asset`` with ``asset_id`` from the database."""
+    def get_all_filtered(
+            self, asset_type: AssetType,
+            depth: int = None,
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None) -> List[Asset]:
+        """Get all assets of ``AssetType`` from the database."""
+        pass
+
+    @abstractmethod
+    def get_batch(
+            self, asset_type: AssetType,
+            offset: int, limit: int,
+            depth: int = None) \
+            -> List[Asset]:
+        """Get all assets of ``AssetType`` from the database."""
+        pass
+
+    @abstractmethod
+    def count(self, asset_type: AssetType):
+        """Count the number of assets of the given type."""
         pass
 
     def convert_row_to_data(
