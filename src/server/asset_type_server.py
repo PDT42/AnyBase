@@ -173,27 +173,34 @@ class AssetTypeServer:
         asset_type_manager = AssetTypeManager()
         asset_type = asset_type_manager.get_one(asset_type_id)
 
+        request_asset_data(asset_type.asset_type_id, depth=1)
+
         asset_manager = AssetManager()
         assets = asset_manager.get_all(asset_type, depth=1)
 
         # TODO: Get AssetTypePage from AssetTypePageManager
 
         asset_type_page = AssetTypePage(
+            layout_id=0,
             asset_type=asset_type,
-            assets=assets,
-            number_of_fields=1,
-            layout=(
-                (
-                    (12, PluginSettings(
-                        plugin=Plugin('list_assets', 'plugins/list-assets-plugin.html'),
+            assets=assets,  # TODO: Transmit query url instead of items
+            layout=[
+                RowInfo(columns=[
+                    ColumnInfo(
+                        column_width=12,
+                        plugin_name='list-assets',
+                        plugin_path='plugins/list-assets-plugin.html',
                         employed_columns=['name'],
-                        plugin_settings_id=0
+                        column_id=0
                     )
-                     ),
-                ),
-            ),
+                ]),
+            ]
         )
-        return render_template("asset-type.html", asset_type_page=asset_type_page)
+
+        AssetTypePageManager().create_page(asset_type_page)
+        page = AssetTypePageManager().get_page(asset_type)
+
+        return render_template("asset-type.html", asset_type_page=page)
 
     @staticmethod
     def delete_asset_type(asset_type_id):
