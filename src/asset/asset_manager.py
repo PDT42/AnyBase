@@ -82,25 +82,6 @@ class AssetManager(AAssetManager):
 
         self.db_connection.update(asset_type.asset_table_name, data)
 
-    def get_all(self, asset_type: AssetType, depth: int = None) -> List[Asset]:
-        """Get all assets of ``AssetType`` from the database."""
-
-        if not self.asset_type_manager.check_asset_type_exists(asset_type):
-            raise AssetTypeDoesNotExistException()
-
-        result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.db_name for column in asset_type.columns])
-
-        assets = []
-        for asset_row in result:
-            assets.append(Asset(
-                asset_id=asset_row.pop('primary_key'),
-                data=self.convert_row_to_data(asset_row, asset_type.columns)
-            ))
-
-        return assets
-
     def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
 
@@ -124,3 +105,73 @@ class AssetManager(AAssetManager):
             data=self.convert_row_to_data(result[0], asset_type.columns, depth)
         )
         return asset
+
+    def get_all(self, asset_type: AssetType, depth: int = None) -> List[Asset]:
+        """Get all assets of ``AssetType`` from the database."""
+
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
+            raise AssetTypeDoesNotExistException()
+
+        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+            self.asset_type_manager.generate_asset_table_name(asset_type),
+            [column.db_name for column in asset_type.columns])
+
+        return self._convert_results_to_assets(results, asset_type, depth)
+
+    def get_all_filtered(
+            self, asset_type: AssetType,
+            depth: int = None,
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None) -> List[Asset]:
+        """Get all (filtered) assets of ``AssetType`` from the database."""
+
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
+            raise AssetTypeDoesNotExistException()
+
+        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+            self.asset_type_manager.generate_asset_table_name(asset_type),
+            [column.db_name for column in asset_type.columns],
+            and_filters=and_filters, or_filters=or_filters
+        )
+
+        return self._convert_results_to_assets(results, asset_type, depth)
+
+    def get_batch(
+            self, asset_type: AssetType,
+            offset: int, limit: int,
+            depth: int = None) \
+            -> List[Asset]:
+        """Get a batch of assets of ``AssetType`` from the database."""
+
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
+            raise AssetTypeDoesNotExistException()
+
+        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+            self.asset_type_manager.generate_asset_table_name(asset_type),
+            [column.db_name for column in asset_type.columns],
+            limit=limit, offset=offset
+        )
+
+        return self._convert_results_to_assets(results, asset_type, depth)
+
+    def count(self, asset_type: AssetType):
+        """Count the number of assets of the given type."""
+
+        if not self.asset_type_manager.check_asset_type_exists(asset_type):
+            raise AssetTypeDoesNotExistException()
+
+        count: int = self.db_connection.count(asset_type.asset_table_name)
+        return count
+
+    def _convert_results_to_assets(self, results, asset_type, depth):
+        """Convert the db results to a list of Assets."""
+
+        assets = []
+
+        for asset_row in results:
+            assets.append(Asset(
+                asset_id=asset_row.pop('primary_key'),
+                data=self.convert_row_to_data(asset_row, asset_type.columns, depth)
+            ))
+
+        return assets
