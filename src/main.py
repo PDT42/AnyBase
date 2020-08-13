@@ -1,6 +1,8 @@
 """
 :Author: PDT
 :Since: 2020/05/24
+
+This is the main application of AnyBase. Run this.
 """
 
 from flask import Flask
@@ -19,6 +21,10 @@ template_folder = Config.get().read('frontend', 'template_folder', '/res/templat
 # Creating Flask Application
 # --------------------------
 app = Flask(__name__, template_folder=template_folder)
+
+app.config["REDIS_URL"] = "redis://127.0.0.1"
+
+app.secret_key = "SomeSecret"
 
 # Initialization
 # --------------
@@ -93,4 +99,4 @@ app.add_url_rule(
 )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

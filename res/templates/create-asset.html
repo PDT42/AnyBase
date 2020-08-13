@@ -16,6 +16,30 @@
 
     <hr/>
 
+    <div id="asset-container">
+        <script>
+            if (!!window.EventSource) {
+                let source = new EventSource(
+                    "{{ url_for('sse.stream') }}"
+                );
+
+                // function appendAssets(assets) {
+                //     console.log("TEST")
+                //     // const assetContainer = document.getElementById("asset-container");
+                //     //
+                //     // for (let asset in assets) {
+                //     //
+                //     // }
+                // }
+
+                source.addEventListener('message',  function(event) {
+                    console.log("test")
+                    console.log(event)
+                })
+            }
+        </script>
+    </div>
+
     <div class="row">
         <form class="col" action="/asset-type/{{ asset_type.asset_type_id }}/create-asset" method="POST">
 
