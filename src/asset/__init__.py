@@ -4,6 +4,7 @@
 
 The package contains the AssetManager and the AssetTypeManager.
 """
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, List, MutableMapping, Optional
@@ -65,3 +66,6 @@ class Asset:
 
     data: MutableMapping[Any, Any]
     asset_id: Optional[int] = None
+
+    def to_json(self):
+        return json.dumps({'data': self.data, 'asset_id': self.asset_id})
