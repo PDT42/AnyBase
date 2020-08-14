@@ -106,7 +106,7 @@ class AssetManager(AAssetManager):
         )
         return asset
 
-    def get_all(self, asset_type: AssetType, depth: int = None) -> List[Asset]:
+    def get_all(self, asset_type: AssetType, depth: int = 0) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
