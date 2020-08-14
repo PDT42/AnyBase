@@ -4,38 +4,46 @@
 
 This is the main application of AnyBase. Run this.
 """
-
-from flask import Flask
+import redis
+import asyncio
+import aioredis
+from quart import Quart
 
 from config import Config
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from server import configuration, index
-from server.asset_server import get_create_asset, post_create_asset
+from server.asset_server import AssetServer
 from server.asset_type_server import AssetTypeServer
 
 # Getting config values
 # ---------------------
+Config.get().change_path('U:/projects/anybase_modular_management/res/config.ini')
 template_folder = Config.get().read('frontend', 'template_folder', '/res/templates')
 
-# Creating Flask Application
+# Creating Quart Application
 # --------------------------
-app = Flask(__name__, template_folder=template_folder)
-
-app.config["REDIS_URL"] = "redis://127.0.0.1"
+app = Quart(__name__, template_folder=template_folder)
 
 app.secret_key = "SomeSecret"
+
+# Initializing redis connection
+# -----------------------------
+strict_redis = redis.StrictRedis(host='localhost', port=6379)
+strict_redis.execute_command('FLUSHDB')
 
 # Initialization
 # --------------
 
 # Database
 # ~~~~~~~~
-db_connection: DbConnection = SqliteConnection.get()
+db_path = Config.get().read('local database', 'path')
+db_connection: DbConnection = SqliteConnection.get(db_path)
 
 # Creating Servers
 # ~~~~~~~~~~~~~~~~
 asset_type_server = AssetTypeServer.get()
+asset_server = AssetServer.get()
 
 # Adding Routes provided in server to app
 # ---------------------------------------
@@ -87,16 +95,23 @@ app.add_url_rule(
 app.add_url_rule(
     '/asset-type/<int:asset_type_id>/create-asset',
     'get-create-asset',
-    get_create_asset,
+    asset_server.get_create_asset,
     methods=['GET']
 )
 
 app.add_url_rule(
     '/asset-type/<int:asset_type_id>/create-asset',
     'post-create-asset',
-    post_create_asset,
+    asset_server.post_create_asset,
     methods=['POST']
 )
 
+app.add_url_rule(
+    '/asset-type/<int:asset_type_id>/items',
+    'check-asset-data',
+    asset_server.check_asset_data,
+    methods=['GET']
+)
+
 if __name__ == '__main__':
-    app.run(debug=True, threaded=True)
+    app.run('localhost', port=5000, debug=True)
