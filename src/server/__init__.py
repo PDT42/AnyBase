@@ -4,21 +4,20 @@
 
 These are the routes for the project.
 """
-
-from flask import render_template
+from quart import render_template
 
 from asset.asset_type_manager import AssetTypeManager
 
 
-def index():
-    """Return home page."""
-    return render_template("base.html")
+async def index():
+    """Return home page_layout."""
+    return await render_template("base.html")
 
 
-def configuration():
-    """Return Configuration page."""
+async def configuration():
+    """Return Configuration page_layout."""
 
     asset_type_manager = AssetTypeManager()
     asset_types = asset_type_manager.get_all()
 
-    return render_template("configuration.html", asset_types=asset_types)
+    return await render_template("configuration.html", asset_types=asset_types)
