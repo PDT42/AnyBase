@@ -9,7 +9,7 @@
 {% block body %}
 <div class="container" style="padding-top: 20px">
 
-    {% if asset_type_page %}
+    {% if page_layout %}
 
     <div class="row">
         <div class="col-sm">
@@ -17,7 +17,7 @@
             <div class="row">
 
                 <div class="col">
-                    <h4>{{ asset_type_page.asset_type.asset_name }}</h4>
+                    <h4>{{ page_layout.asset_type.asset_name }}</h4>
                 </div>
 
                 <div class="col">
@@ -25,7 +25,7 @@
                     <div class="row justify-content-end">
 
                         <div class="col-3">
-                            <form action="/asset-type/{{ asset_type_page.asset_type.asset_type_id }}/create-asset"
+                            <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}/create-asset"
                                   method="GET">
                                 <button type="submit" name="createAsset" class="btn btn-block btn-dark">
                                     Create
@@ -34,7 +34,7 @@
                         </div>
 
                         <div class="col-3">
-                            <form action="/asset-type/{{ asset_type_page.asset_type.asset_type_id }}" method="POST">
+                            <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}" method="POST">
                                 <button type="submit" name="deleteAsset" class="btn btn-block btn-danger" value="True">
                                     Delete
                                 </button>
@@ -51,7 +51,7 @@
 
     <!-- Import Layout Macro and apply it -->
     {% from 'layout-generator.html' import layout_generator %}
-    {{ layout_generator(asset_type_page) }}
+    {{ layout_generator(page_layout) }}
 
     {% else %}
     <h1>Error: Page Information is missing.</h1>
