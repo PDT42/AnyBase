@@ -1,48 +1,54 @@
-{% macro plugin_macro(column) %}
-<div id="column-{{ column.column_id }}">
-    <script>
-        column = JSON.parse('{{ column|tojson }}');
+{% macro plugin_macro(column_info) %}
+<script>
+    column_info = JSON.parse('{{ column_info.as_dict()|tojson }}');
 
-        // Putting this into a function is important
-        // The variable names used, will otherwise
-        // be globally declared and not be usable
-        // within the same html again. If we want to
-        // use the same plugin twice in one layout
-        // tho - that must be possible.
+    // Putting this into a function is important
+    // The variable names used, will otherwise
+    // be globally declared and not be usable
+    // within the same html again. If we want to
+    // use the same plugin twice in one layout
+    // tho - that must be possible.
 
-        function generate() {
-            console.log(column['plugin_settings_id'])
-            const root = document.getElementById('column-' + column['column_id']);
+    function appendListItems(items, assetList, employedColumns) {
 
-            let assetList = document.createElement('div');
-            assetList.setAttribute('class', 'list-group');
-            root.appendChild(assetList);
+        for (let index in items) {
 
-            let employedColumns = column['employed_columns'];
+            let assetData = items[index]
 
-            // This can be ignored, assets is declared
-            // in a script block of the layout generator.
-            for (let asset_id in assets) {
-                let assetData = assets[asset_id]['data'];
+            let assetCard = document.createElement('a');
+            assetCard.setAttribute('id', '{{column_info.column_id}}-asset-' + assetData['asset_id'])
+            assetCard.setAttribute('class', 'list-group-item card');
+            assetCard.setAttribute('href', '#'); // TODO: Insert correct link
+            assetCard.setAttribute('style', 'margin-bottom: 15px');
+            assetList.appendChild(assetCard);
 
-                let assetCard = document.createElement('a');
-                assetCard.setAttribute('class', 'list-group-item card');
-                assetCard.setAttribute('href', '#'); // TODO: Insert correct link
-                assetCard.setAttribute('style', 'margin-bottom: 15px');
-                assetList.appendChild(assetCard);
+            let assetCardBody = document.createElement('div');
+            assetCardBody.setAttribute('class', 'card-body');
+            assetCard.appendChild(assetCardBody);
 
-                let assetCardBody = document.createElement('div');
-                assetCardBody.setAttribute('class', 'card-body');
-                assetCard.appendChild(assetCardBody);
-
-                let cardTitle = document.createElement('h5');
-                cardTitle.setAttribute('class', 'card-title');
-                cardTitle.innerText = assetData[employedColumns[0]];
-                assetCardBody.appendChild(cardTitle);
-            }
+            let cardTitle = document.createElement('h5');
+            cardTitle.setAttribute('class', 'card-title');
+            cardTitle.innerText = assetData['data'][employedColumns[0]];
+            assetCardBody.appendChild(cardTitle);
         }
+    }
 
-        generate();
-    </script>
-</div>
+    function initListAssets() {
+        const root = document.getElementById('column-' + column_info['column_id']);
+
+        let assetList = document.createElement('div');
+        assetList.setAttribute('class', 'list-group');
+        root.appendChild(assetList);
+
+        let employedColumns = column_info['employed_columns'];
+
+        appendListItems(items, employedColumns)
+
+        itemsPubSub.subscribe('items-data', function (items) {
+            appendListItems(items, assetList, employedColumns)
+        })
+    }
+
+    initListAssets();
+</script>
 {% endmacro %}
