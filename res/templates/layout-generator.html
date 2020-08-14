@@ -1,30 +1,90 @@
-{% macro layout_generator(asset_type_page) %}
+{% macro layout_generator(page_layout) %}
 
 {# shortening names #}
-{% set asset_type = asset_type_page.asset_type %}
-{% set assets = asset_type_page.assets %}
+{% set asset_type = page_layout.asset_type %}
+
 
 <script>
-    // Constants that are used in all of the plugins
-    const assets = JSON.parse('{{ assets|tojson }}');
-    const asset_type = JSON.parse('{{ asset_type|tojson }}');
+    const asset_type = JSON.parse('{{ asset_type.as_dict()|tojson }}');
 </script>
+
+{# We don't need to load data if asset_type supplies an asset. #}
+{% if not page_layout.asset %}
+<script>
+
+    // Save some status variables. Each page_layout layout
+    // can (right now) request item data from one
+    // source. This source is supplied in  '
+    let items_status = 'init';
+    let items = [];
+    let item_count;
+    let received_items = 0;
+
+    function pubSub() {
+
+        // Defining channels
+        let subscribers = {
+            'items-data': []
+        }
+
+        function subscribe(channel, callback) {
+            subscribers[channel].push(callback)
+        }
+
+        function publish(channel, data) {
+            subscribers[channel].forEach((callback) => callback(data));
+        }
+
+        return {publish, subscribe}
+    }
+
+    // Creating an event source, that will
+    // request items using the PageLayouts
+    // 'items_url'.
+    let source = new EventSource('{{ page_layout.items_url }}');
+
+    // Creating a pubsub to notify elements
+    // processing async requested items
+    let itemsPubSub = pubSub();
+
+    source.addEventListener('items-data', function (event) {
+        let received_data = JSON.parse(event.data.replace(/'/g, '"'))[0];
+
+        if (!item_count) {
+            items_status = 'loading';
+            item_count = received_data['item_count'];
+        }
+
+        for (let key in received_data['items']) {
+            let item = received_data['items'][key];
+            items.push(item);
+            received_items += 1;
+        }
+
+        itemsPubSub.publish('items-data', received_data['items'])
+
+        if (received_items >= item_count) {
+            source.close();
+            items_status = 'finished';
+        }
+    })
+</script>
+{% endif %}
 
 <!-- We use simple bootstrap for the layout for now -->
 
-{% for row_info in asset_type_page.layout %}
+{% for row_info in page_layout.layout %}
 <div class="row">
 
-    {% for column in row_info.columns %}
+    {% for column_info in row_info %}
 
-    {% set plugin_path = column.plugin_path %}
+    {% set plugin_path = column_info.plugin_path %}
 
-    <div class="col-md-{{ column.column_width }}">
+    <div class="col-md-{{ column_info.column_width }}" id="column-{{ column_info.column_id }}"></div>
 
-        {% from plugin_path import plugin_macro %}
-        {{ plugin_macro(column) }}
+    {% from plugin_path import plugin_macro %}
+    {{ plugin_macro(column_info) }}
 
-    </div>
     {% endfor %}
 
 </div>
