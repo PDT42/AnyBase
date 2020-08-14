@@ -6,7 +6,7 @@ These are the routes for the ``AssetTypeManager``.
 """
 from typing import List
 
-from flask import jsonify, redirect, render_template, request
+from quart import jsonify, redirect, render_template, request
 
 from asset import AssetType, AssetTypePrefab, AssetTypePrefabs
 from asset.abstract_asset_type_manager import AAssetTypeManager
@@ -16,9 +16,8 @@ from config import Config
 from database import Column, DataType, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from exceptions.common import IllegalStateException
-from pages import AssetTypePage, ColumnInfo, RowInfo
-from pages.asset_type_page_manager import AssetTypePageManager
-from server.asset_server import request_asset_data
+from pages import ColumnInfo, PageLayout
+from pages.page_manager import PageManager
 
 
 class AssetTypeServer:
@@ -43,14 +42,16 @@ class AssetTypeServer:
         self.json_response = Config.get().read('frontend', 'json_response', False) in ["True", "true", 1]
 
     @staticmethod
-    def post_create_asset_type():
+    async def post_create_asset_type():
         """Handle POST request to create-asset-type.
 
         This will create the asset type defined by
         the request parameters."""
 
+        sync_form = await request.form
+
         columns: List[Column] = []
-        asset_name = request.form.get('assetName')
+        asset_name = sync_form.get('assetName')
 
         for column_number in range(0, 15):
 
@@ -61,11 +62,11 @@ class AssetTypeServer:
 
             r = request  # TODO: remove, debug
 
-            if column_name in request.form.keys():
+            if column_name in sync_form.keys():
 
                 # Get the columns datatype from the form
-                datatype_str = request.form.get(column_datatype)
-                asset_type = request.form.get(column_asset_type)
+                datatype_str = sync_form.get(column_datatype)
+                asset_type = sync_form.get(column_asset_type)
 
                 # Checking if the set data type is know to the system
                 if datatype_str in DataTypes.get_all_type_names():
@@ -82,10 +83,10 @@ class AssetTypeServer:
                     raise AssetTypeDoesNotExistException(
                         "The data type you referenced does not exist!")
 
-                column_name = request.form.get(column_name)
+                column_name = sync_form.get(column_name)
                 column_db_name = column_name.replace(' ', '_').lower()
 
-                required = request.form.get(column_required) == 'checkboxTrue'
+                required = sync_form.get(column_required) == 'checkboxTrue'
 
                 columns.append(Column(
                     name=column_name,
@@ -111,7 +112,7 @@ class AssetTypeServer:
         return redirect('/configuration')
 
     @staticmethod
-    def get_create_asset_type():
+    async def get_create_asset_type():
         """Handle get requests to create-asset-type.
 
         This will return a rendered template, containing
@@ -125,21 +126,21 @@ class AssetTypeServer:
         }
 
         # Checking if the request argument Prefab was provided
-        if request_arg := request.args.get('prefab'):
-            request_arg = request_arg.upper()
+        if prefab_arg := request.args.get('prefab'):
+            prefab_arg = prefab_arg.upper()
             prefab_names = AssetTypeServer.get().prefab_names
 
-            if request_arg in prefab_names:
-                prefab: AssetTypePrefab = AssetTypePrefabs[request_arg].value
-                prefab_json = dict(jsonify(prefab).json)
+            if prefab_arg in prefab_names:
+                prefab: AssetTypePrefab = AssetTypePrefabs[prefab_arg].value
+                prefab_dict = prefab.__dict__
 
-                for column in prefab_json['columns']:
+                for column in prefab_dict['columns']:
                     if column['asset_type_id'] > 0:
                         column['asset_type'] = asset_type_manager.get_one(column['asset_type_id'])
 
-                return render_template(
+                return await render_template(
                     "create-asset-type-from-prefab.html",
-                    prefab=prefab_json
+                    prefab=prefab_dict
                 )
 
         data_types: List[DataType] = DataTypes.get_all_data_types()
@@ -151,64 +152,43 @@ class AssetTypeServer:
                 "asset_types": asset_types
             })
 
-        return render_template(
+        return await render_template(
             "create-asset-type.html",
             data_types=data_types,
             asset_types=asset_types
         )
 
     @staticmethod
-    def get_all_asset_types():
+    async def get_all_asset_types():
         """This is a FlaskAppRoute that shows ``AssetTypes`` available using asset-types.html."""
 
         asset_type_manager = AssetTypeManager()
         asset_types = asset_type_manager.get_all()
 
-        return render_template("asset-types.html", asset_types=asset_types)
+        return await render_template("asset-types.html", asset_types=asset_types)
 
     @staticmethod
-    def get_one_asset_type(asset_type_id):
+    async def get_one_asset_type(asset_type_id):
         """Show the Detail Page for an ``AssetType``."""
 
-        asset_type_manager = AssetTypeManager()
-        asset_type = asset_type_manager.get_one(asset_type_id)
+        page_manager: PageManager = PageManager()
+        asset_type_manager: AssetTypeManager = AssetTypeManager()
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
-        request_asset_data(asset_type.asset_type_id, depth=1)
+        if not (page_layout := page_manager.get_page(asset_type)):
+            raise NotImplementedError("Implement get editor routing.")
 
-        asset_manager = AssetManager()
-        assets = asset_manager.get_all(asset_type, depth=1)
-
-        # TODO: Get AssetTypePage from AssetTypePageManager
-
-        asset_type_page = AssetTypePage(
-            layout_id=0,
-            asset_type=asset_type,
-            assets=assets,  # TODO: Transmit query url instead of items
-            layout=[
-                RowInfo(columns=[
-                    ColumnInfo(
-                        column_width=12,
-                        plugin_name='list-assets',
-                        plugin_path='plugins/list-assets-plugin.html',
-                        employed_columns=['name'],
-                        column_id=0
-                    )
-                ]),
-            ]
-        )
-
-        AssetTypePageManager().create_page(asset_type_page)
-        page = AssetTypePageManager().get_page(asset_type)
-
-        return render_template("asset-type.html", asset_type_page=page)
+        return await render_template("asset-type.html", page_layout=page_layout)
 
     @staticmethod
-    def delete_asset_type(asset_type_id):
+    async def delete_asset_type(asset_type_id):
         """Delete the ``AssetType`` with id ``asset_type_id``."""
+
+        sync_form = await request.form
 
         asset_type_manager = AssetTypeManager()
         asset_type = asset_type_manager.get_one(asset_type_id)
 
-        if request.form.get('deleteAsset') == 'True':
+        if sync_form.get('deleteAsset') == 'True':
             asset_type_manager.delete_asset_type(asset_type)
             return redirect('/configuration')
