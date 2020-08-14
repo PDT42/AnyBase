@@ -4,10 +4,11 @@
 
 The package contains the AssetManager and the AssetTypeManager.
 """
-import json
 from dataclasses import dataclass
+from datetime import date, datetime, time
 from enum import Enum
 from typing import Any, List, MutableMapping, Optional
+from uuid import uuid4
 
 from database import Column, DataTypes
 
@@ -23,6 +24,16 @@ class AssetType:
     is_subtype: bool = False
     super_type_id: int = 0
 
+    def as_dict(self):
+        return {
+            'asset_name': self.asset_name,
+            'columns': [col.as_dict() for col in self.columns],
+            'asset_table_name': self.asset_table_name,
+            'asset_type_id': self.asset_type_id,
+            'is_subtype': self.is_subtype,
+            'super_type_id': self.super_type_id
+        }
+
 
 @dataclass
 class AssetTypePrefab:
@@ -30,6 +41,12 @@ class AssetTypePrefab:
 
     prefab_name: str
     columns: List[Column]
+
+    def as_dict(self):
+        return {
+            'prefab_name': self.prefab_name,
+            'columns': [col.as_dict() for col in self.columns]
+        }
 
 
 @dataclass
@@ -67,5 +84,23 @@ class Asset:
     data: MutableMapping[Any, Any]
     asset_id: Optional[int] = None
 
-    def to_json(self):
-        return json.dumps({'data': self.data, 'asset_id': self.asset_id})
+    def __hash__(self):
+        return hash(uuid4())
+
+    def as_dict(self):
+        """Get a dict from an Asset."""
+
+        data = {}
+        for key, value in self.data.items():
+            if isinstance(value, datetime):
+                data[key] = int(value.timestamp())
+                continue
+            if isinstance(value, date):
+                data[key] = int(datetime.combine(value, time(0)).timestamp())
+                continue
+            data[key] = value
+
+        return {
+            'data': data,
+            'asset_id': self.asset_id
+        }
