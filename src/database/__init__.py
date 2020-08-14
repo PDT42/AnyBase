@@ -12,6 +12,7 @@ from typing import NamedTuple
 
 class DataType(NamedTuple):
     """This is a possible datatype."""
+
     typename: str
     fe_name: str
     fe_type: str
@@ -55,8 +56,18 @@ class DataTypes(Enum):
 @dataclass
 class Column:
     """This is a column, as required to create database column."""
+
     name: str
     db_name: str
     datatype: DataType
     asset_type_id: int = 0
     required: bool = False
+
+    def as_dict(self):
+        return {
+            'name': self.name,
+            'db_name': self.db_name,
+            'datatype': str(self.datatype),
+            'asset_type_id': self.asset_type_id,
+            'required': self.required
+        }
