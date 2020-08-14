@@ -66,7 +66,7 @@ class DbConnection:
     def write_dict(
             self, table_name: str,
             values: Mapping[str, Any]
-    ):
+    ) -> int:
         """Write to the database."""
         pass
 
