@@ -6,14 +6,13 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
 from datetime import datetime
-from typing import Any, Mapping, MutableMapping, Sequence
+from typing import Any, Mapping, Sequence
 
 from database import DataType, DataTypes
 from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
-from exceptions.common import IllegalStateException
+from exceptions.common import IllegalStateException, MissingArgumentException
 from exceptions.database import MissingValueException, TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
-from src.config import Config
 from src.database.db_connection import Column, DbConnection
 
 
@@ -34,27 +33,27 @@ class SqliteConnection(DbConnection):
     }
 
     @staticmethod
-    def get():
+    def get(db_path: str = None):
         """Get the instance of this singleton."""
 
         if not SqliteConnection._instance:
-            SqliteConnection._instance = SqliteConnection()
+            if not db_path:
+                raise MissingArgumentException("Db Path is required on initialization!")
+            SqliteConnection._instance = SqliteConnection(db_path)
         return SqliteConnection._instance
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path):
         """Create a new SqliteConnection."""
 
         if SqliteConnection._instance:
             raise IllegalStateException(
                 "This singleton already exists. Use SqliteConnection.get() to get the instance!")
 
+        self.db_path = db_path
+
         self.connection = None
         self.cursor = None
 
-        if db_path is None:
-            self.db_path = Config.get().read('local database', 'path', '../res/database.db')
-        else:
-            self.db_path = db_path
         self._connect()
 
     @staticmethod
@@ -199,12 +198,12 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
         # Get info on ``table_name`` from database
         table_name = table_name.replace(' ', '_')
         table_info = self.get_table_info(table_name)
-
-        if not self.check_table_exists(table_name):
-            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
 
         # Creating Query
         # --------------
@@ -225,11 +224,11 @@ class SqliteConnection(DbConnection):
 
             # 'column_name' is not provided on values. Do we need it?
             # Values for required columns must be present in 'values'
-            if column_name not in values.keys() and bool(column_required):
+            if (column_name not in values.keys() or values[column_name] is None) and bool(column_required):
                 raise MissingValueException(f"The required value {column_name} is missing. Please provide it!")
 
             # It's not there, but we don't need it - so we don't care
-            elif column_name not in values.keys() and not bool(column_required):
+            elif (column_name not in values.keys() or values[column_name] is None) and not bool(column_required):
                 query = f'''{query}null, '''
 
             # The most obvious other case: There are values for the column.
