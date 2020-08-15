@@ -176,6 +176,8 @@ class AssetTypeServer:
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
         if not (page_layout := page_manager.get_page(asset_type)):
+            # TODO
+
             raise NotImplementedError("Implement get editor routing.")
 
         return await render_template("asset-type.html", page_layout=page_layout)
