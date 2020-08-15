@@ -21,6 +21,7 @@ class TestAssetManager(TestCase):
 
     def setUp(self) -> None:
         """Set up before tests."""
+
         self.tempdir, self.db_connection = init_test_db()
         # print(f"Tempdir used in this tests: {self.tempdir}")
 
@@ -170,4 +171,4 @@ class TestAssetManager(TestCase):
     def test_jsonable(self):
         self.test_asset.asset_id = 1
 
-        json.dumps(self.test_asset.to_json())
+        json.dumps(self.test_asset.as_dict())
