@@ -74,7 +74,7 @@
 <!-- We use simple bootstrap for the layout for now -->
 
 {% for row_info in page_layout.layout %}
-<div class="row">
+<div class="row" id="row-{{ loop.index }}">
 
     {% for column_info in row_info %}
 
