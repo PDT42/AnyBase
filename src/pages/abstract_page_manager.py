@@ -57,11 +57,6 @@ class APageManager:
         """Get the plugin with ``column_id``. """
         pass
 
-    @abstractmethod
-    def get_editor(self, page_layout: PageLayout):
-        """Get the editor for a given ``asset_type_id``."""
-        pass
-
     @staticmethod
     def convert_layout_to_row(page_layout: PageLayout) -> Mapping[str, Any]:
         """Convert a PageLayout Type to a row."""

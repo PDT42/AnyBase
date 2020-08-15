@@ -159,15 +159,6 @@ class PageManager(APageManager):
 
         return column_info
 
-    def get_editor(self, asset_type: AssetType):
-        """Get the editor for a given ``asset_type_id``."""
-
-        # Ensuring the required database tables exist
-        self._init_page_layout_tables()
-
-        # TODO
-        pass
-
     #####################
     #  PRIVATE METHODS  #
     #####################
