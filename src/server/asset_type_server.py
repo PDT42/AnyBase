@@ -112,7 +112,7 @@ class AssetTypeServer:
 
     @staticmethod
     async def get_create_asset_type():
-        """Handle get requests to create-asset-type.
+        """Handle get requests to ``create-asset-type``.
 
         This will return a rendered template, containing
         a create form, which can be used to defined a
