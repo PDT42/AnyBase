@@ -77,11 +77,20 @@ class AssetTypeManager(AAssetTypeManager):
         }
 
         # Storing the type information in the appropriate table
-        self.db_connection.write_dict(self._asset_types_table_name, query_dict)
+        asset_type_id = self.db_connection.write_dict(self._asset_types_table_name, query_dict)
 
         # Creating a table appropriate for the asset_type_id
         self.db_connection.create_table(asset_table_name, asset_type.columns)
         self.db_connection.commit()
+
+        return AssetType(
+            asset_name=asset_type.asset_name,
+            columns=asset_type.columns,
+            asset_table_name=asset_table_name,
+            asset_type_id=asset_type_id,
+            is_subtype=asset_type.is_subtype,
+            super_type_id=asset_type.super_type_id
+        )
 
     def delete_asset_type(self, asset_type: AssetType) -> None:
         """Delete ``asset_type_id`` and all it's assets from the system."""
