@@ -86,6 +86,7 @@ class Asset:
     data: MutableMapping[Any, Any]
     created: datetime = None
     asset_id: Optional[int] = None
+    extended_by_id: Optional[int] = 0
 
     def __hash__(self):
         return hash(uuid4())
@@ -106,5 +107,6 @@ class Asset:
         return {
             'data': data,
             'asset_id': self.asset_id,
-            'created': self.created
+            'created': self.created,
+            'extended_by_id': self.extended_by_id
         }

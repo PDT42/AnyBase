@@ -87,7 +87,8 @@ class AssetTypeManager(AAssetTypeManager):
         asset_type_id = self.db_connection.write_dict(self._asset_types_table_name, query_dict)
 
         asset_table_columns = asset_type.columns + [
-            Column('created', 'abintern_created', DataTypes.DATETIME.value, required=True)
+            Column('created', 'abintern_created', DataTypes.DATETIME.value, required=True),
+            Column('extended_by_id', 'abintern_extended_by_id', DataTypes.VARCHAR.value, required=True)
         ]
 
         # Creating a table appropriate for the asset_type_id
@@ -144,7 +145,13 @@ class AssetTypeManager(AAssetTypeManager):
             )
 
         # Updating the "abasset.." tables columns
-        self.db_connection.update_table_columns(updated_table_name, asset_type.columns)
+
+        asset_table_columns = asset_type.columns + [
+            Column('created', 'abintern_created', DataTypes.DATETIME.value, required=True),
+            Column('extended_by_id', 'abintern_extended_by_id', DataTypes.VARCHAR.value, required=True)
+        ]
+
+        self.db_connection.update_table_columns(updated_table_name, asset_table_columns)
 
         # Creating a query dict as required by update
         values = {

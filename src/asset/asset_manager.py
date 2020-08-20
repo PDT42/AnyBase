@@ -41,6 +41,7 @@ class AssetManager(AAssetManager):
 
         self.db_connection: DbConnection = SqliteConnection.get()
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
+        self.asset_headers = ['primary_key', 'abintern_created', 'abintern_extended_by_id']
 
     def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
         """Create an asset in the database."""
@@ -50,7 +51,11 @@ class AssetManager(AAssetManager):
 
         created: datetime = datetime.now()
         values = (self.db_connection.convert_data_to_row(asset.data, asset_type.columns))
-        values.update({'primary_key': None, 'abintern_created': int(created.timestamp())})
+        values.update({
+            'primary_key': None,
+            'abintern_created': int(created.timestamp()),
+            'abintern_extended_by_id': asset.extended_by_id
+        })
 
         asset_id = self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
@@ -81,17 +86,18 @@ class AssetManager(AAssetManager):
             raise AssetTypeDoesNotExistException(f"The asset type {asset_type} does not exist!")
 
         data = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
-        data.update({'primary_key': asset.asset_id})
+        data.update({'primary_key': asset.asset_id, 'abintern_extended_by_id': asset.extended_by_id})
 
         self.db_connection.update(asset_type.asset_table_name, data)
 
     def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
 
+        headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
+
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=[column.db_name for column in asset_type.columns] + ['primary_key', 'abintern_created'],
-            and_filters=[f'primary_key = {asset_id}']
+            headers=headers, and_filters=[f'primary_key = {asset_id}']
         )
 
         if len(result) < 1:
@@ -115,9 +121,11 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException()
 
+        headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
+
         results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.db_name for column in asset_type.columns])
+            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+            headers=headers)
 
         return self._convert_results_to_assets(results, asset_type, depth)
 
@@ -131,10 +139,11 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException()
 
+        headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
+
         results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.db_name for column in asset_type.columns],
-            and_filters=and_filters, or_filters=or_filters
+            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+            headers=headers, and_filters=and_filters, or_filters=or_filters
         )
 
         return self._convert_results_to_assets(results, asset_type, depth)
@@ -149,10 +158,11 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException()
 
+        headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
+
         results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            self.asset_type_manager.generate_asset_table_name(asset_type),
-            [column.db_name for column in asset_type.columns],
-            limit=limit, offset=offset
+            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+            headers=headers, limit=limit, offset=offset
         )
 
         return self._convert_results_to_assets(results, asset_type, depth)
@@ -174,7 +184,7 @@ class AssetManager(AAssetManager):
         for asset_row in results:
             assets.append(Asset(
                 asset_id=asset_row.pop('primary_key'),
-                data=self.convert_row_to_data(asset_row, asset_type.columns, depth)
+                data=self.convert_row_to_data(asset_row, asset_type.columns, depth),
             ))
 
         return assets
