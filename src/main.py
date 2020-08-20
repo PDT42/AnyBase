@@ -4,9 +4,6 @@
 
 This is the main application of AnyBase. Run this.
 """
-import redis
-import asyncio
-import aioredis
 from quart import Quart
 
 from config import Config
@@ -20,17 +17,23 @@ from server.asset_type_server import AssetTypeServer
 # ---------------------
 Config.get().change_path('U:/projects/anybase_modular_management/res/config.ini')
 template_folder = Config.get().read('frontend', 'template_folder', '/res/templates')
+static_folder = Config.get().read('frontend', 'static_folder', 'res/static')
 
 # Creating Quart Application
 # --------------------------
-app = Quart(__name__, template_folder=template_folder)
+app = Quart(
+    import_name=__name__,
+    template_folder=template_folder,
+    static_url_path='/static',
+    static_folder=static_folder
+)
 
 app.secret_key = "SomeSecret"
 
 # Initializing redis connection
 # -----------------------------
-strict_redis = redis.StrictRedis(host='localhost', port=6379)
-strict_redis.execute_command('FLUSHDB')
+# strict_redis = redis.StrictRedis(host='localhost', port=6379)
+# strict_redis.execute_command('FLUSHDB')
 
 # Initialization
 # --------------
@@ -109,7 +112,7 @@ app.add_url_rule(
 app.add_url_rule(
     '/asset-type/<int:asset_type_id>/items',
     'check-asset-data',
-    asset_server.check_asset_data,
+    asset_server.request_asset_data,
     methods=['GET']
 )
 
