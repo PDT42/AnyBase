@@ -18,6 +18,14 @@ class DataType(NamedTuple):
     fe_type: str
     db_type: str
 
+    def as_dict(self):
+        return {
+            'typename': self.typename,
+            'fe_name': self.fe_type,
+            'fe_type': self.fe_type,
+            'db_type': self.db_type
+        }
+
 
 class DataTypes(Enum):
     """The available data types."""
@@ -67,7 +75,7 @@ class Column:
         return {
             'name': self.name,
             'db_name': self.db_name,
-            'datatype': str(self.datatype),
+            'datatype': self.datatype.as_dict(),
             'asset_type_id': self.asset_type_id,
             'required': self.required
         }
