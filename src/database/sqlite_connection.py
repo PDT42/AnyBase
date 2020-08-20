@@ -277,6 +277,14 @@ class SqliteConnection(DbConnection):
 
             column_name = column_info['name']
 
+            if column_name == 'primary_key':
+                continue
+
+            # If its not supplied, we don't
+            # want to update it
+            if column_name not in values.keys():
+                continue
+
             if isinstance(values[column_name], str):
                 query += f'{column_name} = "{values[column_name]}", '
             elif isinstance(values[column_name], datetime):

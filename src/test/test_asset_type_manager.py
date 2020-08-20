@@ -42,9 +42,8 @@ class TestAssetTypeManager(TestCase):
         self.assertIsNone(self.asset_type)
 
     def test_update_asset_type(self):
-        self.asset_type_manager.create_asset_type(self.asset_type)
         self.assertRaises(AttributeError, self.asset_type_manager.update_asset_type, self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
         self.assertEqual('TestAsset', self.asset_type.asset_name)
 
         update_asset_type = AssetType(
@@ -54,7 +53,8 @@ class TestAssetTypeManager(TestCase):
                 Column('TextNumber', 'textnumber', DataTypes.NUMBER.value, required=True),
                 Column("AppendedColumn", "appendedcolumn", DataTypes.VARCHAR.value)
             ],
-            asset_type_id=1
+            asset_type_id=1,
+            created=self.asset_type.created
         )
         self.asset_type_manager.update_asset_type(update_asset_type)
 
@@ -76,10 +76,8 @@ class TestAssetTypeManager(TestCase):
         self.assertFalse(self.asset_type_manager.check_asset_type_exists(self.asset_type))
 
     def test_get_all(self):
-        self.asset_type_manager.create_asset_type(self.asset_type)
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
         all_asset_types = self.asset_type_manager.get_all()
-        self.asset_type.asset_type_id = 1
-        self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual([self.asset_type], all_asset_types)
 
     def test_get_all_filtered(self):
@@ -122,14 +120,12 @@ class TestAssetTypeManager(TestCase):
             self.asset_type_manager.create_asset_type(asset_type)
 
     def test_get_one(self):
-        self.asset_type_manager.create_asset_type(self.asset_type)
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
         asset_type = self.asset_type_manager.get_one(1)
-        self.asset_type.asset_type_id = 1
-        self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual(self.asset_type, asset_type)
 
     def test__check_asset_type_consistency(self):
-        self.asset_type_manager.create_asset_type(self.asset_type)
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
         asset_type = self.asset_type_manager.get_one(1)
         self.asset_type.asset_type_id = 1
         self.asset_type.asset_table_name = 'abasset_table_testasset'

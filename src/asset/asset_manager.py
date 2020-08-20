@@ -42,19 +42,20 @@ class AssetManager(AAssetManager):
         self.db_connection: DbConnection = SqliteConnection.get()
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-    def create_asset(self, asset_type: AssetType, asset: Asset) -> Asset:
+    def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
         """Create an asset in the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
-            return 0
+            return None
 
+        created: datetime = datetime.now()
         values = (self.db_connection.convert_data_to_row(asset.data, asset_type.columns))
-        values.update({'primary_key': None})
+        values.update({'primary_key': None, 'abintern_created': int(created.timestamp())})
 
         asset_id = self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
 
-        return Asset(data=asset.data, asset_id=asset_id)
+        return Asset(data=asset.data, asset_id=asset_id, created=created.replace(microsecond=0))
 
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
@@ -89,7 +90,7 @@ class AssetManager(AAssetManager):
 
         result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
             table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=[column.db_name for column in asset_type.columns],
+            headers=[column.db_name for column in asset_type.columns] + ['primary_key', 'abintern_created'],
             and_filters=[f'primary_key = {asset_id}']
         )
 

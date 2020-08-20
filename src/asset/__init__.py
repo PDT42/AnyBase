@@ -19,6 +19,7 @@ class AssetType:
 
     asset_name: str
     columns: List[Column]
+    created: datetime = None
     asset_table_name: str = None
     asset_type_id: int = None
     is_subtype: bool = False
@@ -28,6 +29,7 @@ class AssetType:
         return {
             'asset_name': self.asset_name,
             'columns': [col.as_dict() for col in self.columns],
+            'created': self.created,
             'asset_table_name': self.asset_table_name,
             'asset_type_id': self.asset_type_id,
             'is_subtype': self.is_subtype,
@@ -45,7 +47,7 @@ class AssetTypePrefab:
     def as_dict(self):
         return {
             'prefab_name': self.prefab_name,
-            'columns': [col.as_dict() for col in self.columns]
+            'columns': [col.as_dict() for col in self.columns],
         }
 
 
@@ -82,6 +84,7 @@ class Asset:
     """This is an ``Asset``."""
 
     data: MutableMapping[Any, Any]
+    created: datetime = None
     asset_id: Optional[int] = None
 
     def __hash__(self):
@@ -102,5 +105,6 @@ class Asset:
 
         return {
             'data': data,
-            'asset_id': self.asset_id
+            'asset_id': self.asset_id,
+            'created': self.created
         }
