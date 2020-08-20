@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+
+<div class="container" style="padding-top: 20px">
+
+    <div class="row">
+        <div class="col">
+            <h4>Create Layout for: {{ asset_type.asset_name }}</h4>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+        <div class="col">
+
+            <!-- Container for the Layout Rows-->
+
+            <div id="layout-container" class="container">
+
+                <!-- Filled by Interaction -->
+
+            </div>
+
+            <hr>
+
+            <!-- Append Row Button -->
+
+        </div>
+    </div>
+
+    <div class="row justify-content-end" style="margin-bottom: 10px">
+        <div class="col-2">
+            <button class="btn btn-block btn-dark" onclick="appendRow()">Add Row</button>
+        </div>
+    </div>
+
+    <script>
+
+        let rowNumber = 0;
+        let rows = {};
+
+        const layoutGenerator = document.getElementById('layout-container');
+
+        function createRow(rowId) {
+
+            // Create a container for the layout row
+
+            let layoutRowEditItemRow = document.createElement('div');
+            layoutRowEditItemRow.setAttribute('class', 'row');
+            layoutRowEditItemRow.style.paddingBottom = '10px';
+            layoutGenerator.appendChild(layoutRowEditItemRow);
+
+            let layoutRowEditItem = document.createElement('div');
+            layoutRowEditItem.setAttribute('id', rowId);
+            layoutRowEditItem.setAttribute('class', 'col');
+            layoutRowEditItem.style.borderStyle = 'solid';
+            layoutRowEditItem.style.borderColor = '#204060';
+            layoutRowEditItem.style.borderRadius = '5px'
+            layoutRowEditItem.style.borderWidth = '1px';
+            layoutRowEditItem.style.padding = '10px';
+            layoutRowEditItemRow.appendChild(layoutRowEditItem);
+
+            let layoutRowEditItemBody = document.createElement('div');
+            layoutRowEditItemBody.setAttribute('class', 'container');
+            layoutRowEditItem.appendChild(layoutRowEditItemBody);
+
+            // Add a menu to the layoutRowEditItem
+
+            let editItemMenu = document.createElement('div');
+            editItemMenu.setAttribute('id', 'menu-' + rowId);
+            editItemMenu.setAttribute('class', 'row justify-content-end');
+            layoutRowEditItemBody.appendChild(editItemMenu);
+
+            // Add menu item to the layoutRowEditItem
+
+            let addColumnMenuItemColumn = document.createElement('div');
+            addColumnMenuItemColumn.setAttribute('class', 'col-2');
+            editItemMenu.appendChild(addColumnMenuItemColumn);
+
+            // Specifying a button, that lets a user add
+            // a layoutColumn to the row of the layout.
+
+            let addColMenuItemButton = document.createElement('button');
+            addColMenuItemButton.setAttribute('class', 'btn btn-block btn-dark');
+            addColMenuItemButton.innerText = "Add Column"
+            addColMenuItemButton.onclick = function () {
+                appendColumn(rowId);
+            };
+            addColumnMenuItemColumn.appendChild(addColMenuItemButton);
+
+            layoutRowEditItemBody.appendChild(document.createElement('hr'));
+
+            // Add a container for the layoutColumns
+
+            let columnRow = document.createElement('div');
+            columnRow.setAttribute('id', 'columns-' + rowId)
+            columnRow.setAttribute('class', 'row');
+            layoutRowEditItemBody.appendChild(columnRow);
+
+            return layoutRowEditItemRow;
+        }
+
+        function createColumnEditor(columnId) {
+
+            let columnEditor = document.createElement('div');
+            columnEditor.setAttribute('id', columnId);
+            columnEditor.setAttribute('class', 'col');
+
+            let columnEditorBody = document.createElement('div');
+            columnEditorBody.setAttribute('class', 'container');
+            columnEditorBody.style.height = '10px';
+            columnEditorBody.style.borderStyle = 'solid';
+            columnEditorBody.style.borderColor = '#204060';
+            columnEditorBody.style.borderWidth = '1px';
+            columnEditor.appendChild(columnEditorBody);
+
+            return columnEditor;
+        }
+
+        function appendRow() {
+
+            let rowId = 'layout-row-' + rowNumber;
+            let newRow = createRow(rowId);
+            layoutGenerator.appendChild(newRow);
+            rows[rowId] = ([0, []]);
+            rowNumber += 1;
+        }
+
+        function appendColumn(rowId) {
+
+            if (rows[rowId][1].length < 3) {
+                let columnId = 'column-' + rows[rowId][0] + '-' + rowId;
+                let columnRow = document.getElementById('columns-' + rowId);
+
+                columnRow.appendChild(createColumnEditor(columnId));
+
+                rows[rowId][0] += 1;
+                rows[rowId][1].push(columnId);
+            }
+        }
+
+    </script>
+
+</div>
+</div>
+</div>
+
+{% endblock %}
