@@ -12,37 +12,32 @@
     {% if page_layout %}
 
     <div class="row">
-        <div class="col-sm">
 
-            <div class="row">
+        <div class="col">
+            <h4>{{ page_layout.asset_type.asset_name }}</h4>
+        </div>
 
-                <div class="col">
-                    <h4>{{ page_layout.asset_type.asset_name }}</h4>
+        <div class="col">
+
+            <div class="row justify-content-end">
+
+                <div class="col-3">
+                    <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}/create-asset"
+                          method="GET">
+                        <button type="submit" name="createAsset" class="btn btn-block btn-dark">
+                            Create
+                        </button>
+                    </form>
                 </div>
 
-                <div class="col">
-
-                    <div class="row justify-content-end">
-
-                        <div class="col-3">
-                            <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}/create-asset"
-                                  method="GET">
-                                <button type="submit" name="createAsset" class="btn btn-block btn-dark">
-                                    Create
-                                </button>
-                            </form>
-                        </div>
-
-                        <div class="col-3">
-                            <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}" method="POST">
-                                <button type="submit" name="deleteAsset" class="btn btn-block btn-danger" value="True">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
-
-                    </div>
+                <div class="col-3">
+                    <form action="/asset-type/{{ page_layout.asset_type.asset_type_id }}" method="POST">
+                        <button type="submit" name="deleteAsset" class="btn btn-block btn-danger" value="True">
+                            Delete
+                        </button>
+                    </form>
                 </div>
+
             </div>
         </div>
     </div>
