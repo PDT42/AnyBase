@@ -4,19 +4,18 @@
 
 These are the routes for the ``AssetTypeManager``.
 """
+
 from typing import List
 
 from quart import jsonify, redirect, render_template, request
 
 from asset import AssetType, AssetTypePrefab, AssetTypePrefabs
 from asset.abstract_asset_type_manager import AAssetTypeManager
-from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import Column, DataType, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from exceptions.common import IllegalStateException
-from pages import ColumnInfo, PageLayout
 from pages.page_manager import PageManager
 
 
@@ -39,14 +38,15 @@ class AssetTypeServer:
         """Create a new AssetTypeServer."""
 
         self.prefab_names = AssetTypePrefabs.get_all_asset_type_prefab_names()
-        self.json_response = Config.get().read('frontend', 'json_response', False) in ["True", "true", 1]
+        self.json_response = Config.get().read(
+            'frontend', 'json_response', False) in ["True", "true", 1]
 
     @staticmethod
     async def post_create_asset_type():
         """Handle POST request to create-asset-type.
 
-        This will create the asset type defined by
-        the request parameters."""
+        This will create the asset type in the database
+        defined by the request parameters."""
 
         sync_form = await request.form
 
@@ -59,8 +59,6 @@ class AssetTypeServer:
             column_datatype = f'column-data-type-{column_number}'
             column_required = f'column-required-{column_number}'
             column_asset_type = f'column-asset-type-{column_number}'
-
-            r = request  # TODO: remove, debug
 
             if column_name in sync_form.keys():
 
@@ -99,7 +97,8 @@ class AssetTypeServer:
                 break
 
         if not columns:
-            raise IllegalStateException("Can't create an asset type without any columns!")
+            raise IllegalStateException(
+                "Can't create an asset type without any columns!")
 
         new_asset_type = AssetType(
             asset_name=asset_name,
@@ -120,6 +119,7 @@ class AssetTypeServer:
         new asset type in the system."""
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
+
         asset_types = {
             asset_type.asset_name: asset_type.asset_type_id
             for asset_type in asset_type_manager.get_all()
@@ -132,11 +132,13 @@ class AssetTypeServer:
 
             if prefab_arg in prefab_names:
                 prefab: AssetTypePrefab = AssetTypePrefabs[prefab_arg].value
-                prefab_dict = prefab.__dict__
+                prefab_dict = prefab.as_dict()
 
                 for column in prefab_dict['columns']:
                     if column['asset_type_id'] > 0:
-                        column['asset_type'] = asset_type_manager.get_one(column['asset_type_id'])
+
+                        column['asset_type'] = asset_type_manager\
+                            .get_one(column['asset_type_id'])
 
                 return await render_template(
                     "create-asset-type-from-prefab.html",
@@ -145,7 +147,7 @@ class AssetTypeServer:
 
         data_types: List[DataType] = DataTypes.get_all_data_types()
 
-        # checking ig the output was requested as json
+        # checking if the output was requested as json
         if AssetTypeServer.get().json_response:
             return jsonify({
                 "data_types": data_types,
@@ -160,7 +162,7 @@ class AssetTypeServer:
 
     @staticmethod
     async def get_all_asset_types():
-        """This is a FlaskAppRoute that shows ``AssetTypes`` available using asset-types.html."""
+        """Handle get requests to ``asset-types``."""
 
         asset_type_manager = AssetTypeManager()
         asset_types = asset_type_manager.get_all()
@@ -176,9 +178,7 @@ class AssetTypeServer:
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
         if not (page_layout := page_manager.get_page(asset_type)):
-            # TODO
-
-            raise NotImplementedError("Implement get editor routing.")
+            return await render_template("layout-editor.html", asset_type=asset_type)
 
         return await render_template("asset-type.html", page_layout=page_layout)
 
