@@ -50,7 +50,7 @@ class AssetServer:
         )
 
     @staticmethod
-    async def check_asset_data(asset_type_id: int, depth: int = 0):
+    async def request_asset_data(asset_type_id: int, depth: int = 0):
         """Check if more assets are available."""
 
         # Get AssetType and number of assets of this type
@@ -85,6 +85,7 @@ class AssetServer:
             # earlier.
 
             for result_task in asyncio.as_completed(tasks):
+
                 # Each result task will have completed
                 # here. We process the result and yield
                 # an encoded message that can be sent.
