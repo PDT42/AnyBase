@@ -53,6 +53,8 @@ class AssetTypeServer:
         columns: List[Column] = []
         asset_name = sync_form.get('assetName')
 
+        # TODO: Add requirements for setting a subtype
+
         for column_number in range(0, 15):
 
             column_name = f'column-name-{column_number}'
