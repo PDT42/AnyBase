@@ -42,7 +42,7 @@ class AssetManager(AAssetManager):
         self.db_connection: DbConnection = SqliteConnection.get()
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-    def create_asset(self, asset_type: AssetType, asset: Asset):
+    def create_asset(self, asset_type: AssetType, asset: Asset) -> Asset:
         """Create an asset in the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -51,8 +51,10 @@ class AssetManager(AAssetManager):
         values = (self.db_connection.convert_data_to_row(asset.data, asset_type.columns))
         values.update({'primary_key': None})
 
-        self.db_connection.write_dict(asset_type.asset_table_name, values)
+        asset_id = self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
+
+        return Asset(data=asset.data, asset_id=asset_id)
 
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
