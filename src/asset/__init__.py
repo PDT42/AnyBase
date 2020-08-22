@@ -7,7 +7,7 @@ The package contains the AssetManager and the AssetTypeManager.
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from enum import Enum
-from typing import Any, List, MutableMapping, Optional
+from typing import Any, List, MutableMapping, Optional, Union
 from uuid import uuid4
 
 from database import Column, DataTypes
@@ -94,6 +94,13 @@ class Asset:
 
     def __hash__(self):
         return hash(uuid4())
+
+    def __eq__(self, other):
+        if not isinstance(other, Asset):
+            return False
+        if self.as_dict() == other.as_dict():
+            return True
+        return False
 
     def as_dict(self):
         """Get a dict from an Asset."""
