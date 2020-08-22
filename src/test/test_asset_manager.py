@@ -5,6 +5,7 @@
 These are tests for the asset manager.
 """
 import json
+from copy import deepcopy
 from datetime import date, datetime
 from shutil import rmtree
 from typing import List
@@ -143,6 +144,26 @@ class TestAssetManager(TestCase):
         for gotten_olaf, created_olaf in zip(gotten_olafs, created_olafs):
             self.assertEqual(gotten_olaf, created_olaf)
 
+    def test_update_asset_with_subtype(self):
+
+        created_person_type, created_student_type = self.create_asset_with_subtype()
+
+        olaf: Asset = Asset(
+            data={
+                'name': 'Olaf',
+                'age': 64,
+                'city_of_birth': 'Bielefeld',
+                'subject_of_study': 'Modern Arts'
+            }
+        )
+
+        created_olaf: Asset = self.asset_manager.create_asset(created_student_type, olaf)
+
+        updated_olaf: Asset = deepcopy(created_olaf)
+        updated_olaf.data['age'] = 65
+
+        self.assertEqual(self.asset_manager.update_asset(created_student_type, updated_olaf), updated_olaf)
+
     def test_delete_asset(self):
         # Creating an asset
         self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
@@ -230,6 +251,7 @@ class TestAssetManager(TestCase):
             "asset_column": self.test_asset,
             "asset_list_col": [self.test_asset, self.test_asset],
         })
+
         self.asset_manager.create_asset(asset_type, asset)
         self.assertEqual(1, len(self.asset_manager.get_all(asset_type)))
         asset = self.asset_manager.get_one(1, asset_type)
