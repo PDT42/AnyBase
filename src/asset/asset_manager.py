@@ -137,7 +137,7 @@ class AssetManager(AAssetManager):
                 table_names=table_names,
                 join_on_chain=['abintern_extended_by_id'] * (len(table_names) - 1),
                 headers_sequence=headers_sequence,
-                and_filters=[f'primary_key = {asset_id}']
+                and_filters=[f'{table_names[0]}.primary_key = {asset_id}']
             )
 
         else:
