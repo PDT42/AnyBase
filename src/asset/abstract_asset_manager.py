@@ -14,6 +14,7 @@ from asset import Asset, AssetType
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
+from exceptions.common import MissingKeyException
 
 
 class AAssetManager:
@@ -74,12 +75,13 @@ class AAssetManager:
 
     def convert_row_to_data(
             self, row: MutableMapping[str, Any],
-            columns: Sequence[Column],
+            columns: List[Column],
             depth: int = 0) \
             -> MutableMapping[str, Any]:
         """Convert a row to a valid data entry of an ``Asset``."""
 
-        data: MutableMapping[str, Any] = {}
+        received_data: MutableMapping[str, Any] = {}
+
         for column in columns:
 
             field = self._conversions[column.datatype](row[column.db_name])
@@ -88,15 +90,15 @@ class AAssetManager:
                 asset_type = self.asset_type_manager.get_one(column.asset_type_id)
                 asset = self.get_one(field, asset_type, depth - 1)
 
-                data[column.db_name] = asset
+                received_data[column.db_name] = asset
 
             elif column.datatype is DataTypes.ASSETLIST.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one(column.asset_type_id)
 
-                data[column.db_name] = [
+                received_data[column.db_name] = [
                     self.get_one(int(asset), asset_type, depth - 1) for asset in field
                 ]
 
             else:
-                data[column.db_name] = field
-        return data
+                received_data[column.db_name] = field
+        return received_data
