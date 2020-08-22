@@ -6,16 +6,16 @@ This is the the module for the AssetManager.
 """
 
 from datetime import datetime
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
+from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set
 
 from asset import Asset, AssetType
 from asset.abstract_asset_manager import AAssetManager
 from asset.asset_type_manager import AssetTypeManager
-from database import DataType, DataTypes
+from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import AssetTypeDoesNotExistException
-from exceptions.common import KeyConstraintException
+from exceptions.asset import AssetTypeDoesNotExistException, SuperTypeDoesNotExistException
+from exceptions.common import KeyConstraintException, MissingKeyException
 
 
 class AssetManager(AAssetManager):
