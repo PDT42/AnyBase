@@ -111,6 +111,6 @@ class Asset:
         return {
             'data': data,
             'asset_id': self.asset_id,
-            'created': self.created,
+            'created': int(self.created.timestamp()),
             'extended_by_id': self.extended_by_id
         }
