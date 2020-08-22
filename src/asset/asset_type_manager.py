@@ -14,7 +14,7 @@ from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
-from exceptions.common import IllegalStateException, InvalidTypeError, KeyConstraintException
+from exceptions.common import KeyConstraintException
 
 
 class AssetTypeManager(AAssetTypeManager):
@@ -169,6 +169,45 @@ class AssetTypeManager(AAssetTypeManager):
             AssetTypeManager.generate_asset_table_name(asset_type))
         return bool(db_response) and table_exists
 
+    def get_one(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
+        """Get the ``AssetType`` with ident ``asset_type_id``."""
+
+        # Ensuring the table to get asset types from exists
+        self._init_asset_types_table()
+
+        # Reading asset types from the database
+        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+            table_name=self._asset_types_table_name,
+            headers=self._asset_headers,
+            and_filters=[f'primary_key = {asset_type_id}']
+        )
+
+        if len(result) < 1:
+            return None
+
+        if len(result) > 1:
+            raise KeyConstraintException(
+                "There is a real big problem here! Real biggy - trust me." +
+                "The primary key constraint is broken!"
+            )
+
+        asset_type_columns: List[Column] = \
+            self.generate_columns_from_columns_str(result[0]['asset_columns'])
+
+        if (super_type_id := int(result[0]['super_type'])) > 0 and extend_columns:
+            super_type: AssetType = self.get_one(super_type_id, extend_columns=True)
+            asset_type_columns.extend(super_type.columns)
+
+        asset_type = AssetType(
+            asset_name=str(result[0]['asset_name']),
+            columns=asset_type_columns,
+            created=datetime.fromtimestamp(int(result[0]['abintern_created'])),
+            asset_table_name=str(result[0].get('asset_table_name', None)),
+            asset_type_id=int(result[0]['primary_key']),
+            super_type=super_type_id
+        )
+        return asset_type
+
     def get_all(self) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
 
@@ -239,38 +278,13 @@ class AssetTypeManager(AAssetTypeManager):
 
         return assets_types
 
-    def get_one(self, asset_type_id: int) -> Optional[AssetType]:
-        """Get the ``AssetType`` with ident ``asset_type_id``."""
+    def get_type_children(self, asset_type: AssetType):
+        """Get the children tree of an asset_type."""
 
-        # Ensuring the table to get asset types from exists
-        self._init_asset_types_table()
+        children: List[AssetType] = self.get_all_filtered(
+            and_filters=[f'super_type = {asset_type.asset_type_id}'])
 
-        # Reading asset types from the database
-        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
-            table_name=self._asset_types_table_name,
-            headers=self._asset_headers,
-            and_filters=[f'primary_key = {asset_type_id}']
-        )
-
-        if len(result) < 1:
-            return None
-
-        if len(result) > 1:
-            raise KeyConstraintException(
-                "There is a real big problem here! Real biggy - trust me." +
-                "The primary key constraint is broken!"
-            )
-
-        asset_type = AssetType(
-            asset_name=str(result[0]['asset_name']),
-            columns=self.generate_columns_from_columns_str(result[0]['asset_columns']),
-            created=datetime.fromtimestamp(int(result[0]['abintern_created'])),
-            asset_table_name=str(result[0].get('asset_table_name', None)),
-            asset_type_id=int(result[0]['primary_key']),
-            super_type=int(result[0]['super_type'])
-        )
-
-        return asset_type
+        return children
 
     #####################
     #  PRIVATE METHODS  #
