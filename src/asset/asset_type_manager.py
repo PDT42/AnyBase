@@ -74,7 +74,7 @@ class AssetTypeManager(AAssetTypeManager):
         # Adding obligatory columns to the asset_table
         asset_table_columns = asset_type.columns + [
             Column('created', 'abintern_created', DataTypes.DATETIME.value, required=True),
-            Column('extended_by_id', 'abintern_extended_by_id', DataTypes.VARCHAR.value, required=True)
+            Column('extended_by_id', 'abintern_extended_by_id', DataTypes.INTEGER.value, required=True)
         ]
 
         # Creating the asset table
