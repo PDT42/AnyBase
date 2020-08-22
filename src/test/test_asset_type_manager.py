@@ -1,5 +1,7 @@
+import json
 from copy import deepcopy
 from shutil import rmtree
+from typing import Any, List, Tuple
 from unittest import TestCase
 
 from asset import AssetType
@@ -103,6 +105,43 @@ class TestAssetTypeManager(TestCase):
         self.assertEqual(10, len(asset_types))
         self.assertEqual(11, asset_types[0].asset_type_id)
 
+    def test_get_type_children(self):
+
+        person_type: AssetType = AssetType(
+            asset_name="Person",
+            columns=[
+                # Varchar and Text can be used interchangeably
+                Column('name', 'name', DataTypes.TEXT.value, required=True),
+                Column('age', 'age', DataTypes.INTEGER.value, required=True),
+                Column('city_of_birth', 'city_of_birth', DataTypes.VARCHAR.value, required=True)
+            ]
+        )
+        created_person_type: AssetType = self.asset_type_manager.create_asset_type(person_type)
+
+        # Each student is a person, but unlike other
+        # people a student has a subject of study.
+        student_type: AssetType = AssetType(
+            asset_name="Student",
+            columns=[
+                Column('subject', 'subject', DataTypes.VARCHAR.value, required=True)
+            ],
+            super_type=created_person_type.asset_type_id
+        )
+        created_student_type: AssetType = self.asset_type_manager.create_asset_type(student_type)
+
+        professor_type: AssetType = AssetType(
+            asset_name="Professor",
+            columns=[
+                Column('faculty', 'faculty', DataTypes.VARCHAR.value, required=True)
+            ],
+            super_type=created_person_type.asset_type_id
+        )
+        created_professor_type: AssetType = self.asset_type_manager.create_asset_type(professor_type)
+
+        children = self.asset_type_manager.get_type_children(created_person_type)
+
+        self.assertEqual(children, [created_student_type, created_professor_type])
+
     def create_twenty_samples(self):
 
         for iterator in range(0, 10):
@@ -131,3 +170,8 @@ class TestAssetTypeManager(TestCase):
         self.assertEqual(self.asset_type, asset_type)
         self.db_connection.delete_table(self.asset_type.asset_table_name)
         self.assertRaises(AssetTypeInconsistencyException, self.asset_type_manager._check_asset_type_consistency)
+
+    def test_jsonable(self):
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
+
+        json.dumps(self.asset_type.as_dict())
