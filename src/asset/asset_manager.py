@@ -122,25 +122,48 @@ class AssetManager(AAssetManager):
     def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
 
+        # Creating the list of headers_sequence required for this result_columns
         headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
 
-        result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=headers, and_filters=[f'primary_key = {asset_id}']
-        )
+        # Check if we need to supplement the asset
+        # with additional data from a super asset.
 
-        if len(result) < 1:
+        if asset_type.get_super_type_id() > 0:
+
+            table_names, headers_sequence, result_columns = \
+                self._extract_joined_parameters(asset_type)
+
+            result: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
+                table_names=table_names,
+                join_on_chain=['abintern_extended_by_id'] * (len(table_names) - 1),
+                headers_sequence=headers_sequence,
+                and_filters=[f'primary_key = {asset_id}']
+            )
+
+        else:
+            result_columns: List[Column] = asset_type.columns
+            result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+                table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+                headers=headers, and_filters=[f'primary_key = {asset_id}']
+            )
+
+        if not result:
             return None
 
         if len(result) > 1:
             raise KeyConstraintException(
-                "There is a real big problem here! Real biggy - trust me." +
+                "There is a real big problem here! Real biggy - Trust me! " +
                 "The primary key constraint is broken!"
             )
 
+        received_data: MutableMapping[str, Any] = \
+            self.convert_row_to_data(result[0], result_columns, depth)
+
         asset = Asset(
             asset_id=result[0].pop('primary_key'),
-            data=self.convert_row_to_data(result[0], asset_type.columns, depth)
+            data=received_data,
+            created=datetime.fromtimestamp(result[0]['abintern_created']),
+            extended_by_id=int(result[0]['abintern_extended_by_id'])
         )
         return asset
 
@@ -152,11 +175,31 @@ class AssetManager(AAssetManager):
 
         headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
 
-        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=headers)
+        # Check if the requested asset type defines a super type.
+        # If that is the case, we need to supplement the assets
+        # data, with data from the super asset it references.
+        # We also need to consider cases, in which multiple assets
+        # are chained in child-parent/extension hierarchies.
 
-        return self._convert_results_to_assets(results, asset_type, depth)
+        if asset_type.get_super_type_id() > 0:
+
+            table_names, headers_sequence, result_columns = \
+                self._extract_joined_parameters(asset_type)
+
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
+                table_names=table_names,
+                join_on_chain=['abintern_extended_by_id'] * (len(table_names) - 1),
+                headers_sequence=headers_sequence
+            )
+
+        else:
+            result_columns: List[Column] = asset_type.columns
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+                table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+                headers=headers
+            )
+
+        return self._convert_results_to_assets(results, result_columns, depth)
 
     def get_all_filtered(
             self, asset_type: AssetType,
@@ -170,18 +213,32 @@ class AssetManager(AAssetManager):
 
         headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
 
-        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=headers, and_filters=and_filters, or_filters=or_filters
-        )
+        if asset_type.get_super_type_id() > 0:
 
-        return self._convert_results_to_assets(results, asset_type, depth)
+            table_names, headers_sequence, result_columns = \
+                self._extract_joined_parameters(asset_type)
+
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
+                table_names=table_names,
+                join_on_chain=['abintern_extended_by_id'] * (len(table_names) - 1),
+                headers_sequence=headers_sequence,
+                and_filters=and_filters,
+                or_filters=or_filters
+            )
+
+        else:
+            result_columns: List[Column] = asset_type.columns
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+                table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+                headers=headers, and_filters=and_filters, or_filters=or_filters
+            )
+
+        return self._convert_results_to_assets(results, result_columns, depth)
 
     def get_batch(
             self, asset_type: AssetType,
             offset: int, limit: int,
-            depth: int = None) \
-            -> List[Asset]:
+            depth: int = None) -> List[Asset]:
         """Get a batch of assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -189,12 +246,25 @@ class AssetManager(AAssetManager):
 
         headers: List[str] = self.asset_headers + [column.db_name for column in asset_type.columns]
 
-        results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
-            table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-            headers=headers, limit=limit, offset=offset
-        )
+        if asset_type.get_super_type_id() > 0:
 
-        return self._convert_results_to_assets(results, asset_type, depth)
+            table_names, headers_sequence, result_columns = \
+                self._extract_joined_parameters(asset_type)
+
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
+                table_names=table_names,
+                join_on_chain=['abintern_extended_by_id'] * (len(table_names) - 1),
+                headers_sequence=headers_sequence, limit=limit, offset=offset
+            )
+
+        else:
+            result_columns: List[Column] = asset_type.columns
+            results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
+                table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
+                headers=headers, limit=limit, offset=offset
+            )
+
+        return self._convert_results_to_assets(results, result_columns, depth)
 
     def count(self, asset_type: AssetType):
         """Count the number of assets of the given type."""
@@ -205,7 +275,7 @@ class AssetManager(AAssetManager):
         count: int = self.db_connection.count(asset_type.asset_table_name)
         return count
 
-    def _convert_results_to_assets(self, results, asset_type, depth):
+    def _convert_results_to_assets(self, results, result_columns, depth):
         """Convert the db results to a list of Assets."""
 
         assets = []
@@ -213,7 +283,30 @@ class AssetManager(AAssetManager):
         for asset_row in results:
             assets.append(Asset(
                 asset_id=asset_row.pop('primary_key'),
-                data=self.convert_row_to_data(asset_row, asset_type.columns, depth),
+                data=self.convert_row_to_data(asset_row, result_columns, depth),
+                created=datetime.fromtimestamp(asset_row['abintern_created']),
+                extended_by_id=asset_row['abintern_extended_by_id']
             ))
 
         return assets
+
+    def _extract_joined_parameters(self, asset_type: AssetType):
+        """Extract the parameters required for a joined read from an asset type."""
+
+        table_names: List[str] = []
+        headers_sequence: List[List[str]] = []
+        result_columns: List[Column] = []
+
+        table_names.append(self.asset_type_manager.generate_asset_table_name(asset_type))
+        headers_sequence.append(self.asset_headers + [c.db_name for c in asset_type.columns])
+        result_columns.extend(asset_type.columns)
+
+        inspected_type: AssetType = asset_type
+
+        while (super_id := inspected_type.get_super_type_id()) > 0:
+            inspected_type = self.asset_type_manager.get_one(super_id)
+            table_names.append(inspected_type.asset_table_name)
+            result_columns.extend(inspected_type.columns)
+            headers_sequence.append([column.db_name for column in inspected_type.columns])
+
+        return table_names, headers_sequence, result_columns
