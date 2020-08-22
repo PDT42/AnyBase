@@ -196,7 +196,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        headers_sequence = [set(hs) - {'primary_key'} for hs in list(headers_sequence)]
+        headers_sequence = [set(hs) for hs in list(headers_sequence)]
 
         if not len(headers_sequence) == len(table_names):
             raise InvalidArgumentError("Number of headers_sequence and tables does not match!")
@@ -214,13 +214,13 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
-        query_headers: List[str] = [f'{table_names[0]}.primary_key']
+        query_headers: List[str] = []
         for index, headers in enumerate(headers_sequence):
             query_headers += [f"{table_names[index]}.{header}" for header in headers]
 
         query = f"SELECT {', '.join(query_headers)} FROM {' JOIN '.join(table_names)} WHERE "
 
-        for iteration, (table_name, join_on) in enumerate(zip(table_names, join_on_chain[:-1])):
+        for iteration, (table_name, join_on) in enumerate(zip(table_names, join_on_chain)):
             if iteration + 1 is len(table_names):
                 break
             query += f"{table_name}.{join_on} = {table_names[iteration + 1]}.primary_key"
