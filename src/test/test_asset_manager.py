@@ -7,6 +7,7 @@ These are tests for the asset manager.
 import json
 from datetime import date, datetime
 from shutil import rmtree
+from typing import List
 from unittest import TestCase
 
 from asset import Asset, AssetType
@@ -32,7 +33,7 @@ class TestAssetManager(TestCase):
             'TestAsset',
             [
                 Column('TestText', 'testtext', DataTypes.VARCHAR.value, required=True),
-                Column('TestNumber', 'testnumber', DataTypes.NUMBER.value, required=True)
+                Column('TestNumber', 'testnumber', DataTypes.INTEGER.value, required=True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
         self.asset_type = self.asset_type_manager.get_one(1)
@@ -48,21 +49,103 @@ class TestAssetManager(TestCase):
 
     def test_create_asset(self):
         # Creating an asset
-        self.asset_manager.create_asset(self.asset_type, self.test_asset)
-
-        # Updating asset data
-        self.test_asset.asset_id = 1
+        self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         # Checking if asset exists in the databased
         asset = self.asset_manager.get_one(1, self.asset_type)
         self.assertEqual(asset, self.test_asset)
 
+    def create_asset_with_subtype(self):
+
+        # I'll try to make this text very verbose
+        # so it can serve as an example for the
+        # intended structure of super types.
+
+        # Create an average Person
+        person_type: AssetType = AssetType(
+            asset_name="Person",
+            columns=[
+                # Varchar and Text can be used interchangeably
+                Column('name', 'name', DataTypes.TEXT.value, required=True),
+                Column('age', 'age', DataTypes.INTEGER.value, required=True),
+                Column('city_of_birth', 'city_of_birth', DataTypes.VARCHAR.value, required=True)
+            ]
+        )
+        created_person_type: AssetType = self.asset_type_manager.create_asset_type(person_type)
+
+        # Each student is a person, but unlike other
+        # people a student has a subject of study.
+        student_type: AssetType = AssetType(
+            asset_name="Student",
+            columns=[
+                Column('subject', 'subject_of_study', DataTypes.VARCHAR.value, required=True)
+            ],
+            super_type=created_person_type
+        )
+        created_student_type: AssetType = self.asset_type_manager.create_asset_type(student_type)
+
+        return created_person_type, created_student_type
+
+    def test_create_asset_with_super_type(self):
+
+        created_person_type, created_student_type = self.create_asset_with_subtype()
+
+        # Let's create a new student: Olaf. He is old
+        # from Bielefeld and studying Modern Arts.
+
+        olaf: Asset = Asset(
+            data={
+                'name': 'Olaf',
+                'age': 64,
+                'city_of_birth': 'Bielefeld',
+                'subject_of_study': 'Modern Arts'
+            }
+        )
+
+        created_olaf: Asset = self.asset_manager.create_asset(created_student_type, olaf)
+
+        # Read info on Olaf from database.
+        gotten_olaf: Asset = self.asset_manager.get_one(created_olaf.asset_id, created_student_type)
+
+        self.assertEqual(gotten_olaf, created_olaf)
+
+    def test_get_all_with_subtype(self):
+
+        created_person_type, created_student_type = self.create_asset_with_subtype()
+
+        # Let's create students: Olaf. He is old
+        # from Bielefeld and studying Modern Arts.
+        # He is the archetype of all Olaf's.
+
+        created_olafs: List[Asset] = []
+
+        # There are Olaf's of all ages.
+        # They still all come from
+        # Bielefeld tho and study something
+        # useless #NoFront
+
+        for age in range(10, 100, 5):
+            olaf: Asset = Asset(
+                data={
+                    'name': 'Olaf',
+                    'age': age,
+                    'city_of_birth': 'Bielefeld',
+                    'subject_of_study': 'Modern Arts'
+                }
+            )
+            created_olafs.append(self.asset_manager.create_asset(created_student_type, olaf))
+
+        gotten_olafs: List[Asset] = sorted(
+            self.asset_manager.get_all(created_student_type),
+            key=lambda o: o.data['age']
+        )
+
+        for gotten_olaf, created_olaf in zip(gotten_olafs, created_olafs):
+            self.assertEqual(gotten_olaf, created_olaf)
+
     def test_delete_asset(self):
         # Creating an asset
-        self.asset_manager.create_asset(self.asset_type, self.test_asset)
-
-        # Updating asset data
-        self.test_asset.asset_id = 1
+        self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         # Checking if asset exists in the database
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -74,8 +157,7 @@ class TestAssetManager(TestCase):
 
     def test_update_asset(self):
         # Creating an asset
-        self.asset_manager.create_asset(self.asset_type, self.test_asset)
-        self.test_asset.asset_id = 1
+        self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         # Getting the asset from the database
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -104,10 +186,7 @@ class TestAssetManager(TestCase):
 
     def test_get_one(self):
         # Create an assetType
-        self.asset_manager.create_asset(self.asset_type, self.test_asset)
-
-        # Updating asset data
-        self.test_asset.asset_id = 1
+        self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         # Checking if asset exists in database
         asset = self.asset_manager.get_one(1, self.asset_type)
@@ -169,6 +248,6 @@ class TestAssetManager(TestCase):
         self.assertTrue(all([isinstance(at, Asset) for at in asset.data["asset_list_col"]]))
 
     def test_jsonable(self):
-        self.test_asset.asset_id = 1
+        self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
         json.dumps(self.test_asset.as_dict())

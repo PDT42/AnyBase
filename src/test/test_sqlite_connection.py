@@ -30,7 +30,7 @@ class TestSqliteConnection(TestCase):
         rmtree(self.tempdir)
 
     def test_read(self):
-        # TODO: Add tests fpr filters, limit and offset
+        # TODO: Add tests for filters, limit and offset
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.db_connection.write_dict(self.table_name, self.row_values)
@@ -38,15 +38,73 @@ class TestSqliteConnection(TestCase):
         self.row_values["primary_key"] = 1
         self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
 
+    def test_read_joined(self):
+        # Create an average Person
+        person_table_name: str = 'abasset_table_person'
+        self.db_connection.create_table(
+            table_name=person_table_name,
+            columns=[
+                # Varchar and Text can be used interchangeably
+                Column('name', 'name', DataTypes.TEXT.value, required=True),
+                Column('age', 'age', DataTypes.INTEGER.value, required=True),
+                Column('city_of_birth', 'city_of_birth', DataTypes.VARCHAR.value, required=True),
+                Column('extended_by_id', 'extended_by_id', DataTypes.INTEGER.value, required=True)
+            ]
+        )
+
+        # Each student is a person, but unlike other
+        # people a student has a subject of study.
+        student_table_name: str = 'abasset_table_student'
+        self.db_connection.create_table(
+            table_name=student_table_name,
+            columns=[
+                Column('subject', 'subject_of_study', DataTypes.VARCHAR.value, required=True),
+                Column('extended_by_id', 'extended_by_id', DataTypes.INTEGER.value, required=True)
+            ]
+        )
+
+        olaf_person_id: int = self.db_connection.write_dict(
+            person_table_name, values={
+                'name': 'Olaf',
+                'age': 64,
+                'city_of_birth': 'Bielefeld',
+                'extended_by_id': 0
+            })
+
+        olaf_student_id: int = self.db_connection.write_dict(
+            student_table_name, values={
+                'subject_of_study': 'Modern Arts',
+                'extended_by_id': olaf_person_id
+            }
+        )
+        self.db_connection.commit()
+
+        test_result = self.db_connection.read_joined(
+            table_names=[student_table_name, person_table_name],
+            join_on_chain=['extended_by_id', 'extended_by_id'],
+            headers_sequence=[['subject_of_study', 'extended_by_id', 'primary_key'], ['name', 'age', 'city_of_birth']]
+        )
+
+        self.assertTrue(isinstance(test_result, list))
+        self.assertEqual(test_result[0], {
+            'name': 'Olaf',
+            'age': 64,
+            'city_of_birth': 'Bielefeld',
+            'subject_of_study': 'Modern Arts',
+            'extended_by_id': olaf_person_id,
+            'primary_key': olaf_student_id
+        })
+
+
     def test_delete(self):
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
         for iterator in range(0, 10):
-            self.row_values["numbercolumn"] = iterator
+            self.row_values['numbercolumn'] = iterator
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
-        self.db_connection.delete(self.table_name, [f"numbercolumn = 0"])
+        self.db_connection.delete(self.table_name, [f'numbercolumn = 0'])
         self.assertEqual(9, self.db_connection.count(self.table_name))
 
     def test_write_dict(self):
@@ -54,7 +112,7 @@ class TestSqliteConnection(TestCase):
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
         for iterator in range(0, 10):
-            self.row_values["numbercolumn"] = iterator
+            self.row_values['numbercolumn'] = iterator
             self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(10, self.db_connection.count(self.table_name))
 
