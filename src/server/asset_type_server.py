@@ -53,6 +53,7 @@ class AssetTypeServer:
 
         columns: List[Column] = []
         asset_name = sync_form.get('assetName')
+        super_type = int(sync_form.get('superType'))
 
         # TODO: Add requirements for setting a subtype
 
@@ -105,7 +106,8 @@ class AssetTypeServer:
 
         new_asset_type = AssetType(
             asset_name=asset_name,
-            columns=columns
+            columns=columns,
+            super_type=super_type
         )
 
         asset_type_manager = AssetTypeManager()
@@ -154,7 +156,7 @@ class AssetTypeServer:
 
         data_types: List[DataType] = DataTypes.get_all_data_types()
 
-        # checking if the output was requested as json
+        # Checking if the output was requested as json
         if AssetTypeServer.get().json_response:
             return jsonify({
                 "data_types": data_types,
@@ -182,7 +184,8 @@ class AssetTypeServer:
 
         page_manager: PageManager = PageManager()
         asset_type_manager: AssetTypeManager = AssetTypeManager()
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
+
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
 
         # Comment this out, if you dont want to create a
         # PageLayout for each Type by default
@@ -193,9 +196,7 @@ class AssetTypeServer:
         ))
 
         if not (page_layout := page_manager.get_page(asset_type)):
-
             return await render_template("layout-editor.html", asset_type=asset_type)
-
         return await render_template("asset-type.html", page_layout=page_layout)
 
     @staticmethod

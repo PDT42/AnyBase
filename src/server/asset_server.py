@@ -4,15 +4,17 @@
 
 These are the routes for the ``AssetTypeManager``.
 """
+
 import asyncio
 from asyncio import Task
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Set
+from typing import Any, Dict, List, Mapping, MutableMapping, Set
 
 from quart import make_response, redirect, render_template, request
 
-from asset import Asset
+from asset import Asset, AssetType
 from asset.abstract_asset_manager import AAssetManager
+from asset.abstract_asset_type_manager import AAssetTypeManager
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from config import Config
@@ -85,7 +87,6 @@ class AssetServer:
             # earlier.
 
             for result_task in asyncio.as_completed(tasks):
-
                 # Each result task will have completed
                 # here. We process the result and yield
                 # an encoded message that can be sent.
@@ -128,16 +129,16 @@ class AssetServer:
     async def post_create_asset(asset_type_id: int):
         """This is a FlaskAppRoute that lets you create an ``Asset``."""
 
-        asset_type_manager = AssetTypeManager()
-        asset_type = asset_type_manager.get_one(asset_type_id)
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        asset_manager: AAssetManager = AssetManager()
 
-        asset_manager = AssetManager()
+        extended_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
-        asset_data = {}
+        sync_form = await request.form
+        asset_data: MutableMapping[str, Any] = {}
 
-        for column in asset_type.columns:
-
-            sync_form = await request.form
+        for column in extended_type.columns:
 
             # Column is missing in form but is required
             if column.required and column.db_name not in sync_form.keys():
@@ -148,6 +149,7 @@ class AssetServer:
                 continue
 
             # Column is present
+            # TODO: This should be done in a cleaner way - The DataTypes feel kinda muddled
             else:
                 # TODO: Validate input
                 if column.datatype is DataTypes.DATETIME.value:
@@ -159,8 +161,8 @@ class AssetServer:
                 asset_data[column.db_name] = str(sync_form[column.db_name])
 
         # Init new Asset and store it in the database
-        asset = Asset(asset_id=None, data=asset_data)
-        asset_manager.create_asset(asset_type, asset)
+        asset: Asset = Asset(data=asset_data)
+        asset = asset_manager.create_asset(asset_type, asset)
 
         return redirect(f'/asset-type/{asset_type_id}')
 
@@ -168,8 +170,9 @@ class AssetServer:
     async def get_create_asset(asset_type_id: int):
         """Handle get requests to this route. TODO"""
 
-        asset_type_manager = AssetTypeManager()
-        asset_type = asset_type_manager.get_one(asset_type_id)
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
 
         assets: Dict[int, List[Asset]] = {}
 
