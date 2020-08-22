@@ -221,9 +221,10 @@ class SqliteConnection(DbConnection):
         query = f"SELECT {', '.join(query_headers)} FROM {' JOIN '.join(table_names)} WHERE "
 
         for iteration, (table_name, join_on) in enumerate(zip(table_names, join_on_chain)):
-            if iteration + 1 is len(table_names):
+            if (iteration + 1) is len(table_names):
                 break
             query += f"{table_name}.{join_on} = {table_names[iteration + 1]}.primary_key"
+            query += " AND " if (iteration + 2) < len(table_names) else ""
 
         if and_filters:
             query = f"{query} AND {' AND '.join(and_filters)}"
