@@ -6,11 +6,11 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
 from datetime import datetime
-from typing import Any, Mapping, Sequence
+from typing import Any, List, Mapping, Sequence
 
 from database import DataType, DataTypes
 from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
-from exceptions.common import IllegalStateException, MissingArgumentException
+from exceptions.common import IllegalStateException, InvalidArgumentError, MissingArgumentException
 from exceptions.database import MissingValueException, TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
 from src.database.db_connection import Column, DbConnection
@@ -167,6 +167,69 @@ class SqliteConnection(DbConnection):
 
             if and_filters:
                 query = f"{query})"
+
+        # Adding Limit
+        if limit:
+            query = f"{query} LIMIT {limit}"
+
+        # Adding Offset
+        if offset:
+            query = f"{query} OFFSET {offset}"
+        # --------------
+        self.cursor.execute(query)
+
+        result = self.cursor.fetchall()
+
+        return result
+
+    def read_joined(
+            self, table_names: List[str],
+            join_on_chain: List[str],
+            headers_sequence: Sequence[Sequence[str]],
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            offset: int = None,
+            limit: int = None
+    ):
+        """Read from the database joining the table names in ``table_names``."""
+
+        # Initialize connection
+        self._connect()
+
+        headers_sequence = [set(hs) - {'primary_key'} for hs in list(headers_sequence)]
+
+        if not len(headers_sequence) == len(table_names):
+            raise InvalidArgumentError("Number of headers_sequence and tables does not match!")
+
+        # Making sure the table we want to read from exists in the database
+        if not all(self.check_table_exists(name) for name in table_names):
+            raise TableDoesNotExistException(
+                "One of the table names you supplied was invalid!")
+
+        # Making sure people don't get lazy
+        if not len(table_names) > 1:
+            raise IllegalStateException(
+                "You are trying to use a joined read, to read from only one table. " +
+                "That is unnecessary however. Please use db_connection.read instead!")
+
+        # Creating Query
+        # --------------
+        query_headers: List[str] = [f'{table_names[0]}.primary_key']
+        for index, headers in enumerate(headers_sequence):
+            query_headers += [f"{table_names[index]}.{header}" for header in headers]
+
+        query = f"SELECT {', '.join(query_headers)} FROM {' JOIN '.join(table_names)} WHERE "
+
+        for iteration, (table_name, join_on) in enumerate(zip(table_names, join_on_chain[:-1])):
+            if iteration + 1 is len(table_names):
+                break
+            query += f"{table_name}.{join_on} = {table_names[iteration + 1]}.primary_key"
+
+        if and_filters:
+            query = f"{query} AND {' AND '.join(and_filters)}"
+
+        if or_filters:
+            query = f"{query} AND ({' OR '.join(or_filters)})"
 
         # Adding Limit
         if limit:

@@ -8,7 +8,7 @@ database.
 """
 
 from abc import abstractmethod
-from typing import Any, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping, MutableMapping, Sequence
 
 from database import Column, DataType
 
@@ -55,6 +55,19 @@ class DbConnection:
             limit: int = None
     ):
         """Read from the database."""
+        pass
+
+    @abstractmethod
+    def read_joined(
+            self, table_names: List[str],
+            join_on_chain: List[str],
+            headers_sequence: Sequence[Sequence[str]],
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            offset: int = None,
+            limit: int = None
+    ):
+        """Read from joined tables."""
         pass
 
     @abstractmethod
