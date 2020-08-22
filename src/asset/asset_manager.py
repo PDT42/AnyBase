@@ -49,8 +49,32 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             return None
 
-        created: datetime = datetime.now()
-        values = (self.db_connection.convert_data_to_row(asset.data, asset_type.columns))
+        # If the asset has a super type, we won't be able to store
+        # all the data in asset.data in the asset database table.
+        # We need to create a super type asset and let it handle
+        # the additional data.
+
+        if (super_id := asset_type.get_super_type_id()) > 0:
+
+            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+
+            if not super_type:
+                raise SuperTypeDoesNotExistException()
+
+            # Passing all the data this asset won't be able to store
+            # in its own database table up to the super asset.
+
+            asset_headers: Set[str] = {col.db_name for col in asset_type.columns}
+            super_headers: Set[str] = set(asset.data.keys()) - asset_headers
+            super_data: MutableMapping[str, Any] = {
+                header: asset.data[header] for header in super_headers
+            }
+
+            super_asset: Asset = self.create_asset(super_type, Asset(data=super_data))
+            asset.extended_by_id = super_asset.asset_id
+
+        created: datetime = datetime.now().replace(microsecond=0)
+        values = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
         values.update({
             'primary_key': None,
             'abintern_created': int(created.timestamp()),
@@ -60,7 +84,12 @@ class AssetManager(AAssetManager):
         asset_id = self.db_connection.write_dict(asset_type.asset_table_name, values)
         self.db_connection.commit()
 
-        return Asset(data=asset.data, asset_id=asset_id, created=created.replace(microsecond=0))
+        return Asset(
+            data=asset.data,
+            asset_id=asset_id,
+            created=created,
+            extended_by_id=asset.extended_by_id
+        )
 
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
