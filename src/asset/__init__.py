@@ -28,7 +28,7 @@ class AssetType:
         return {
             'asset_name': self.asset_name,
             'columns': [col.as_dict() for col in self.columns],
-            'created': self.created,
+            'created': int(self.created.timestamp()),
             'asset_table_name': self.asset_table_name,
             'asset_type_id': self.asset_type_id,
             'super_type': self.super_type
