@@ -14,13 +14,11 @@ from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
-from exceptions.common import IllegalStateException, KeyConstraintException
+from exceptions.common import IllegalStateException, InvalidTypeError, KeyConstraintException
 
 
 class AssetTypeManager(AAssetTypeManager):
     """This is the ``AssetTypeManager``."""
-
-    # TODO: Make this a singleton? Might be necessary for db concurrency.
 
     # Required fields
     db_connection: DbConnection = None
