@@ -7,7 +7,7 @@ These are the routes for the ``AssetTypeManager``.
 import asyncio
 from asyncio import Task
 from datetime import datetime
-from typing import Dict, List, Mapping, Set
+from typing import Any, Dict, List, Mapping, Set
 
 from quart import make_response, redirect, render_template, request
 
@@ -93,7 +93,7 @@ class AssetServer:
                 result = await result_task
 
                 # Get the items
-                result_dict: Mapping[str, str] = {
+                result_dict: Mapping[str, Any] = {
                     "items": [asset.as_dict() for asset in result],
                     "item_count": asset_count
                 }
