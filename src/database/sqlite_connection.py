@@ -321,7 +321,7 @@ class SqliteConnection(DbConnection):
 
         return result
 
-    def update(self, table_name: str, values: Mapping[str, Any]):
+    def update(self, table_name: str, values: Mapping[str, Any]) -> int:
         """Update an entry in the database."""
 
         # Initialize connection
