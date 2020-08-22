@@ -95,7 +95,6 @@ class TestSqliteConnection(TestCase):
             'primary_key': olaf_student_id
         })
 
-
     def test_delete(self):
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
