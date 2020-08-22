@@ -22,6 +22,22 @@
 
             <hr/>
 
+            <div class="form-group row">
+                <label for="superType" class="col-md-2 col-form-label">Extends Asset Type:</label>
+                <div class="col-md-10">
+                    <select class="form-control custom-select" name="superType" id="superType">
+                        <option value="0" selected>...</option>
+
+                        {% for asset_type in asset_types %}
+                        <option value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+            </div>
+
+            <hr/>
+
             <!-- HEADER LINE -->
 
             <div class="row" style="margin-top: 10px">
