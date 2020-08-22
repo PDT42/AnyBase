@@ -49,6 +49,8 @@ class PageManager(APageManager):
     def create_page(self, page_layout: PageLayout) -> int:
         """Create a new ``AssetPage`` in the database."""
 
+        # TODO: Add check if layout already exists
+
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
 
@@ -62,6 +64,10 @@ class PageManager(APageManager):
 
         for row in page_layout.layout:
             for column in row:
+
+                # Creating a query dict from the columns
+                # and storing them in a separate database
+
                 column_row: Mapping[str: Any] = {
                     'primary_key': None,
                     'column_width': column.column_width,
