@@ -14,8 +14,9 @@ from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import AssetTypeDoesNotExistException, SuperTypeDoesNotExistException
-from exceptions.common import KeyConstraintException, MissingKeyException
+from exceptions.asset import AssetTypeDoesNotExistException, SuperAssetDoesNotExistException, \
+    SuperTypeDoesNotExistException
+from exceptions.common import KeyConstraintException
 
 
 class AssetManager(AAssetManager):
@@ -114,10 +115,48 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException(f"The asset type {asset_type} does not exist!")
 
+        if (super_id := asset_type.get_super_type_id()) > 0:
+
+            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+
+            if not super_type:
+                raise SuperTypeDoesNotExistException()
+
+            # Passing all the data this asset won't be able to store
+            # in its own database table up to the super asset.
+
+            asset_headers: Set[str] = {col.db_name for col in asset_type.columns}
+            super_headers: Set[str] = set(asset.data.keys()) - asset_headers
+
+            # Making sure, the super type of this asset exists
+            if not (super_asset := self.get_one(asset.extended_by_id, super_type)):
+                raise SuperAssetDoesNotExistException(
+                    "The super asset of this asset does not exist! " +
+                    "This means a constraint failure - that's shit!"
+                )
+
+            # Updating the super assets data
+            super_asset.data = {
+                header: asset.data[header] for header in super_headers
+            }
+
+            self.update_asset(super_type, super_asset)
+
         data = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
-        data.update({'primary_key': asset.asset_id, 'abintern_extended_by_id': asset.extended_by_id})
+        data.update({
+            'primary_key': asset.asset_id,
+            'abintern_created': int(asset.created.timestamp()),
+            'abintern_extended_by_id': asset.extended_by_id
+        })
 
         self.db_connection.update(asset_type.asset_table_name, data)
+
+        return Asset(
+            data=asset.data,
+            created=asset.created,
+            asset_id=asset.asset_id,
+            extended_by_id=asset.extended_by_id
+        )
 
     def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
