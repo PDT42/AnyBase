@@ -4,8 +4,7 @@ class AssetType {
     VARCHAR: asset_name
     VARCHAR: asset_columns
     VARCHAR: asset_table_name
-    INTEGER: is_subtype
-    INTEGER: super_type_id
+    INTEGER: super_type
     INTEGER: primary_key
 }
 

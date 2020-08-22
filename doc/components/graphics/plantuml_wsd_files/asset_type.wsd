@@ -5,8 +5,7 @@ class AssetType {
     Column[]: columns
     str: asset_table_name
     int: asset_type_id
-    bool: is_subtype
-    int: super_type_id
+    int: super_type
 }
 
 @enduml

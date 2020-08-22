@@ -22,8 +22,7 @@ class AssetType:
     created: datetime = None
     asset_table_name: str = None
     asset_type_id: int = None
-    is_subtype: bool = False
-    super_type_id: int = 0
+    super_type: Union['AssetType', int] = 0
 
     def as_dict(self):
         return {
@@ -32,9 +31,14 @@ class AssetType:
             'created': self.created,
             'asset_table_name': self.asset_table_name,
             'asset_type_id': self.asset_type_id,
-            'is_subtype': self.is_subtype,
-            'super_type_id': self.super_type_id
+            'super_type': self.super_type
         }
+
+    def get_super_type_id(self) -> int:
+        if isinstance(self.super_type, int):
+            return self.super_type
+        elif isinstance(self.super_type, AssetType):
+            return self.super_type.asset_type_id
 
 
 @dataclass

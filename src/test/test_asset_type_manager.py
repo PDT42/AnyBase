@@ -85,7 +85,7 @@ class TestAssetTypeManager(TestCase):
         self.create_twenty_samples()
         self.assertEqual(20, len(self.asset_type_manager.get_all()))
 
-        and_filters = ["is_subtype = 1"]
+        and_filters = ["super_type > 0"]
         self.assertEqual(10, len(self.asset_type_manager.get_all_filtered(and_filters=and_filters)))
 
         or_filters = [f'asset_name = "{self.asset_type.asset_name}_0"']
@@ -115,8 +115,7 @@ class TestAssetTypeManager(TestCase):
         for iterator in range(10, 20):
             asset_type = deepcopy(self.asset_type)
             asset_type.asset_name = f"{asset_type.asset_name}_{iterator}"
-            asset_type.is_subtype = True
-            asset_type.super_type_id = 1
+            asset_type.super_type = 1
             self.asset_type_manager.create_asset_type(asset_type)
 
     def test_get_one(self):
