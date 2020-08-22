@@ -84,7 +84,7 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def update(self, table_name: str, values: Mapping[str, Any]):
+    def update(self, table_name: str, values: Mapping[str, Any]) -> int:
         """Update database entry."""
         pass
 
