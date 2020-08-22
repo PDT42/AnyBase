@@ -15,7 +15,8 @@ from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import Column, DataType, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
-from exceptions.common import IllegalStateException
+from exceptions.common import IllegalStateException, InvalidArgumentError
+from pages import ColumnInfo, PageLayout
 from pages.page_manager import PageManager
 
 
@@ -129,6 +130,10 @@ class AssetTypeServer:
 
         # Checking if the request argument Prefab was provided
         if prefab_arg := request.args.get('prefab'):
+
+            if prefab_arg in [False, [], '']:
+                raise InvalidArgumentError()
+
             prefab_arg = prefab_arg.upper()
             prefab_names = AssetTypeServer.get().prefab_names
 
@@ -139,7 +144,7 @@ class AssetTypeServer:
                 for column in prefab_dict['columns']:
                     if column['asset_type_id'] > 0:
 
-                        column['asset_type'] = asset_type_manager\
+                        column['result_columns'] = asset_type_manager\
                             .get_one(column['asset_type_id'])
 
                 return await render_template(
@@ -179,7 +184,16 @@ class AssetTypeServer:
         asset_type_manager: AssetTypeManager = AssetTypeManager()
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
+        # Comment this out, if you dont want to create a
+        # PageLayout for each Type by default
+
+        page_manager.create_page(PageLayout(
+            layout=[[ColumnInfo('list-assets', 'plugins/list-assets-plugin.html', 12, ['name'], 0)]],
+            asset_type=asset_type, items_url=f'/asset-type/{asset_type.asset_type_id}/items'
+        ))
+
         if not (page_layout := page_manager.get_page(asset_type)):
+
             return await render_template("layout-editor.html", asset_type=asset_type)
 
         return await render_template("asset-type.html", page_layout=page_layout)
