@@ -131,9 +131,9 @@ class SqliteConnection(DbConnection):
             offset: int = None,
             limit: int = None
     ) -> Sequence[Mapping[str, Any]]:
-        """Read headers from database ``table`` called ``table_name``.
+        """Read headers_sequence from database ``table`` called ``table_name``.
 
-        This will read all ``headers`` from ``table_name`` adding the
+        This will read all ``headers_sequence`` from ``table_name`` adding the
         ``and_filters`` and the ``or_filters`` to the query it runs on the
         database and using ``offset`` and ``limit`` in the way the names
         suggest."""
@@ -143,6 +143,9 @@ class SqliteConnection(DbConnection):
 
         headers = set(headers)
         headers.add('primary_key')
+
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException("The table you supplied does not exist!")
 
         # Creating Query
         # --------------
