@@ -25,7 +25,7 @@ class AAssetManager:
     db_connection: DbConnection = None
 
     @abstractmethod
-    def create_asset(self, asset_type: AssetType, asset: Asset) -> None:
+    def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
         """Create an asset in the database."""
         pass
 
