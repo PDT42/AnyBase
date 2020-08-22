@@ -363,7 +363,9 @@ class SqliteConnection(DbConnection):
 
         query += f"WHERE primary_key = {values['primary_key']}"
         # --------------
-        self.cursor.execute(query)
+        result = self.cursor.execute(query)
+
+        return result
 
     def update_table_name(self, table_name: str, new_table_name: str):
         """Update the name of a table in the database."""
