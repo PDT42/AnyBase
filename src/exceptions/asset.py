@@ -20,3 +20,7 @@ class AssetTypeInconsistencyException(Exception):
 
 class SuperTypeDoesNotExistException(Exception):
     pass
+
+
+class SuperAssetDoesNotExistException(Exception):
+    pass
