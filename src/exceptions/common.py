@@ -13,5 +13,18 @@ class IllegalStateException(Exception):
 class KeyConstraintException(Exception):
     pass
 
+
 class MissingArgumentException(Exception):
+    pass
+
+
+class MissingKeyException(Exception):
+    pass
+
+
+class InvalidArgumentError(Exception):
+    pass
+
+
+class InvalidTypeError(Exception):
     pass
