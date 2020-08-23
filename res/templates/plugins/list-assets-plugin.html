@@ -1,4 +1,4 @@
-{% macro plugin_macro(column_info) %}
+{% macro plugin_macro(asset_type, column_info) %}
 <script>
     column_info = JSON.parse('{{ column_info.as_dict()|tojson }}');
 
@@ -9,7 +9,7 @@
     // use the same plugin twice in one layout
     // tho - that must be possible.
 
-    function appendListItems(items, assetList, employedColumns) {
+    function appendListItems(items, assetList, field_mappings) {
 
         for (let index in items) {
 
@@ -18,7 +18,8 @@
             let assetCard = document.createElement('a');
             assetCard.setAttribute('id', '{{column_info.column_id}}-asset-' + assetData['asset_id'])
             assetCard.setAttribute('class', 'list-group-item card');
-            assetCard.setAttribute('href', '#'); // TODO: Insert correct link
+            assetCard.setAttribute('href','/asset-type/' +
+                '{{ asset_type.asset_type_id }}/' + assetData['asset_id']); // TODO: Insert correct link
             assetCard.setAttribute('style', 'margin-bottom: 15px');
             assetList.appendChild(assetCard);
 
@@ -28,7 +29,7 @@
 
             let cardTitle = document.createElement('h5');
             cardTitle.setAttribute('class', 'card-title');
-            cardTitle.innerText = assetData['data'][employedColumns[0]];
+            cardTitle.innerText = assetData['data'][field_mappings['title']];
             assetCardBody.appendChild(cardTitle);
         }
     }
@@ -40,12 +41,12 @@
         assetList.setAttribute('class', 'list-group');
         root.appendChild(assetList);
 
-        let employedColumns = column_info['employed_columns'];
+        let field_mappings = column_info['field_mappings'];
 
-        appendListItems(items, employedColumns)
+        appendListItems(items, assetList, field_mappings)
 
         itemsPubSub.subscribe('items-data', function (items) {
-            appendListItems(items, assetList, employedColumns)
+            appendListItems(items, assetList, field_mappings)
         })
     }
 
