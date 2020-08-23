@@ -421,7 +421,7 @@ class SqliteConnection(DbConnection):
             self, table_name: str,
             columns: Sequence[Column]
     ):
-        """Create a table called ``table_name`` with ``employed_columns`` in the database."""
+        """Create a table called ``table_name`` with ``field_mappings`` in the database."""
 
         primary_key = False
 
@@ -436,7 +436,7 @@ class SqliteConnection(DbConnection):
 
         for column in columns:
 
-            # Adding employed_columns
+            # Adding field_mappings
             query = f"{query}{column.db_name} {column.datatype.db_type}"
 
             if column.required:

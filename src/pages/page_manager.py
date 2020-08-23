@@ -12,7 +12,6 @@ from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
 from exceptions.asset import AssetTypeDoesNotExistException
-from exceptions.plugins import PageDoesNotExistException
 from pages import ColumnInfo, PageLayout
 from pages.abstract_page_manager import APageManager
 
@@ -33,7 +32,7 @@ class PageManager(APageManager):
         'plugin_name',
         'plugin_path',
         'column_width',
-        'employed_columns',
+        'field_mappings',
         'primary_key'
     ]
 
@@ -64,7 +63,6 @@ class PageManager(APageManager):
 
         for row in page_layout.layout:
             for column in row:
-
                 # Creating a query dict from the columns
                 # and storing them in a separate database
 
@@ -73,7 +71,10 @@ class PageManager(APageManager):
                     'column_width': column.column_width,
                     'plugin_name': column.plugin_name,
                     'plugin_path': column.plugin_path,
-                    'employed_columns': ";".join(column.employed_columns),
+                    'field_mappings': ";".join([
+                        f"{field},{mapping}"
+                        for field, mapping in column.field_mappings.items()
+                    ]),
                 }
 
                 # Storing the column and getting its pk
@@ -155,11 +156,17 @@ class PageManager(APageManager):
             and_filters=[f'primary_key = {column_id}']
         )[0]
 
+        field_mappings: Mapping[str, str] = {
+            field: mapping for field, mapping in [
+                fm.split(',') for fm in result['field_mappings'].split(';')
+            ]
+        }
+
         column_info: ColumnInfo = ColumnInfo(
             column_width=result['column_width'],
             plugin_name=result['plugin_name'],
             plugin_path=result['plugin_path'],
-            employed_columns=result['employed_columns'].split(';'),
+            field_mappings=field_mappings,
             column_id=result['primary_key']
         )
 
@@ -189,7 +196,7 @@ class PageManager(APageManager):
                 Column('plugin_name', 'plugin_name', DataTypes.VARCHAR.value, True),
                 Column('plugin_path', 'plugin_path', DataTypes.VARCHAR.value, True),
                 Column('column_width', 'column_width', DataTypes.INTEGER.value, True),
-                Column('employed_columns', 'employed_columns', DataTypes.VARCHAR.value, True),
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
             ]
 
             self.db_connection.create_table(self.asset_type_plugin_table_name, columns)
