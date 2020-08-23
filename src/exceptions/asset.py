@@ -24,3 +24,11 @@ class SuperTypeDoesNotExistException(Exception):
 
 class SuperAssetDoesNotExistException(Exception):
     pass
+
+
+class MissingAssetError(Exception):
+    pass
+
+
+class ColumnNameTakenError(Exception):
+    pass
