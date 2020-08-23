@@ -9,7 +9,7 @@
 {% block body %}
 <div class="container">
     <div class="row" style="margin-top: 35px">
-        <form class="col-sm" action="/asset-type/create" method="post">
+        <form class="col" action="/asset-type/create" method="post">
 
             <!-- INPUT FOR ASSET TYPE NAME -->
 
@@ -25,11 +25,16 @@
             <div class="form-group row">
                 <label for="superType" class="col-md-2 col-form-label">Extends Asset Type:</label>
                 <div class="col-md-10">
-                    <select class="form-control custom-select" name="superType" id="superType">
+                    <select class="form-control custom-select"
+                            name="superType" id="superType"
+                            onchange=""
+                    >
                         <option value="0" selected>...</option>
 
-                        {% for asset_type in asset_types %}
-                        <option value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
+                        {% for asset_type_id in asset_types %}
+                        <option value="{{ asset_type_id }}">
+                            {{ asset_types[asset_type_id].asset_name }}
+                        </option>
                         {% endfor %}
 
                     </select>
@@ -55,56 +60,7 @@
             <!-- COLUMN INPUTS -->
             <!-- TODO: Do this completely in JS -->
 
-            <div id="column-list">
-                <div name="column-entry-0" class="form-group row" style="padding-top: 5px">
-
-                    <!-- COLUMN NAME -->
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" name="column-name-0">
-                    </div>
-
-                    <!-- COLUMN DATATYPE -->
-                    <div class="col-md-4">
-                        <div class="row">
-
-                            <div class="col-md-6">
-                                <select class="form-control custom-select" name="column-data-type-0"
-                                        onchange="dataTypeSelection(name, value)">
-
-                                    {% for data_type in data_types %}
-                                    <option value="{{ data_type.typename }}">
-                                        {{ data_type.fe_name }}
-                                    </option>
-                                    {% endfor %}
-
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <select class="form-control custom-select" name="column-asset-type-0">
-
-                                    {% for asset_type in asset_types %}
-                                    <option value="{{ asset_types[asset_type] }}">{{ asset_type }}</option>
-                                    {% endfor %}
-
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- COLUMN REQUIRED FLAG -->
-                    <div class="col-md-2">
-                        <input
-                                type="checkbox"
-                                class="check-input"
-                                name="column-required-0"
-                                value="checkboxTrue"
-                        >
-                    </div>
-                </div>
-            </div>
-
+            <div id="column-list"></div>
 
             <button class="btn btn-block btn-secondary" type="button" onclick="addColumn()">
                 +
@@ -123,47 +79,122 @@
 </div>
 
 <script>
-    let columnNumber = 1;
+    let columnsAdded = 0;
+    let columnNumber = 0;
+
+    let dataTypes = JSON.parse('{{ data_types|tojson }}');
+    let assetTypes = JSON.parse('{{ asset_types|tojson }}');
 
     function addColumn() {
-        if (columnNumber < 15) {
+        if (columnsAdded < 15) {
             const columnList = document.getElementById('column-list');
-            let columnEntry = document.getElementsByName('column-entry-0').item(0).cloneNode(true);
 
-            // Updating identifiers
-            columnEntry.setAttribute('name', 'column-entry-' + columnNumber);
-
-            let name = columnEntry.querySelector('div > input[name="column-name-0"]');
-            name.setAttribute("name", 'column-name-' + columnNumber);
-            name.value = "";
-
-            columnEntry.querySelector('div > select[name="column-data-type-0"]')
-                .setAttribute("name", 'column-data-type-' + columnNumber);
-
-            columnEntry.querySelector('div > select[name="column-asset-type-0"]')
-                .setAttribute("name", 'column-asset-type-' + columnNumber);
-
-            let required = columnEntry.querySelector('div > input[name="column-required-0"]');
-            required.setAttribute("name", 'column-required-' + columnNumber);
-            required.checked = false;
-
+            let columnEntry = document.createElement('div');
+            columnEntry.setAttribute('id', 'column-entry-' + columnNumber);
+            columnEntry.setAttribute('class', 'form-group row');
+            columnEntry.style.paddingTop = '5px';
             columnList.appendChild(columnEntry);
 
+            // Adding Column Name Input
+
+            let columnName = document.createElement('div');
+            columnName.setAttribute('class', 'col-md-6');
+            columnEntry.appendChild(columnName);
+
+            let columnNameInput = document.createElement('input');
+            columnNameInput.setAttribute('class', 'form-control');
+            columnNameInput.setAttribute('type', 'text');
+            columnNameInput.setAttribute('name', 'column-name-' + columnNumber);
+            columnName.appendChild(columnNameInput);
+
+            // Adding Data Type Input
+
+            let columnDataType = document.createElement('div');
+            columnDataType.setAttribute('class', 'col-md-4');
+            columnEntry.appendChild(columnDataType);
+
+            let columnDataTypeRow = document.createElement('div');
+            columnDataTypeRow.setAttribute('class', 'row');
+            columnDataType.appendChild(columnDataTypeRow);
+
+            let columnDataTypeSelectColumn = document.createElement('div');
+            columnDataTypeSelectColumn.setAttribute('class', 'col-md-6');
+            columnDataTypeRow.appendChild(columnDataTypeSelectColumn);
+
+            let columnDataTypeSelect = document.createElement('select');
+            columnDataTypeSelect.setAttribute('class', 'form-control custom-select');
+            columnDataTypeSelect.setAttribute('name', 'column-data-type-' + columnNumber);
+            columnDataTypeSelect.onchange = function () {
+                dataTypeSelection(
+                    columnDataTypeSelect.name,
+                    columnDataTypeSelect.value
+                );
+            };
+            columnDataTypeSelectColumn.appendChild(columnDataTypeSelect);
+
+            for (let key in dataTypes) {
+                let dataType = dataTypes[key];
+                let columnDataTypeSelectOption = document.createElement('option');
+                columnDataTypeSelectOption.value = dataType['typename'];
+                columnDataTypeSelectOption.text = dataType['fe_name'];
+                columnDataTypeSelect.appendChild(columnDataTypeSelectOption);
+            }
+
+            // Adding Asset Type Input
+
+            let columnAssetTypeSelectColumn = document.createElement('div');
+            columnAssetTypeSelectColumn.setAttribute('class', 'col-md-6');
+            columnDataTypeRow.appendChild(columnAssetTypeSelectColumn);
+
+            let columnAssetTypeSelect = document.createElement('select');
+            columnAssetTypeSelect.setAttribute('class', 'form-control custom-select');
+            columnAssetTypeSelect.setAttribute('id', 'column-asset-type-' + columnNumber);
+            columnAssetTypeSelect.setAttribute('name', 'column-asset-type-' + columnNumber);
+            columnAssetTypeSelectColumn.appendChild(columnAssetTypeSelect);
+
+            for (let key in assetTypes) {
+                let assetType = assetTypes[key];
+                let columnAssetTypeSelectOption = document.createElement('option');
+                columnAssetTypeSelectOption.setAttribute('value', key);
+                columnAssetTypeSelectOption.text = assetType['asset_name'];
+                columnAssetTypeSelect.appendChild(columnAssetTypeSelectOption);
+            }
+
+            // Adding Required Input
+            let columnRequired = document.createElement('div');
+            columnRequired.setAttribute('class', 'col-md-2');
+            columnEntry.appendChild(columnRequired);
+
+            let columnRequiredInput = document.createElement('input');
+            columnRequiredInput.setAttribute('type', 'checkbox');
+            columnRequiredInput.setAttribute('class', 'check-input');
+            columnRequiredInput.setAttribute('name', 'column-required-' + columnNumber);
+            columnRequiredInput.setAttribute('value', 'checkboxTrue');
+            columnRequiredInput.checked = false;
+            columnRequired.appendChild(columnRequiredInput);
+
             columnNumber += 1;
+            columnNumber = columnNumber % 15;
+            columnsAdded += 1;
         } else {
-            console.warn("Can't create more than 15 Columns!")
+            console.warn("Can't create more than 15 Columns!");
         }
     }
 
     function dataTypeSelection(name, value) {
         // TODO: Initialize hidden if not ASSET or ASSETLIST
         const entryNumber = name.toString().slice(-1);
-        const dtSelection = document.getElementsByName('column-asset-type-' + entryNumber).item(0);
+        const dtSelection = document.getElementById('column-asset-type-' + entryNumber);
         if (['ASSET', 'ASSETLIST'].includes(value)) {
             dtSelection.style.visibility = "visible";
         } else {
             dtSelection.style.visibility = "hidden";
         }
     }
+
+    addColumn();
+
+    let first_entry = document.getElementById('column-data-type-0');
+    console.log(first_entry);
 </script>
 {% endblock %}
