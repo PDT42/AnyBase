@@ -13,7 +13,7 @@ from asset import Asset, AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database.db_connection import DbConnection
-from pages import ColumnInfo, PageLayout
+from pages import AssetPageLayout, ColumnInfo, PageLayout
 
 
 class APageManager:
@@ -73,7 +73,7 @@ class APageManager:
         layout_str += "]"
 
         asset_id = None
-        if isinstance(page_layout.asset, Asset):
+        if isinstance(page_layout, AssetPageLayout) and isinstance(page_layout.asset, Asset):
             asset_id = page_layout.asset.asset_id
 
         # Creating a dict as required by db query
@@ -114,17 +114,20 @@ class APageManager:
         asset_type: AssetType = self.asset_type_manager \
             .get_one(row_data['asset_type_id'])
 
-        asset: Optional[Asset] = None
-
         if asset_id := row_data['asset_id']:
             asset = self.asset_manager.get_one(asset_id, asset_type)
 
-        # Finally returning a PageLayout
+            return AssetPageLayout(
+                layout=layout,
+                asset_type=asset_type,
+                items_url=row_data['items_url'],
+                asset=asset,
+                layout_id=row_data['primary_key']
+            )
 
         return PageLayout(
             layout=layout,
             asset_type=asset_type,
             items_url=row_data['items_url'],
-            asset=asset,
             layout_id=row_data['primary_key']
         )
