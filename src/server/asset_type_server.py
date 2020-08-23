@@ -5,16 +5,17 @@
 These are the routes for the ``AssetTypeManager``.
 """
 
-from typing import List
+from typing import List, Set
 
 from quart import jsonify, redirect, render_template, request
 
 from asset import AssetType, AssetTypePrefab, AssetTypePrefabs
 from asset.abstract_asset_type_manager import AAssetTypeManager
+from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import Column, DataType, DataTypes
-from exceptions.asset import AssetTypeDoesNotExistException
+from exceptions.asset import AssetTypeDoesNotExistException, ColumnNameTakenError
 from exceptions.common import IllegalStateException, InvalidArgumentError
 from pages import ColumnInfo, PageLayout
 from pages.page_manager import PageManager
@@ -43,6 +44,29 @@ class AssetTypeServer:
             'frontend', 'json_response', False) in ["True", "true", 1]
 
     @staticmethod
+    async def get_list_asset_types():
+        """Handle get requests to ``asset-types``."""
+
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        asset_types: List[AssetType] = asset_type_manager.get_all()
+
+        # Checking if the output was requested as json
+        if AssetTypeServer.get().json_response:
+            return jsonify({
+                "asset_types": [a.as_dict() for a in asset_types]
+            })
+        return await render_template("asset-types.html", asset_types=asset_types)
+
+    @staticmethod
+    async def get_configure_asset_types():
+        """Return Configuration page_layout."""
+
+        asset_type_manager = AssetTypeManager()
+        asset_types = asset_type_manager.get_all()
+
+        return await render_template("configuration.html", asset_types=asset_types)
+
+    @staticmethod
     async def post_create_asset_type():
         """Handle POST request to create-asset-type.
 
@@ -52,12 +76,15 @@ class AssetTypeServer:
         sync_form = await request.form
 
         columns: List[Column] = []
+        column_names: Set[str] = set()
         asset_name = sync_form.get('assetName')
         super_type = int(sync_form.get('superType'))
 
-        # TODO: Add requirements for setting a subtype
+        # TODO: Check no two columns have the same name
 
-        for column_number in range(0, 15):
+        column_number: int = 0
+
+        while column_number is not None:
 
             column_name = f'column-name-{column_number}'
             column_datatype = f'column-data-type-{column_number}'
@@ -88,6 +115,10 @@ class AssetTypeServer:
                 column_name = sync_form.get(column_name)
                 column_db_name = column_name.replace(' ', '_').lower()
 
+                if column_name in column_names:
+                    raise ColumnNameTakenError(
+                        'No two columns of an asset_type can have the same name!')
+
                 required = sync_form.get(column_required) == 'checkboxTrue'
 
                 columns.append(Column(
@@ -97,12 +128,18 @@ class AssetTypeServer:
                     asset_type_id=asset_type_id,
                     required=required
                 ))
+                column_number += 1
             else:
                 break
+
+        # Raise an error, if no columns could
+        # be constructed from from input.
 
         if not columns:
             raise IllegalStateException(
                 "Can't create an asset type without any columns!")
+
+        # Initialize a new AssetType.
 
         new_asset_type = AssetType(
             asset_name=asset_name,
@@ -113,7 +150,7 @@ class AssetTypeServer:
         asset_type_manager = AssetTypeManager()
         asset_type_manager.create_asset_type(new_asset_type)
 
-        return redirect('/configuration')
+        return redirect('/asset-type/config')
 
     @staticmethod
     async def get_create_asset_type():
@@ -126,7 +163,7 @@ class AssetTypeServer:
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
 
         asset_types = {
-            asset_type.asset_name: asset_type.asset_type_id
+            asset_type.asset_type_id: asset_type
             for asset_type in asset_type_manager.get_all()
         }
 
@@ -145,8 +182,7 @@ class AssetTypeServer:
 
                 for column in prefab_dict['columns']:
                     if column['asset_type_id'] > 0:
-
-                        column['result_columns'] = asset_type_manager\
+                        column['result_columns'] = asset_type_manager \
                             .get_one(column['asset_type_id'])
 
                 return await render_template(
@@ -159,24 +195,14 @@ class AssetTypeServer:
         # Checking if the output was requested as json
         if AssetTypeServer.get().json_response:
             return jsonify({
-                "data_types": data_types,
-                "asset_types": asset_types
+                "data_types": [d.as_dict() for d in data_types],
+                "asset_types": {k: v.as_dict() for k, v in asset_types.items()}
             })
-
         return await render_template(
             "create-asset-type.html",
-            data_types=data_types,
-            asset_types=asset_types
+            data_types=[d.as_dict() for d in data_types],
+            asset_types={k: v.as_dict() for k, v in asset_types.items()}
         )
-
-    @staticmethod
-    async def get_all_asset_types():
-        """Handle get requests to ``asset-types``."""
-
-        asset_type_manager = AssetTypeManager()
-        asset_types = asset_type_manager.get_all()
-
-        return await render_template("asset-types.html", asset_types=asset_types)
 
     @staticmethod
     async def get_one_asset_type(asset_type_id):
@@ -187,16 +213,39 @@ class AssetTypeServer:
 
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
 
+        # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
+
         # Comment this out, if you dont want to create a
         # PageLayout for each Type by default
 
         page_manager.create_page(PageLayout(
-            layout=[[ColumnInfo('list-assets', 'plugins/list-assets-plugin.html', 12, ['name'], 0)]],
-            asset_type=asset_type, items_url=f'/asset-type/{asset_type.asset_type_id}/items'
+            layout=[
+                [
+                    ColumnInfo(
+                        plugin_name='list-assets',
+                        plugin_path='plugins/list-assets-plugin.html',
+                        column_width=12,
+                        field_mappings={
+                            'title': 'name'},
+                        column_id=0
+                    )
+                ]
+            ],
+            asset_type=asset_type, items_url=f'/asset-type/{asset_type.asset_type_id}/stream-items'
         ))
+        # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
         if not (page_layout := page_manager.get_page(asset_type)):
+            if AssetTypeServer.get().json_response:
+                return jsonify({
+                    'asset_type': asset_type.as_dict()
+                })
             return await render_template("layout-editor.html", asset_type=asset_type)
+
+        if AssetTypeServer.get().json_response:
+            return jsonify({
+                'page_layout': page_layout.as_dict()
+            })
         return await render_template("asset-type.html", page_layout=page_layout)
 
     @staticmethod
@@ -205,9 +254,22 @@ class AssetTypeServer:
 
         sync_form = await request.form
 
-        asset_type_manager = AssetTypeManager()
-        asset_type = asset_type_manager.get_one(asset_type_id)
+        asset_type_manager: AssetTypeManager = AssetTypeManager()
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
 
-        if sync_form.get('deleteAsset') == 'True':
+        if sync_form.get('deleteAssetType') == 'True':
+
+            # Deleting the assets of the super type, that are referenced
+            # by the assets of the type being deleted.
+
+            if (super_type_id := asset_type.get_super_type_id()) > 0:
+
+                asset_manager: AssetManager = AssetManager()
+
+                super_type: AssetType = asset_type_manager.get_one(super_type_id)
+
+                for asset in asset_manager.get_all(asset_type):
+                    asset_manager.delete_asset(super_type, asset)
+
             asset_type_manager.delete_asset_type(asset_type)
-            return redirect('/configuration')
+            return redirect('/asset-types/config')
