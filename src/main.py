@@ -9,7 +9,7 @@ from quart import Quart
 from config import Config
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from server import configuration, index
+from server import favicon, index
 from server.asset_server import AssetServer
 from server.asset_type_server import AssetTypeServer
 
@@ -54,7 +54,7 @@ asset_server = AssetServer.get()
 # General Routes
 # ~~~~~~~~~~~~~~
 app.add_url_rule('/', 'index', index, methods=['GET'])
-app.add_url_rule('/configuration', 'configuration', configuration, methods=['GET'])
+app.add_url_rule('/favicon', 'favicon', favicon, methods=['GET'])
 
 # AssetType Routes
 # ~~~~~~~~~~~~~~~~
@@ -73,9 +73,16 @@ app.add_url_rule(
 )
 
 app.add_url_rule(
-    '/asset-types',
-    'asset-types',
-    asset_type_server.get_all_asset_types,
+    '/asset-type/list',
+    'list-asset-types',
+    asset_type_server.get_list_asset_types,
+    methods=['GET']
+)
+
+app.add_url_rule(
+    '/asset-type/config',
+    'configure-asset-types',
+    asset_type_server.get_configure_asset_types,
     methods=['GET']
 )
 
@@ -87,7 +94,7 @@ app.add_url_rule(
 )
 
 app.add_url_rule(
-    '/asset-type/<int:asset_type_id>',
+    '/asset-type/<int:asset_type_id>/delete',
     'delete-asset-type',
     asset_type_server.delete_asset_type,
     methods=['POST']
@@ -110,9 +117,16 @@ app.add_url_rule(
 )
 
 app.add_url_rule(
-    '/asset-type/<int:asset_type_id>/items',
-    'check-asset-data',
-    asset_server.request_asset_data,
+    '/asset-type/<int:asset_type_id>/stream-items',
+    'stream-asset-data',
+    asset_server.stream_asset_data,
+    methods=['GET']
+)
+
+app.add_url_rule(
+    '/asset-type/<int:asset_type_id>/<int:asset_id>',
+    'get-asset',
+    asset_server.get_one_asset,
     methods=['GET']
 )
 
