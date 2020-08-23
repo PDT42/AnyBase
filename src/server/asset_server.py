@@ -10,6 +10,7 @@ from asyncio import Task
 from datetime import datetime
 from typing import Any, Dict, List, Mapping, MutableMapping, Set
 
+from flask import jsonify
 from quart import make_response, redirect, render_template, request
 
 from asset import Asset, AssetType
@@ -19,6 +20,7 @@ from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import DataTypes
+from pages import AssetPageLayout
 
 
 class AssetServer:
@@ -38,6 +40,8 @@ class AssetServer:
     def __init__(self):
         """Create a new AssetServer."""
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
+        self.json_response = Config.get().read(
+            'frontend', 'json_response', False) in ["True", "true", 1]
 
     @staticmethod
     async def th_request_asset_data(th_offset, asset_type, depth):
@@ -52,7 +56,7 @@ class AssetServer:
         )
 
     @staticmethod
-    async def request_asset_data(asset_type_id: int, depth: int = 0):
+    async def stream_asset_data(asset_type_id: int, depth: int = 0):
         """Check if more assets are available."""
 
         # Get AssetType and number of assets of this type
@@ -162,7 +166,7 @@ class AssetServer:
 
         # Init new Asset and store it in the database
         asset: Asset = Asset(data=asset_data)
-        asset = asset_manager.create_asset(asset_type, asset)
+        asset_manager.create_asset(asset_type, asset)
 
         return redirect(f'/asset-type/{asset_type_id}')
 
@@ -180,7 +184,9 @@ class AssetServer:
         # that contain other assets, we need to load them
         # so we can present them to the user.
 
-        if field_asset_ids := [column.asset_type_id for column in asset_type.columns if column.asset_type_id]:
+        if field_asset_ids := \
+                [column.asset_type_id for column in asset_type.columns
+                 if column.asset_type_id]:
 
             # Create only one asset_manager, if required
             asset_manager: AAssetManager = AssetManager()
@@ -190,4 +196,36 @@ class AssetServer:
                 result = asset_manager.get_all(asset_t)
                 assets[asset_t.asset_type_id] = result  # [asset.asset_id for asset in results]
 
+        if AssetServer.get().json_response:
+            return jsonify({
+                'asset_type': asset_type.as_dict(),
+                'assets': {key: [a.as_dict() for a in value] for key, value in assets.items()}
+            })
         return await render_template("create-asset.html", asset_type=asset_type, assets=assets)
+
+    @staticmethod
+    async def get_one_asset(asset_type_id: int, asset_id: int):
+        """Handle get requests to get-asset."""
+
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        asset_manager: AAssetManager = AssetManager()
+
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
+        asset: Asset = asset_manager.get_one(asset_id, asset_type)
+
+        asset_page_layout: AssetPageLayout = AssetPageLayout(
+            layout=[[]],
+            asset_type=asset_type,
+            layout_id=0,
+            items_url=None,
+            asset=asset,
+            field_mappings={
+                'header': 'name'
+            }
+        )
+
+        if AssetServer.get().json_response:
+            return jsonify({
+                'asset_page_layout': asset_page_layout.as_dict()
+            })
+        return await render_template("asset.html", asset_page_layout=asset_page_layout)
