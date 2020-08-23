@@ -21,7 +21,7 @@ class DataType(NamedTuple):
     def as_dict(self):
         return {
             'typename': self.typename,
-            'fe_name': self.fe_type,
+            'fe_name': self.fe_name,
             'fe_type': self.fe_type,
             'db_type': self.db_type
         }
