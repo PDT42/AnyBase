@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+<!-- Extend Block 'head' in base.html -->
+{% block head %}
+
+{% endblock %}
+
+<!-- Extend Block 'body' in base.html -->
+{% block body %}
+
+<div class="container" style="padding-top: 20px">
+
+    {% if asset_page_layout and asset_page_layout.asset %}
+
+    <div>
+        {% set asset_type_id = asset_page_layout.asset_type.asset_type_id %}
+        {% set asset_id = asset_page_layout.asset.asset_id %}
+
+        {% set data = asset_page_layout.asset.data %}
+        {% set field_mappings = asset_page_layout.field_mappings %}
+
+        <div class="row">
+
+            <div class="col">
+                <h4>{{ data[field_mappings['header']] }}</h4>
+            </div>
+
+            <div class="col">
+
+                <div class="row justify-content-end">
+
+                    <div class="col-3">
+                        <form action="/asset-type/{{ asset_type_id }}/{{ asset_id }}/" method="POST">
+                            <button type="submit" name="deleteAsset" class="btn btn-block btn-danger" value="True">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <hr/>
+
+        <!-- Import Layout Macro and apply it -->
+        {% from 'asset-layout-generator.html' import layout_generator %}
+        {{ layout_generator(asset_page_layout) }}
+    </div>
+
+    {% else %}
+
+    <div>
+        {% if asset_page_layout.asset %}
+        <h1>Error: Page Information is missing.</h1>
+        {% else %}
+        <h1>Error: Asset Information is missing.</h1>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
