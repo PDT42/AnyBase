@@ -95,6 +95,11 @@ class AssetManager(AAssetManager):
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
 
+        if (super_id := asset_type.get_super_type_id()) > 0:
+            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+            super_asset: Asset = self.get_one(asset.extended_by_id, super_type)
+            self.delete_asset(super_type, super_asset)
+
         self.db_connection.delete(
             self.asset_type_manager.generate_asset_table_name(asset_type),
             [f"primary_key = {asset.asset_id}"]
