@@ -8,7 +8,7 @@ database.
 """
 
 from abc import abstractmethod
-from typing import Any, List, Mapping, MutableMapping, Sequence
+from typing import Any, List, Mapping, MutableMapping, OrderedDict, Sequence, Tuple
 
 from database import Column, DataType
 
@@ -59,9 +59,7 @@ class DbConnection:
 
     @abstractmethod
     def read_joined(
-            self, table_names: List[str],
-            join_on_chain: List[str],
-            headers_sequence: Sequence[Sequence[str]],
+            self, table_headers: OrderedDict[str, Tuple[str, Sequence[str]]],
             and_filters: Sequence[str] = None,
             or_filters: Sequence[str] = None,
             offset: int = None,

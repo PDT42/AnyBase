@@ -6,11 +6,11 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
 from datetime import datetime
-from typing import Any, List, Mapping, Sequence
+from typing import Any, List, Mapping, OrderedDict, Sequence, Tuple
 
 from database import DataType, DataTypes
 from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
-from exceptions.common import IllegalStateException, InvalidArgumentError, MissingArgumentException
+from exceptions.common import IllegalStateException, MissingArgumentException
 from exceptions.database import MissingValueException, TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
 from src.database.db_connection import Column, DbConnection
@@ -183,9 +183,7 @@ class SqliteConnection(DbConnection):
         return result
 
     def read_joined(
-            self, table_names: List[str],
-            join_on_chain: List[str],
-            headers_sequence: Sequence[Sequence[str]],
+            self, table_headers: OrderedDict[str, Tuple[str, Sequence[str]]],
             and_filters: Sequence[str] = None,
             or_filters: Sequence[str] = None,
             offset: int = None,
@@ -196,18 +194,13 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        headers_sequence = [set(hs) for hs in list(headers_sequence)]
-
-        if not len(headers_sequence) == len(table_names):
-            raise InvalidArgumentError("Number of headers_sequence and tables does not match!")
-
         # Making sure the table we want to read from exists in the database
-        if not all(self.check_table_exists(name) for name in table_names):
+        if not all(self.check_table_exists(name) for name in table_headers.keys()):
             raise TableDoesNotExistException(
                 "One of the table names you supplied was invalid!")
 
         # Making sure people don't get lazy
-        if not len(table_names) > 1:
+        if not len(table_headers) > 1:
             raise IllegalStateException(
                 "You are trying to use a joined read, to read from only one table. " +
                 "That is unnecessary however. Please use db_connection.read instead!")
@@ -215,16 +208,22 @@ class SqliteConnection(DbConnection):
         # Creating Query
         # --------------
         query_headers: List[str] = []
-        for index, headers in enumerate(headers_sequence):
-            query_headers += [f"{table_names[index]}.{header}" for header in headers]
+        for table_name, (_, headers) in table_headers.items():
+            query_headers += [f"{table_name}.{header}" for header in headers]
 
-        query = f"SELECT {', '.join(query_headers)} FROM {' JOIN '.join(table_names)} WHERE "
+        query = f"SELECT {', '.join(query_headers)} FROM {' JOIN '.join(table_headers.keys())} WHERE "
 
-        for iteration, (table_name, join_on) in enumerate(zip(table_names, join_on_chain)):
-            if (iteration + 1) is len(table_names):
-                break
-            query += f"{table_name}.{join_on} = {table_names[iteration + 1]}.primary_key"
-            query += " AND " if (iteration + 2) < len(table_names) else ""
+        # °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+        def generate_join_chain(theaders):
+
+            for (tn, jo), tt in zip(
+                    [(th, jo) for th, (jo, _) in theaders.items()],
+                    list(theaders.keys())[1:]
+            ):
+                yield f"{tn}.{jo} = {tt}.primary_key"
+        # ................................
+
+        query = f"{query}{' AND '.join(list(generate_join_chain(table_headers)))}"
 
         if and_filters:
             query = f"{query} AND {' AND '.join(and_filters)}"
