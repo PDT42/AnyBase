@@ -17,6 +17,7 @@ from config import Config
 from database import Column, DataType, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException, ColumnNameTakenError
 from exceptions.common import IllegalStateException, InvalidArgumentError
+from exceptions.server import ServerAlreadyInitializedError
 from pages import ColumnInfo, PageLayout
 from pages.page_manager import PageManager
 
@@ -26,6 +27,7 @@ class AssetTypeServer:
     so we don't need to init all the constants again and again."""
 
     _instance = None
+    _initialized = False
     json_response = None
 
     @staticmethod
@@ -42,6 +44,57 @@ class AssetTypeServer:
         self.prefab_names = AssetTypePrefabs.get_all_asset_type_prefab_names()
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
+
+    @staticmethod
+    def register_routes(app):
+        """Register the routes of this server in the ``app``."""
+
+        if AssetTypeServer.get()._initialized:
+            raise ServerAlreadyInitializedError("AssetTypeServer already initialized!")
+
+        app.add_url_rule(
+            '/asset-type/list',
+            'list-asset-types',
+            AssetTypeServer.get_list_asset_types,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/config',
+            'configure-asset-types',
+            AssetTypeServer.get_configure_asset_types,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/create',
+            'get-create-asset-type',
+            AssetTypeServer.get_create_asset_type,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/create',
+            'post-create-asset-type',
+            AssetTypeServer.post_create_asset_type,
+            methods=['POST']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>',
+            'asset-type',
+            AssetTypeServer.get_one_asset_type,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/delete',
+            'delete-asset-type',
+            AssetTypeServer.delete_asset_type,
+            methods=['POST']
+        )
+
+        AssetTypeServer.get()._initialized = False
 
     @staticmethod
     async def get_list_asset_types():
@@ -272,4 +325,4 @@ class AssetTypeServer:
                     asset_manager.delete_asset(super_type, asset)
 
             asset_type_manager.delete_asset_type(asset_type)
-            return redirect('/asset-types/config')
+            return redirect('/asset-type/config')

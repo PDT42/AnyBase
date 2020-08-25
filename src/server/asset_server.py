@@ -20,6 +20,7 @@ from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import DataTypes
+from exceptions.server import ServerAlreadyInitializedError
 from pages import AssetPageLayout
 
 
@@ -27,6 +28,7 @@ class AssetServer:
     """This is a server singleton."""
 
     _instance = None
+    _initialized = False
 
     DB_BATCH_SIZE = None
 
@@ -42,6 +44,50 @@ class AssetServer:
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
+
+    @staticmethod
+    def register_routes(app):
+        """Register the routes of this server in the ``app``."""
+
+        if AssetServer.get()._initialized:
+            raise ServerAlreadyInitializedError("AssetServer already initialized!")
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/stream-items',
+            'stream-asset-data',
+            AssetServer.stream_asset_data,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/create-asset',
+            'post-create-asset',
+            AssetServer.post_create_asset,
+            methods=['POST']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/create-asset',
+            'get-create-asset',
+            AssetServer.get_create_asset,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/<int:asset_id>',
+            'get-asset',
+            AssetServer.get_one_asset,
+            methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type/<int:asset_type_id>/<int:asset_id>/delete',
+            'delete-asset',
+            AssetServer.delete_asset,
+            methods=['GET']
+        )
+
+        AssetServer.get()._initialized = True
 
     @staticmethod
     async def th_request_asset_data(th_offset, asset_type, depth):
@@ -176,7 +222,8 @@ class AssetServer:
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
 
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
+        asset_type: AssetType = asset_type_manager.get_one(
+            asset_type_id, extend_columns=True)
 
         assets: Dict[int, List[Asset]] = {}
 
@@ -210,7 +257,7 @@ class AssetServer:
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_manager: AAssetManager = AssetManager()
 
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
+        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
         asset_page_layout: AssetPageLayout = AssetPageLayout(
@@ -229,3 +276,16 @@ class AssetServer:
                 'asset_page_layout': asset_page_layout.as_dict()
             })
         return await render_template("asset.html", asset_page_layout=asset_page_layout)
+
+    @staticmethod
+    def delete_asset(asset_type_id: int, asset_id: int):
+        """Handle requests """
+
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        asset_manager: AAssetManager = AssetManager()
+
+        asset_type = asset_type_manager.get_one(
+            int(asset_type_id), extend_columns=False)
+        asset = asset_manager.get_one(asset_id, asset_type)
+        asset_manager.delete_asset(asset_type, asset)
+        return redirect(f'/asset-type/{asset_type_id}')
