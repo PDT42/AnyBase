@@ -39,10 +39,12 @@ class PageLayout:
     asset_type: AssetType
     layout_id: Optional[int] = None
     items_url: Optional[str] = None
+    field_mappings: Mapping[str, str] = None
 
     def as_dict(self):
         return {
             'layout': [[column.as_dict() for column in row] for row in self.layout],
+            'field_mappings': self.field_mappings,
             'asset_type': self.asset_type.as_dict(),
             'layout_id': self.layout_id,
             'items_url': self.items_url,
@@ -54,7 +56,6 @@ class AssetPageLayout(PageLayout):
     """This is a ``PageLayout`` for an ``AssetPage``."""
 
     asset: Optional[Asset] = None
-    field_mappings: Mapping[str, str] = None
 
     def as_dict(self):
 
@@ -63,8 +64,7 @@ class AssetPageLayout(PageLayout):
 
         result_dict = super().as_dict()
         result_dict.update({
-            'asset': self.asset.as_dict(),
-            'field_mappings': self.field_mappings
+            'asset': self.asset.as_dict()
         })
         return result_dict
 
