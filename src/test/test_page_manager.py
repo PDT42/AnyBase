@@ -12,7 +12,7 @@ from asset import Asset, AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
-from pages import ColumnInfo, PageLayout
+from pages import AssetPageLayout, ColumnInfo, PageLayout
 from pages.abstract_page_manager import APageManager
 from pages.page_manager import PageManager
 from test.test_util import init_test_db
@@ -53,8 +53,8 @@ class TestPageManager(TestCase):
                 ColumnInfo(
                     plugin_name='list-assets',
                     plugin_path='plugins/list-assets-plugin.html',
+                    field_mappings={'header': 'name'},
                     column_width=12,
-                    employed_columns=['name'],
                     column_id=0
                 )]
             ]
@@ -70,16 +70,16 @@ class TestPageManager(TestCase):
         # Defining a Page Layout with asset = self.asset
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        self.asset_layout: PageLayout = PageLayout(
+        self.asset_layout: AssetPageLayout = AssetPageLayout(
             asset_type=self.asset_type,
             items_url=f'/asset-type/{self.asset_type.asset_type_id}/items',
-            asset=self.asset,
+            asset=self.asset.asset_id,
             layout=[[
                 ColumnInfo(
                     plugin_name='list-assets',
                     plugin_path='plugins/list-assets-plugin.html',
                     column_width=12,
-                    employed_columns=['name'],
+                    field_mappings={'header': 'name'},
                     column_id=0
                 )]
             ]
@@ -87,7 +87,7 @@ class TestPageManager(TestCase):
         self.asset_layout_row: Mapping[str, Any] = {
             'primary_key': None,
             'items_url': '/asset-type/1/items',
-            'asset_id': 1,
+            'asset_id': None,
             'asset_type_id': 1,
             'layout': '[{12, 0}]'
         }

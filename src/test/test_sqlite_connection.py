@@ -4,8 +4,9 @@
 
 These are tests for the SqliteConnection class.
 """
-
+from collections import OrderedDict, Sequence
 from shutil import rmtree
+from typing import Tuple
 from unittest import TestCase
 
 from database import Column, DataTypes
@@ -79,11 +80,15 @@ class TestSqliteConnection(TestCase):
         )
         self.db_connection.commit()
 
+        table_headers: OrderedDict[str, Tuple[str, Sequence[str]]] = OrderedDict({
+            'abasset_table_student':
+                ('extended_by_id', ['subject_of_study', 'primary_key', 'extended_by_id']),
+            'abasset_table_person':
+                ('extended_by_id', ['name', 'age', 'city_of_birth'])
+        })
+
         test_result = self.db_connection.read_joined(
-            table_names=[student_table_name, person_table_name],
-            join_on_chain=['extended_by_id', 'extended_by_id'],
-            headers_sequence=[['subject_of_study', 'extended_by_id', 'primary_key'], ['name', 'age', 'city_of_birth']]
-        )
+            table_headers=table_headers)
 
         self.assertTrue(isinstance(test_result, list))
         self.assertEqual(test_result[0], {
