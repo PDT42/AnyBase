@@ -17,7 +17,7 @@ Not all urls are implementing more than one HTTP-method. The obvious goal is to 
 [Quart] binds the urls to functions, so when a user requests a url, a python function is called. The function is expected to return a valid response or nothing. Refer to [Quart]'s documentation for further detail on the matter.
 AnyBase servers are its outermost layer and provide an interface to AnyBase's managers. The managers in return supply an interface to the database, which is the innermost _layer_ of AnyBase.
 
-![AnyBase Layers][anybase_layers]
+<img src='graphics/draw_io_rendered/anybase_layers.png' width='100%' height='auto'>
 
 [//]: # (LINKS)
 [Quart]: https://github.com/pgjones/quart
@@ -25,4 +25,3 @@ AnyBase servers are its outermost layer and provide an interface to AnyBase's ma
 [main.py]: https://github.com/PDT420/AnyBase/blob/master/src/main.py 
 
 [//]: # (IMAGES)
-[anybase_layers]: graphics/draw_io_rendered/anybase_layers.png "AnyBase Layers"
