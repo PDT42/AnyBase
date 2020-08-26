@@ -81,14 +81,14 @@ class AssetTypeServer:
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>',
+            '/asset-type:<int:asset_type_id>',
             'asset-type',
             AssetTypeServer.get_one_asset_type,
             methods=['GET']
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/delete',
+            '/asset-type:<int:asset_type_id>/delete',
             'delete-asset-type',
             AssetTypeServer.delete_asset_type,
             methods=['POST']
@@ -101,7 +101,7 @@ class AssetTypeServer:
         """Handle get requests to ``asset-types``."""
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
-        asset_types: List[AssetType] = asset_type_manager.get_all()
+        asset_types: List[Mapping] = [at.as_dict() for at in asset_type_manager.get_all()]
 
         # Checking if the output was requested as json
         if AssetTypeServer.get().json_response:

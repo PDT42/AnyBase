@@ -48,7 +48,7 @@ class TestPageManager(TestCase):
 
         self.asset_type_layout: PageLayout = PageLayout(
             asset_type=self.asset_type,
-            items_url=f'/asset-type/{self.asset_type.asset_type_id}/items',
+            items_url=f'/asset-type:{self.asset_type.asset_type_id}/items',
             layout=[[
                 ColumnInfo(
                     plugin_name='list-assets',
@@ -61,7 +61,7 @@ class TestPageManager(TestCase):
         )
         self.asset_type_layout_row: Mapping[str, Any] = {
             'primary_key': None,
-            'items_url': '/asset-type/1/items',
+            'items_url': '/asset-type:1/items',
             'asset_id': None,
             'asset_type_id': 1,
             'layout': '[{12, 0}]'
@@ -72,7 +72,7 @@ class TestPageManager(TestCase):
 
         self.asset_layout: AssetPageLayout = AssetPageLayout(
             asset_type=self.asset_type,
-            items_url=f'/asset-type/{self.asset_type.asset_type_id}/items',
+            items_url=f'/asset-type:{self.asset_type.asset_type_id}/items',
             asset=self.asset.asset_id,
             layout=[[
                 ColumnInfo(
@@ -86,7 +86,7 @@ class TestPageManager(TestCase):
         )
         self.asset_layout_row: Mapping[str, Any] = {
             'primary_key': None,
-            'items_url': '/asset-type/1/items',
+            'items_url': '/asset-type:1/items',
             'asset_id': None,
             'asset_type_id': 1,
             'layout': '[{12, 0}]'

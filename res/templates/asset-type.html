@@ -25,7 +25,7 @@
             <div class="row justify-content-end">
 
                 <div class="col-3">
-                    <form action="/asset-type/{{ asset_type_id }}/create-asset"
+                    <form action="/asset-type:{{ asset_type_id }}/create-asset"
                           method="GET">
                         <button type="submit" name="createAsset" class="btn btn-block btn-dark">
                             Create
@@ -34,7 +34,7 @@
                 </div>
 
                 <div class="col-3">
-                    <form action="/asset-type/{{ asset_type_id }}/delete" method="POST">
+                    <form action="/asset-type:{{ asset_type_id }}/delete" method="POST">
                         <button type="submit" name="deleteAssetType" class="btn btn-block btn-danger" value="True">
                             Delete
                         </button>

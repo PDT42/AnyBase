@@ -53,35 +53,35 @@ class AssetServer:
             raise ServerAlreadyInitializedError("AssetServer already initialized!")
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/stream-items',
+            '/asset-type:<int:asset_type_id>/stream-items',
             'stream-asset-data',
             AssetServer.stream_asset_data,
             methods=['GET']
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/create-asset',
+            '/asset-type:<int:asset_type_id>/create-asset',
             'post-create-asset',
             AssetServer.post_create_asset,
             methods=['POST']
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/create-asset',
+            '/asset-type:<int:asset_type_id>/create-asset',
             'get-create-asset',
             AssetServer.get_create_asset,
             methods=['GET']
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/<int:asset_id>',
+            '/asset-type:<int:asset_type_id>/<int:asset_id>',
             'get-asset',
             AssetServer.get_one_asset,
             methods=['GET']
         )
 
         app.add_url_rule(
-            '/asset-type/<int:asset_type_id>/<int:asset_id>/delete',
+            '/asset-type:<int:asset_type_id>/<int:asset_id>/delete',
             'delete-asset',
             AssetServer.delete_asset,
             methods=['GET']
@@ -214,7 +214,7 @@ class AssetServer:
         asset: Asset = Asset(data=asset_data)
         asset_manager.create_asset(asset_type, asset)
 
-        return redirect(f'/asset-type/{asset_type_id}')
+        return redirect(f'/asset-type:{asset_type_id}')
 
     @staticmethod
     async def get_create_asset(asset_type_id: int):
@@ -288,4 +288,4 @@ class AssetServer:
             int(asset_type_id), extend_columns=False)
         asset = asset_manager.get_one(asset_id, asset_type)
         asset_manager.delete_asset(asset_type, asset)
-        return redirect(f'/asset-type/{asset_type_id}')
+        return redirect(f'/asset-type:{asset_type_id}')

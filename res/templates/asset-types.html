@@ -21,7 +21,7 @@
         <div class="col">
 
                 {% for asset_type in asset_types %}
-                <a href="{{ '/asset-type/' + asset_type.asset_type_id|string }}">
+                <a href="{{ '/asset-type:' + asset_type.asset_type_id|string }}">
                     <li class="list-group-item" style="margin-top: 10px; margin-left: 0px">
                         <p>{{ asset_type.asset_name }}</p>
                     </li>
