@@ -6,7 +6,7 @@ This is a command line interface for the sqlite connection.
 """
 
 from argparse import ArgumentParser
-from typing import Any
+from typing import Any, Iterable
 
 from config import Config
 from database.sqlite_connection import SqliteConnection
@@ -66,18 +66,28 @@ if __name__ == '__main__':
         print(f"Executing query: '{query}'\n")
         return sqlite_con.execute_query(query)
 
+
     def reset_layouts():
-        query: str = "DROP TABLE IF EXISTS abintern_asset_type_layouts;"
-        query += "DROP TABLE IF EXISTS abintern_asset_type_plugins"
-        return sqlite_con.execute_query(query)
+        query: str = "DROP TABLE IF EXISTS abintern_layouts;"
+        sqlite_con.execute_query(query)
+        query = "DROP TABLE IF EXISTS abintern_plugins;"
+        sqlite_con.execute_query(query)
+        return 0
 
 
     result: Any = {
-        'exec': execute_query()
+        'exec': execute_query(),
+        'reset_layouts': reset_layouts(),
     }.get(arguments.get('command'), 'Error: Invalid Command ...')
 
     join_on = '\n'
 
-    print("Result:")
-    print("=======")
-    print(f"[{join_on.join([str(r) for r in result])}]")
+    if result != 'Error: Invalid Command ...':
+        print("Result:")
+        print("=======")
+        if isinstance(result, Iterable):
+            print(f"[{join_on.join([str(r) for r in result])}]")
+        else:
+            print(result)
+    else:
+        print(result)
