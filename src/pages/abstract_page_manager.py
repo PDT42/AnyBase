@@ -7,7 +7,7 @@ This is the abstract super class for the implementations of a PageManager.
 
 from abc import abstractmethod
 from re import findall
-from typing import Any, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from asset import Asset, AssetType
 from asset.asset_manager import AssetManager
@@ -25,7 +25,7 @@ class APageManager:
     asset_manager: AssetManager = None
 
     asset_type_layout_table_name: str = None
-    asset_type_plugin_table_name: str = None
+    plugin_table_name: str = None
 
     @abstractmethod
     def create_page(self, page_layout: PageLayout):

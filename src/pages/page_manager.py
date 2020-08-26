@@ -79,7 +79,7 @@ class PageManager(APageManager):
 
                 # Storing the column and getting its pk
                 column_id: int = self.db_connection.write_dict(
-                    self.asset_type_plugin_table_name, column_row)
+                    self.plugin_table_name, column_row)
 
                 # Updating the column id, so we can build
                 # a connection between layout and plugin
@@ -133,7 +133,7 @@ class PageManager(APageManager):
 
         result = self.db_connection.read(
             self.asset_type_layout_table_name,
-            headers=self.asset_type_layout_table_columns,
+            headers=self.layout_table_columns,
             and_filters=query_filter
         )
 
@@ -151,7 +151,7 @@ class PageManager(APageManager):
         self._init_page_layout_tables()
 
         result = self.db_connection.read(
-            self.asset_type_plugin_table_name,
+            self.plugin_table_name,
             self.asset_type_plugin_table_columns,
             and_filters=[f'primary_key = {column_id}']
         )[0]

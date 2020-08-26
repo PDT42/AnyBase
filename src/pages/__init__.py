@@ -37,17 +37,17 @@ class PageLayout:
 
     layout: List[List[ColumnInfo]]
     asset_type: AssetType
-    layout_id: Optional[int] = None
-    items_url: Optional[str] = None
     field_mappings: Mapping[str, str] = None
+    items_url: Optional[str] = None
+    layout_id: Optional[int] = None
 
     def as_dict(self):
         return {
             'layout': [[column.as_dict() for column in row] for row in self.layout],
-            'field_mappings': self.field_mappings,
             'asset_type': self.asset_type.as_dict(),
-            'layout_id': self.layout_id,
+            'field_mappings': self.field_mappings,
             'items_url': self.items_url,
+            'layout_id': self.layout_id
         }
 
 

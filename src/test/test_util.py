@@ -16,4 +16,4 @@ def init_test_db() -> Tuple[str, DbConnection]:
     test database."""
 
     tempdir = mkdtemp()
-    return tempdir, SqliteConnection.initialize(f"{tempdir}\\database.db")
+    return tempdir, SqliteConnection.get(f"{tempdir}\\database.db")

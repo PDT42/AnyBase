@@ -63,18 +63,6 @@ class SqliteConnection(DbConnection):
             result[column[0]] = row[index]
         return result
 
-    @staticmethod
-    def initialize(db_path: str):
-        """Initialize a sqlite connection using a custom path. This is mainly
-        for testing purposes. For deployment its advised to set the database
-        path in the config."""
-
-        if not SqliteConnection._instance:
-            SqliteConnection._instance = SqliteConnection(db_path=db_path)
-        else:
-            raise IllegalStateException("This singleton already exists, can't change the db path during runtime.")
-        return SqliteConnection._instance
-
     def _connect(self):
         """Connect to the database."""
 
@@ -221,6 +209,7 @@ class SqliteConnection(DbConnection):
                     list(theaders.keys())[1:]
             ):
                 yield f"{tn}.{jo} = {tt}.primary_key"
+
         # ................................
 
         query = f"{query}{' AND '.join(list(generate_join_chain(table_headers)))}"

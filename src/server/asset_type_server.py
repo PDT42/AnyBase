@@ -5,7 +5,7 @@
 These are the routes for the ``AssetTypeManager``.
 """
 
-from typing import List, Set
+from typing import List, Mapping, Set
 
 from quart import jsonify, redirect, render_template, request
 
@@ -115,7 +115,7 @@ class AssetTypeServer:
         """Return Configuration page_layout."""
 
         asset_type_manager = AssetTypeManager()
-        asset_types = asset_type_manager.get_all()
+        asset_types: List[Mapping] = [at.as_dict() for at in asset_type_manager.get_all()]
 
         return await render_template("configuration.html", asset_types=asset_types)
 

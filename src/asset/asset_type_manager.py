@@ -97,6 +97,7 @@ class AssetTypeManager(AAssetTypeManager):
 
         # Ensuring the table to delete
         # the asset types from exists
+
         self._init_asset_types_table()
 
         self.db_connection.delete(self._asset_types_table_name, [f"primary_key = {asset_type.asset_type_id}"])

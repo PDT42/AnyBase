@@ -21,7 +21,8 @@ from asset.asset_type_manager import AssetTypeManager
 from config import Config
 from database import DataTypes
 from exceptions.server import ServerAlreadyInitializedError
-from pages import AssetPageLayout
+from pages import AssetPageLayout, ColumnInfo
+from pages.page_manager import PageManager
 
 
 class AssetServer:
