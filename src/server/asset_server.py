@@ -257,20 +257,34 @@ class AssetServer:
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_manager: AAssetManager = AssetManager()
+        page_manager: PageManager = PageManager()
 
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
-        asset_page_layout: AssetPageLayout = AssetPageLayout(
-            layout=[[]],
-            asset_type=asset_type,
-            layout_id=0,
-            items_url=None,
-            asset=asset,
-            field_mappings={
-                'header': 'name'
-            }
-        )
+        if not (asset_page_layout := page_manager.get_page(asset_type, asset)):
+            asset_page_layout = AssetPageLayout(
+                layout=[
+                    [
+                        ColumnInfo(
+                            plugin_name='asset-details',
+                            plugin_path='plugins/asset-details-plugin.html',
+                            column_width=6,
+                            field_mappings={
+                                'name': 'name'
+                            }
+                        )
+                    ]
+                ],
+                asset_type=asset_type,
+                items_url=None,
+                asset=asset,
+                field_mappings={
+                    'header': 'name'
+                }
+            )
+            page_manager.create_page(asset_page_layout)
+            asset_page_layout = page_manager.get_page(asset_type, asset)
 
         if AssetServer.get().json_response:
             return jsonify({

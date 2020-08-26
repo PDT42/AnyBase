@@ -1,0 +1,43 @@
+{% macro asset_plugin_macro(asset, asset_type, field_mappings, column_id) %}
+<script>
+
+    function createPlugin() {
+
+        const asset = JSON.parse('{{ asset.as_dict()|tojson }}');
+        const assetType = JSON.parse('{{ asset_type.as_dict()|tojson }}');
+        const fieldMappings = JSON.parse('{{ field_mappings|tojson }}');
+
+        // --
+
+        console.log(fieldMappings)
+
+        let column = document.getElementById('column-{{ column_id }}');
+
+        for (let field of fieldMappings) {
+            let value = fieldMappings[key];
+            console.log('stuff');
+            let fieldContainer = document.createElement('div');
+            fieldContainer.setAttribute('class', 'row');
+            column.appendChild(fieldContainer);
+
+            let fieldLabelColumn = document.createElement('div');
+            fieldLabelColumn.setAttribute('class', 'col-6');
+            fieldContainer.appendChild(fieldLabelColumn);
+
+            let fieldLabelText = document.createElement('span');
+            fieldLabelText.textContent = field.toString();
+            fieldLabelColumn.appendChild(fieldLabelText);
+
+            let fieldValueColumn = document.createElement('div');
+            fieldValueColumn.setAttribute('class', 'col-6');
+            fieldContainer.appendChild(fieldValueColumn);
+
+            let fieldValueText = document.createElement('span');
+            fieldValueText.textContent = field.toString();
+            fieldLabelColumn.appendChild(fieldValueText);
+        }
+    }
+
+    createPlugin();
+</script>
+{% endmacro %}

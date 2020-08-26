@@ -17,15 +17,15 @@
     <hr/>
 
     <div class="row">
-        <div class="col-md-6">
 
-                {% for asset_type in asset_types %}
-                <a href="{{ '/asset-type/' + asset_type.asset_type_id|string }}">
-                    <li class="list-group-item row" style="margin-bottom: 10px; margin-left: 0px">
-                        <p>{{ asset_type.asset_name }}</p>
-                    </li>
-                </a>
-                {% endfor %}
+        <script>
+            const assetTypes = JSON.parse('{{ asset_types|tojson }}');
+        </script>
+
+        <div class="col-md-6" id="plugin-asset-types">
+
+            {% from 'plugins/list-asset-types-plugin.html' import plugin_macro %}
+            {{ plugin_macro() }}
 
         </div>
 

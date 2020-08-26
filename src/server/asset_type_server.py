@@ -266,29 +266,36 @@ class AssetTypeServer:
 
         asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
 
+        # If no layout is defined for the asset type yet
+        # this will a layout-editor html page.
+
         # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
         # Comment this out, if you dont want to create a
         # PageLayout for each Type by default
-
-        page_manager.create_page(PageLayout(
-            layout=[
-                [
-                    ColumnInfo(
-                        plugin_name='list-assets',
-                        plugin_path='plugins/list-assets-plugin.html',
-                        column_width=12,
-                        field_mappings={
-                            'title': 'name'},
-                        column_id=0
-                    )
-                ]
-            ],
-            asset_type=asset_type, items_url=f'/asset-type/{asset_type.asset_type_id}/stream-items'
-        ))
+        if not (page_layout := page_manager.get_page(asset_type)):
+            page_manager.create_page(PageLayout(
+                layout=[
+                    [
+                        ColumnInfo(
+                            plugin_name='list-assets',
+                            plugin_path='plugins/list-assets-plugin.html',
+                            column_width=12,
+                            field_mappings={
+                                'title': 'name'
+                            },
+                            column_id=0
+                        )
+                    ]
+                ],
+                asset_type=asset_type,
+                items_url=f'/asset-type:{asset_type.asset_type_id}/stream-items',
+                field_mappings={'created': 'abintern_created'}
+            ))
         # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
         if not (page_layout := page_manager.get_page(asset_type)):
+
             if AssetTypeServer.get().json_response:
                 return jsonify({
                     'asset_type': asset_type.as_dict()

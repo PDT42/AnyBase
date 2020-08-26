@@ -82,7 +82,8 @@ class APageManager:
             'items_url': page_layout.items_url,
             'asset_id': asset_id,
             'asset_type_id': page_layout.asset_type.asset_type_id,
-            'layout': str(layout_str)
+            'layout': str(layout_str),
+            'field_mappings': str(page_layout.field_mappings)
         }
         return layout_row
 
@@ -114,6 +115,12 @@ class APageManager:
         asset_type: AssetType = self.asset_type_manager \
             .get_one(row_data['asset_type_id'])
 
+        field_mappings: Dict[str, str] = {
+            key: value for key, value in [
+                item.split(': ') for item in row_data['field_mappings']
+                    .replace('{', '').replace('}', '').replace("'", '').split(', ')]
+        }
+
         if asset_id := row_data['asset_id']:
             asset = self.asset_manager.get_one(asset_id, asset_type)
 
@@ -122,12 +129,14 @@ class APageManager:
                 asset_type=asset_type,
                 items_url=row_data['items_url'],
                 asset=asset,
-                layout_id=row_data['primary_key']
+                layout_id=row_data['primary_key'],
+                field_mappings=field_mappings
             )
 
         return PageLayout(
             layout=layout,
             asset_type=asset_type,
             items_url=row_data['items_url'],
-            layout_id=row_data['primary_key']
+            layout_id=row_data['primary_key'],
+            field_mappings=field_mappings
         )

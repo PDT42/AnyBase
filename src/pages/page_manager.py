@@ -7,6 +7,7 @@ This is the module for the ``AssetTypePageManager``.
 from typing import Any, List, Mapping, Union
 
 from asset import Asset, AssetType
+from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from database.db_connection import DbConnection
@@ -19,15 +20,16 @@ from pages.abstract_page_manager import APageManager
 class PageManager(APageManager):
     """This is the ``PageManager``."""
 
-    asset_type_layout_table_name: str = 'abintern_asset_type_layouts'
-    asset_type_layout_table_columns: List[str] = [
+    asset_type_layout_table_name: str = 'abintern_layouts'
+    layout_table_columns: List[str] = [
         'primary_key',
+        'layout',
         'asset_type_id',
+        'field_mappings',
         'items_url',
-        'asset_id',
-        'layout'
+        'asset_id'
     ]
-    asset_type_plugin_table_name: str = 'abintern_asset_type_plugins'
+    plugin_table_name: str = 'abintern_plugins'
     asset_type_plugin_table_columns: List[str] = [
         'plugin_name',
         'plugin_path',
@@ -38,12 +40,14 @@ class PageManager(APageManager):
 
     db_connection: DbConnection = None
     asset_type_manager: AssetTypeManager = None
+    asset_manager: AssetManager = None
 
     def __init__(self):
         """Create a new ``AssetTypePageManager``."""
 
         self.db_connection = SqliteConnection.get()
         self.asset_type_manager = AssetTypeManager()
+        self.asset_manager = AssetManager()
 
     def create_page(self, page_layout: PageLayout) -> int:
         """Create a new ``AssetPage`` in the database."""
@@ -182,15 +186,16 @@ class PageManager(APageManager):
         if not self.db_connection.check_table_exists(self.asset_type_layout_table_name):
             columns = [
                 # The column primary_key will be created automatically -> layout_id
+                Column('layout', 'layout', DataTypes.VARCHAR.value, True),
                 Column('asset_type_id', 'asset_type_id', DataTypes.INTEGER.value, True),
                 Column('items_url', 'items_url', DataTypes.VARCHAR.value, True),
                 Column('asset_id', 'asset_id', DataTypes.INTEGER.value, False),
-                Column('layout', 'layout', DataTypes.VARCHAR.value, True)
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True)
             ]
 
             self.db_connection.create_table(self.asset_type_layout_table_name, columns)
 
-        if not self.db_connection.check_table_exists(self.asset_type_plugin_table_name):
+        if not self.db_connection.check_table_exists(self.plugin_table_name):
             columns = [
                 # The column primary_key will be created automatically -> column_id
                 Column('plugin_name', 'plugin_name', DataTypes.VARCHAR.value, True),
@@ -199,4 +204,4 @@ class PageManager(APageManager):
                 Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
             ]
 
-            self.db_connection.create_table(self.asset_type_plugin_table_name, columns)
+            self.db_connection.create_table(self.plugin_table_name, columns)
