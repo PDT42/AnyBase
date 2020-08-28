@@ -25,20 +25,15 @@
             <div class="row justify-content-end">
 
                 <div class="col-3">
-                    <form action="/asset-type:{{ asset_type_id }}/create-asset"
-                          method="GET">
-                        <button type="submit" name="createAsset" class="btn btn-block btn-dark">
-                            Create
-                        </button>
-                    </form>
+                    <a class="btn btn-block btn-dark" href="/asset-type:{{ asset_type_id }}/create-asset">
+                        Create
+                    </a>
                 </div>
 
                 <div class="col-3">
-                    <form action="/asset-type:{{ asset_type_id }}/delete" method="POST">
-                        <button type="submit" name="deleteAssetType" class="btn btn-block btn-danger" value="True">
-                            Delete
-                        </button>
-                    </form>
+                    <a class="btn btn-block btn-danger" href="/asset-type:{{ asset_type_id }}/delete" method="POST">
+                        Delete
+                    </a>
                 </div>
 
             </div>
