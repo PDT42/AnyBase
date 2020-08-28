@@ -6,11 +6,10 @@ The package contains the AssetManager and the AssetTypeManager.
 """
 from dataclasses import dataclass
 from datetime import date, datetime, time
-from enum import Enum
 from typing import Any, List, MutableMapping, Optional, Union
 from uuid import uuid4
 
-from database import Column, DataTypes
+from database import Column
 
 
 @dataclass
@@ -20,18 +19,22 @@ class AssetType:
     asset_name: str
     columns: List[Column]
     created: datetime = None
+    updated: datetime = None
     asset_table_name: str = None
     asset_type_id: int = None
     super_type: Union['AssetType', int] = 0
+    owner_id: int = 0
 
     def as_dict(self):
         return {
             'asset_name': self.asset_name,
             'columns': [col.as_dict() for col in self.columns],
             'created': int(self.created.timestamp()),
+            'updated': int(self.created.timestamp()),
             'asset_table_name': self.asset_table_name,
             'asset_type_id': self.asset_type_id,
-            'super_type': self.super_type
+            'super_type': self.super_type,
+            'owner_id': self.owner_id
         }
 
     def get_super_type_id(self) -> int:
@@ -42,53 +45,12 @@ class AssetType:
 
 
 @dataclass
-class AssetTypePrefab:
-    """This is an ``AssetTypePrefab``."""
-
-    prefab_name: str
-    columns: List[Column]
-
-    def as_dict(self):
-        return {
-            'prefab_name': self.prefab_name,
-            'columns': [col.as_dict() for col in self.columns],
-        }
-
-
-@dataclass
-class AssetTypePrefabs(Enum):
-    """These are the available ``AssetTypePrefabs``."""
-
-    ADDRESS = AssetTypePrefab(
-        prefab_name="Address",
-        columns=[
-            Column("Country", "country", DataTypes.TEXT.value, required=True),
-            Column("City", "city", DataTypes.TEXT.value, required=True),
-            Column("Street", "street", DataTypes.TEXT.value, required=True),
-            Column("ZipCode", "zipcode", DataTypes.INTEGER.value, required=True),
-            Column("House Number", "house_number", DataTypes.INTEGER.value, required=True),
-        ],
-    )
-
-    # --
-
-    @classmethod
-    def get_all_asset_type_prefabs(cls):
-        """Get all distinct field values from enum."""
-        return list(set([prefab.value for prefab in cls.__members__.values()]))
-
-    @classmethod
-    def get_all_asset_type_prefab_names(cls):
-        """Get the names of all available asset type prefabs."""
-        return list(cls.__members__.keys())
-
-
-@dataclass
 class Asset:
     """This is an ``Asset``."""
 
     data: MutableMapping[Any, Any]
     created: datetime = None
+    updated: datetime = None
     asset_id: Optional[int] = None
     extended_by_id: Optional[int] = 0
 
@@ -113,11 +75,15 @@ class Asset:
             if isinstance(value, date):
                 data[key] = int(datetime.combine(value, time(0)).timestamp())
                 continue
+            if isinstance(value, type(None)):
+                data[key] = 'null'
+                continue
             data[key] = value
 
         return {
             'data': data,
             'asset_id': self.asset_id,
             'created': int(self.created.timestamp()),
+            'updated': int(self.updated.timestamp()),
             'extended_by_id': self.extended_by_id
         }
