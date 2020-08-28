@@ -10,6 +10,7 @@ from typing import Tuple
 from unittest import TestCase
 
 from database import Column, DataTypes
+from exceptions.database import UniqueConstraintError
 from test.test_util import init_test_db
 
 
@@ -38,6 +39,33 @@ class TestSqliteConnection(TestCase):
         self.assertEqual(1, self.db_connection.count(self.table_name))
         self.row_values["primary_key"] = 1
         self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
+
+    def test_unique(self):
+
+        self.db_columns = [
+            Column("TextColumn", "textcolumn", DataTypes.VARCHAR.value, required=True, unique=True),
+            Column("NumberColumn", "numbercolumn", DataTypes.NUMBER.value)
+        ]
+
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+        primary_key = self.db_connection.write_dict(self.table_name, self.row_values)
+        self.row_values["primary_key"] = primary_key
+
+        result = self.db_connection.read(self.table_name, list(self.row_values.keys()))
+        self.assertEqual([self.row_values], result)
+
+        self.assertRaises(UniqueConstraintError, self.db_connection.write_dict, self.table_name, self.row_values)
+
+        self.row_values['textcolumn'] = 'another text'
+        primary_key = self.db_connection.write_dict(self.table_name, self.row_values)
+        self.row_values["primary_key"] = primary_key
+
+        result = self.db_connection.read(
+            table_name=self.table_name,
+            headers=list(self.row_values.keys()),
+            and_filters=[f'primary_key = {primary_key}'])
+        self.assertEqual([self.row_values], result)
 
     def test_read_joined(self):
         # Create an average Person

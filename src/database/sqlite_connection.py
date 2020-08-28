@@ -11,7 +11,7 @@ from typing import Any, List, Mapping, OrderedDict, Sequence, Tuple
 from database import DataType, DataTypes
 from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
 from exceptions.common import IllegalStateException, MissingArgumentException
-from exceptions.database import MissingValueException, TableAlreadyExistsException
+from exceptions.database import MissingValueException, TableAlreadyExistsException, UniqueConstraintError
 from exceptions.database import TableDoesNotExistException
 from src.database.db_connection import Column, DbConnection
 
@@ -304,7 +304,10 @@ class SqliteConnection(DbConnection):
         # Removing the ', '.join artifacts
         query = f"{''.join(query[:-2])})"
         # --------------
-        self.cursor.execute(query)
+        try:
+            self.cursor.execute(query)
+        except sqlite3.IntegrityError:
+            raise UniqueConstraintError()
 
         result: int = self.cursor.lastrowid
 
@@ -426,6 +429,9 @@ class SqliteConnection(DbConnection):
 
             # Adding field_mappings
             query = f"{query}{column.db_name} {column.datatype.db_type}"
+
+            if column.unique:
+                query = f"{query} UNIQUE"
 
             if column.required:
                 query = f"{query} NOT NULL"

@@ -70,6 +70,7 @@ class Column:
     datatype: DataType
     asset_type_id: int = 0
     required: bool = False
+    unique: bool = False
 
     def as_dict(self):
         return {
@@ -77,5 +78,6 @@ class Column:
             'db_name': self.db_name,
             'datatype': self.datatype.as_dict(),
             'asset_type_id': self.asset_type_id,
-            'required': self.required
+            'required': self.required,
+            'unique': self.unique
         }
