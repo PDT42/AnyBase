@@ -21,7 +21,7 @@ class AAssetTypeManager:
     """This is the abstract class for AssetTypeManagers."""
 
     @abstractmethod
-    def create_asset_type(self, asset_type: AssetType) -> None:
+    def create_asset_type(self, asset_type: AssetType) -> AssetType:
         """Create a new ``asset_type_id`` in the asset type registry."""
         pass
 
@@ -31,7 +31,7 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def update_asset_type(self, asset_type: AssetType) -> None:
+    def update_asset_type(self, asset_type: AssetType) -> AssetType:
         """Update an ``asset_type_id`` in the database."""
         pass
 
@@ -41,26 +41,38 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def get_all(self) -> List[AssetType]:
+    def get_all(self, ignore_slaves: bool = True) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
         pass
 
     @abstractmethod
     def get_all_filtered(
             self, and_filters: Sequence[str] = None,
-            or_filters: Sequence[str] = None) \
-            -> List[AssetType]:
+            or_filters: Sequence[str] = None,
+            ignore_slaves: bool = True
+    ) -> List[AssetType]:
         """Get all ``AssetTypes`` for which the given filters apply."""
         pass
 
     @abstractmethod
-    def get_batch(self, offset: int, limit: int):
+    def get_batch(
+            self, offset: int,
+            limit: int,
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            ignore_slaves: bool = True
+    ) -> List[AssetType]:
         """Get a batch of ``AssetTypes`` from offset until limit."""
         pass
 
     @abstractmethod
     def get_one(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
         """Get the ``AssetType`` with ident ``asset_type_id``."""
+        pass
+
+    @abstractmethod
+    def get_slaves(self, asset_type: AssetType) -> List[AssetType]:
+        """Get the slaves of this ``asset_type``."""
         pass
 
     @staticmethod
