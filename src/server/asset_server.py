@@ -75,14 +75,14 @@ class AssetServer:
         )
 
         app.add_url_rule(
-            '/asset-type:<int:asset_type_id>/<int:asset_id>',
+            '/asset-type:<int:asset_type_id>/asset:<int:asset_id>',
             'get-asset',
             AssetServer.get_one_asset,
             methods=['GET']
         )
 
         app.add_url_rule(
-            '/asset-type:<int:asset_type_id>/<int:asset_id>/delete',
+            '/asset-type:<int:asset_type_id>/asset:<int:asset_id>/delete',
             'delete-asset',
             AssetServer.delete_asset,
             methods=['GET']
@@ -192,11 +192,15 @@ class AssetServer:
         for column in extended_type.columns:
 
             # Column is missing in form but is required
-            if column.required and column.db_name not in sync_form.keys():
+            if column.required and (
+                    column.db_name not in sync_form.keys() or
+                    sync_form[column.db_name] in ['']):
                 return 1  # TODO: Validation
 
             # Column is missing and isn't required
-            elif not column.required and column.db_name not in sync_form.keys():
+            elif not column.required and (
+                    column.db_name not in sync_form.keys() or
+                    sync_form[column.db_name] in ['']):
                 continue
 
             # Column is present
@@ -244,10 +248,12 @@ class AssetServer:
                 result = asset_manager.get_all(asset_t)
                 assets[asset_t.asset_type_id] = result  # [asset.asset_id for asset in results]
 
+        assets = {key: [a.as_dict() for a in value] for key, value in assets.items()}
+
         if AssetServer.get().json_response:
             return jsonify({
                 'asset_type': asset_type.as_dict(),
-                'assets': {key: [a.as_dict() for a in value] for key, value in assets.items()}
+                'assets': assets
             })
         return await render_template("create-asset.html", asset_type=asset_type, assets=assets)
 
@@ -271,7 +277,10 @@ class AssetServer:
                             plugin_path='plugins/asset-details-plugin.html',
                             column_width=6,
                             field_mappings={
-                                'name': 'name'
+                                'field1': 'straße',
+                                'field2': 'hausnummer',
+                                'field3': 'postleitzahl',
+                                'field4': 'stadt'
                             }
                         )
                     ]
