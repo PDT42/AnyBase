@@ -3,46 +3,61 @@
 
 // This is the script used in create-asset-type.html
 
-let columnsAdded = 0;
+let columnsAdded = new Set();
 let columnNumber = 0;
 
 function addColumn() {
-    if (columnsAdded < 15) {
+    if (columnsAdded.size < 15) {
+
+        while (columnsAdded.has(columnNumber)) {
+            columnNumber = (columnNumber + 1) % 15;
+        }
+
         const columnList = document.getElementById('column-list');
 
         let columnEntry = document.createElement('div');
         columnEntry.setAttribute('id', 'column-entry-' + columnNumber);
-        columnEntry.setAttribute('class', 'form-group row');
-        columnEntry.style.outline = 'solid';
-        columnEntry.style.outlineWidth = '1px';
-        columnEntry.style.outlineColor = 'grey';
-        columnEntry.style.padding = '8px';
+        columnEntry.setAttribute('class', 'form-group card');
         columnList.appendChild(columnEntry);
+
+        let cardBody = document.createElement('div');
+        cardBody.setAttribute('class', 'card-body');
+        columnEntry.appendChild(cardBody);
+
+        let cardBodyRow = document.createElement('div');
+        cardBodyRow.setAttribute('class', 'row');
+        cardBody.appendChild(cardBodyRow);
 
         // Adding Remove Column Button
 
         let removeColumn = document.createElement('div');
         removeColumn.setAttribute('class', 'col-md-1');
-        columnEntry.appendChild(removeColumn);
+        cardBodyRow.appendChild(removeColumn);
 
         let removeColumnButton = document.createElement('button');
         removeColumnButton.setAttribute('type', 'button');
+        removeColumnButton.setAttribute('id', columnNumber);
+        removeColumnButton.onclick = function () {
+            let column = document.getElementById('column-entry-' + removeColumnButton.id);
+            column.parentElement.removeChild(column);
+            columnsAdded.delete(parseInt(removeColumnButton.id));
+        }
         removeColumnButton.style.border = 'none';
         removeColumnButton.style.backgroundColor = 'Transparent';
         removeColumnButton.style.cursor = 'pointer';
         removeColumnButton.style.outline = 'none';
-        removeColumnButton.onclick = function () {
-            let column = document.getElementById('column-entry-' + columnNumber);
-            document.removeChild(column);
-            columnsAdded -= 1;
-        }
         removeColumn.appendChild(removeColumnButton);
+
+        let removeColumnButtonIcon = document.createElement('i');
+        removeColumnButtonIcon.setAttribute(
+            'class', 'far fa-times-circle');
+        removeColumnButton.appendChild(removeColumnButtonIcon);
 
         // Adding Column Name Input
 
         let columnName = document.createElement('div');
         columnName.setAttribute('class', 'col-md-6');
-        columnEntry.appendChild(columnName);
+        cardBodyRow.appendChild(columnName);
 
         let columnNameInput = document.createElement('input');
         columnNameInput.setAttribute('class', 'form-control');
@@ -54,7 +69,7 @@ function addColumn() {
 
         let columnDataType = document.createElement('div');
         columnDataType.setAttribute('class', 'col-md-4');
-        columnEntry.appendChild(columnDataType);
+        cardBodyRow.appendChild(columnDataType);
 
         let columnDataTypeRow = document.createElement('div');
         columnDataTypeRow.setAttribute('class', 'row');
@@ -99,7 +114,7 @@ function addColumn() {
             let assetType = assetTypes[key];
             let columnAssetTypeSelectOption = document.createElement('option');
             columnAssetTypeSelectOption.setAttribute('value', key);
-            columnAssetTypeSelectOption.text = assetType['asset_name'];
+            columnAssetTypeSelectOption.textContent = assetType['asset_name'];
             columnAssetTypeSelect.appendChild(columnAssetTypeSelectOption);
         }
 
@@ -107,25 +122,17 @@ function addColumn() {
 
         let columnRequired = document.createElement('div');
         columnRequired.setAttribute('class', 'col-md-1');
-        columnEntry.appendChild(columnRequired);
+        cardBodyRow.appendChild(columnRequired);
 
         let columnRequiredInput = document.createElement('input');
-        columnRequiredInput.setAttribute('type', 'radio');
+        columnRequiredInput.setAttribute('type', 'checkbox');
         columnRequiredInput.setAttribute('class', 'form check-input');
         columnRequiredInput.setAttribute('name', 'column-required-' + columnNumber);
         columnRequiredInput.setAttribute('value', 'checkboxTrue');
         columnRequiredInput.checked = false;
         columnRequired.appendChild(columnRequiredInput);
 
-        let removeColumnButtonIcon = document.createElement('i');
-        removeColumnButtonIcon.setAttribute(
-            'class', 'far fa-times-circle');
-        removeColumnButton.appendChild(removeColumnButtonIcon);
-
-        columnNumber += 1;
-        columnNumber = columnNumber % 15;
-        columnsAdded += 1;
-
+        columnsAdded.add(columnNumber);
     } else {
         console.warn("Can't create more than 15 Columns!");
     }
