@@ -19,7 +19,7 @@
             assetCard.setAttribute('id', '{{column_info.column_id}}-asset-' + assetData['asset_id'])
             assetCard.setAttribute('class', 'list-group-item card');
             assetCard.setAttribute('href','/asset-type:' +
-                '{{ asset_type.asset_type_id }}/' + assetData['asset_id']); // TODO: Insert correct link
+                '{{ asset_type.asset_type_id }}/asset:' + assetData['asset_id'])
             assetCard.setAttribute('style', 'margin-bottom: 15px');
             assetList.appendChild(assetCard);
 
