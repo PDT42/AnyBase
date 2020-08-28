@@ -11,6 +11,7 @@ from abc import abstractmethod
 from typing import Any, List, Mapping, MutableMapping, OrderedDict, Sequence, Tuple
 
 from database import Column, DataType
+from exceptions.common import MissingKeyException
 
 
 class DbConnection:
@@ -130,9 +131,21 @@ class DbConnection:
         """Convert a data mapping as contained in an asset to a valid
         database query input."""
 
-        row: MutableMapping[str, Any] = {
-            column.db_name: self._conversions[column.datatype](data[column.db_name])
-            for column in columns
-        }
+        row: MutableMapping[str, Any] = {}
+
+        for column in columns:
+
+            data_value = data.get(column.db_name, None)
+
+            if data_value is None and not column.required:
+                row[column.db_name] = None
+                continue
+
+            elif data_value is None and column.required:
+                raise MissingKeyException(
+                    f'The required column {column.db_name} is missing!')
+
+            else:
+                row[column.db_name] = self._conversions[column.datatype](data_value)
 
         return row

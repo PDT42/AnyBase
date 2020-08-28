@@ -14,6 +14,7 @@ from asset import Asset, AssetType
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
+from exceptions.common import MissingKeyException
 
 
 class AAssetManager:
@@ -83,15 +84,25 @@ class AAssetManager:
 
         for column in columns:
 
-            field = self._conversions[column.datatype](row[column.db_name])
+            row_value = row.get(column.db_name, None)
 
-            if column.datatype is DataTypes.ASSET.value and depth > 0:
+            if row_value is None and not column.required:
+                field = None
+
+            elif row_value is None and column.required:
+                raise MissingKeyException(
+                    f'The required column {column.db_name} is missing!')
+
+            else:
+                field = self._conversions[column.datatype](row_value)
+
+            if field and column.datatype is DataTypes.ASSET.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one(column.asset_type_id)
                 asset = self.get_one(field, asset_type, depth - 1)
 
                 received_data[column.db_name] = asset
 
-            elif column.datatype is DataTypes.ASSETLIST.value and depth > 0:
+            elif field and column.datatype is DataTypes.ASSETLIST.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one(column.asset_type_id)
 
                 received_data[column.db_name] = [
