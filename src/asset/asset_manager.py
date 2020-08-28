@@ -47,8 +47,9 @@ class AssetManager(AAssetManager):
         self.PRIMARY_KEY = 'primary_key'
         self.JOIN_ON: str = 'abintern_extended_by_id'
         self.CREATED: str = 'abintern_created'
+        self.UPDATED: str = 'abintern_updated'
 
-        self.ASSET_HEADERS = [self.PRIMARY_KEY, self.CREATED, self.JOIN_ON]
+        self.ASSET_HEADERS = [self.PRIMARY_KEY, self.CREATED, self.JOIN_ON, self.UPDATED]
 
     def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
         """Create an asset in the database."""
@@ -81,10 +82,12 @@ class AssetManager(AAssetManager):
             asset.extended_by_id = super_asset.asset_id
 
         created: datetime = datetime.now().replace(microsecond=0)
+
         values = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
         values.update({
             self.PRIMARY_KEY: None,
             self.CREATED: int(created.timestamp()),
+            self.UPDATED: int(created.timestamp()),
             self.JOIN_ON: asset.extended_by_id
         })
 
@@ -95,6 +98,7 @@ class AssetManager(AAssetManager):
             data=asset.data,
             asset_id=asset_id,
             created=created,
+            updated=created,
             extended_by_id=asset.extended_by_id
         )
 
@@ -155,10 +159,13 @@ class AssetManager(AAssetManager):
 
             self.update_asset(super_type, super_asset)
 
+        updated: datetime = datetime.now().replace(microsecond=0)
+
         data = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
         data.update({
             self.PRIMARY_KEY: asset.asset_id,
             self.CREATED: int(asset.created.timestamp()),
+            self.UPDATED: int(updated.timestamp()),
             self.JOIN_ON: asset.extended_by_id
         })
 
@@ -167,6 +174,7 @@ class AssetManager(AAssetManager):
         return Asset(
             data=asset.data,
             created=asset.created,
+            updated=updated,
             asset_id=asset.asset_id,
             extended_by_id=asset.extended_by_id
         )
@@ -188,10 +196,8 @@ class AssetManager(AAssetManager):
 
         if asset_type.get_super_type_id() > 0:
 
-            table_headers, result_columns = \
-                self._extract_joined_parameters(asset_type)
-            table_name: str = self.asset_type_manager \
-                .generate_asset_table_name(asset_type)
+            table_headers, result_columns = self._extract_joined_parameters(asset_type)
+            table_name: str = self.asset_type_manager.generate_asset_table_name(asset_type)
 
             result: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
                 and_filters=[f'{table_name}.primary_key = {asset_id}'],
@@ -216,16 +222,7 @@ class AssetManager(AAssetManager):
                 "The primary key constraint is broken!"
             )
 
-        received_data: MutableMapping[str, Any] = \
-            self.convert_row_to_data(result[0], result_columns, depth)
-
-        asset = Asset(
-            asset_id=result[0].pop(self.PRIMARY_KEY),
-            data=received_data,
-            created=datetime.fromtimestamp(result[0][self.CREATED]),
-            extended_by_id=int(result[0][self.JOIN_ON])
-        )
-        return asset
+        return self._convert_result_to_asset(result[0], result_columns, depth)
 
     def get_all(self, asset_type: AssetType, depth: int = 0) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
@@ -332,19 +329,23 @@ class AssetManager(AAssetManager):
     # ~~~~~~~~~~~~~~~
     #
 
+    def _convert_result_to_asset(self, result, result_columns, depth):
+        """Convert a single result to an asset."""
+        return Asset(
+            asset_id=result.pop(self.PRIMARY_KEY),
+            data=self.convert_row_to_data(result, result_columns, depth),
+            created=datetime.fromtimestamp(result[self.CREATED]),
+            updated=datetime.fromtimestamp(result[self.UPDATED]),
+            extended_by_id=result[self.JOIN_ON]
+        )
+
     def _convert_results_to_assets(self, results, result_columns, depth):
         """Convert the db results to a list of Assets."""
 
         assets = []
 
-        for asset_row in results:
-            assets.append(Asset(
-                asset_id=asset_row.pop(self.PRIMARY_KEY),
-                data=self.convert_row_to_data(asset_row, result_columns, depth),
-                created=datetime.fromtimestamp(asset_row[self.CREATED]),
-                extended_by_id=asset_row[self.JOIN_ON]
-            ))
-
+        for result in results:
+            assets.append(self._convert_result_to_asset(result, result_columns, depth))
         return assets
 
     def _extract_joined_parameters(self, asset_type: AssetType):
