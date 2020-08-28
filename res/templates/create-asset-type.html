@@ -8,21 +8,30 @@
 <!-- Extend Block 'body' in base.html -->
 {% block body %}
 <div class="container">
-    <div class="row" style="margin-top: 35px">
+    <div class="row" style="margin-top:20px">
+        <div class="col-md-12">
+            <h4>Create new AssetType</h4>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row" style="margin-top: 20px">
         <form class="col" action="/asset-type/create" method="post">
 
             <!-- INPUT FOR ASSET TYPE NAME -->
 
-            <div class="form-group row" style="padding-top: 20px">
+            <input hidden class="form-control" name="ownderId" value="{{ owner_id|int }}">
+
+            <div class="form-group row">
                 <label for="assetName" class="col-md-2 col-form-label">Asset Name:</label>
                 <div class="col-md-10">
                     <input type="text" class="form-control" name="assetName" id="assetName">
                 </div>
             </div>
 
-            <hr/>
 
-            <!-- SELECT SUPER TYPE THE NEW PLUGIN EXTENDS-->
+            <!-- SELECT SUPER TYPE THE NEW TYPE EXTENDS-->
 
             <div class="form-group row">
                 <label for="superType" class="col-md-2 col-form-label">Extends Asset Type:</label>
@@ -48,15 +57,19 @@
             <!-- HEADER LINE -->
 
             <div class="row" style="margin-top: 10px">
+
                 <div class="col-md-5 offset-md-1">
-                    <label>Column Name</label>
+                    <span style="padding-left: 20px">Column Name</span>
                 </div>
-                <div class="col-md-4">
-                    <label>Datatype</label>
+
+                <div class="col-md-3 offset-md-1">
+                    <span>Datatype</span>
                 </div>
-                <div class="col-md-2">
-                    <label>Required</label>
+
+                <div class="col-md-1">
+                    <span style="padding-left: 60px">Required</span>
                 </div>
+
             </div>
 
             <!-- COLUMN INPUTS -->
