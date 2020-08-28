@@ -20,3 +20,6 @@ class DataTypeDoesNotExistException(Exception):
 
 class MissingValueException(Exception):
     pass
+
+class UniqueConstraintError(Exception):
+    pass
