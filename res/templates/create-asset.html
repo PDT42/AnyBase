@@ -17,45 +17,15 @@
 
     <hr/>
 
-    <div class="row">
-        <form class="col" action="/asset-type:{{ asset_type.asset_type_id }}/create-asset" method="POST">
+    <div class="row" id="create-asset"></div>
 
-            {% for column in asset_type.columns %}
-            <div class="row" style="padding-top: 10px">
-
-                <div class="col-4">
-                    <label>{{ column.name }}:</label>
-                </div>
-
-                <div class="col-8">
-
-                    {% if column.datatype.typename in ['ASSET', 'ASSETLIST']%}
-                    <select class="form-control custom-select" name="{{ column.db_name }}">
-
-                        {% for asset in assets[column.asset_type_id] %}
-                        <option value="{{ asset.asset_id|int }}">{{ asset|string }}</option>
-                        {% endfor %}
-
-                    </select>
-                    {% else %}
-                    <input type="{{ column.datatype.fe_type }}" step="any" class="form-control"
-                           name="{{ column.db_name }}">
-                    {% endif %}
-                </div>
-
-            </div>
-            {% endfor %}
-
-            <hr/>
-
-            <div class="row justify-content-end">
-                <div class="col-2">
-                    <button type="submit" class="btn btn-block btn-dark">Create</button>
-                </div>
-            </div>
-
-        </form>
-    </div>
 </div>
+
+<script>
+    const assetType = JSON.parse('{{ asset_type.as_dict()|tojson }}');
+    const assets = JSON.parse('{{ assets|tojson }}');
+</script>
+
+<script src="/static/jscript/createAsset.js"></script>
 
 {% endblock %}
