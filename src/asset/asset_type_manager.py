@@ -13,7 +13,8 @@ from asset.abstract_asset_type_manager import AAssetTypeManager
 from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
+from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeChangedException, AssetTypeDoesNotExistException, \
+    AssetTypeInconsistencyException
 from exceptions.common import KeyConstraintException
 
 
@@ -117,13 +118,26 @@ class AssetTypeManager(AAssetTypeManager):
 
         # Making sure one is not trying to update an asset type without an id
         if not asset_type.asset_type_id:
-            raise AttributeError("The asset_type_id parameter of an asset type you are trying to update must exist!")
+            raise AttributeError(
+                "The asset_type_id parameter of an AssetType " +
+                "you are trying to update must exist!"
+            )
 
         # Ensuring the table, to update the asset types in exists
         self._init_asset_types_table()
 
         # Getting the old asset type from the database
         db_asset_type = self.get_one(asset_type.asset_type_id)
+
+        if not db_asset_type:
+            raise AssetTypeDoesNotExistException(
+                "The asset type you are trying to update does not exist!")
+
+        # Check if the asset_type has been updated
+        # by someone else in the meantime
+        if db_asset_type.updated > asset_type.updated:
+            raise AssetTypeChangedException(
+                "The AssetType you are trying to update, has been changed!")
 
         # Generating the updated table name
         updated_table_name = self.generate_asset_table_name(asset_type)
@@ -133,21 +147,29 @@ class AssetTypeManager(AAssetTypeManager):
 
             # Making sure one can't update to a name that already exists
             if self.check_asset_type_exists(asset_type):
-                raise AssetTypeAlreadyExistsException("Can't perform update - AssetType with that name already exists!")
+                raise AssetTypeAlreadyExistsException(
+                    "Can't perform update - AssetType with that name already exists!")
 
             self.db_connection.update_table_name(
                 db_asset_type.asset_table_name,
-                updated_table_name
-            )
+                updated_table_name)
 
         # Updating the "abasset.." tables columns
 
-        asset_table_columns = asset_type.columns + [
-            Column('created', self.CREATED, DataTypes.DATETIME.value, required=True),
-            Column('extended_by_id', 'abintern_extended_by_id', DataTypes.VARCHAR.value, required=True)
-        ]
+        if len(db_asset_type.columns) != len(asset_type.columns):
+            # TODO: implement remove, append columns
+            raise NotImplementedError(
+                "Removing, appending columns to asset " +
+                "type is not yet implemented!")
 
-        self.db_connection.update_table_columns(updated_table_name, asset_table_columns)
+        update_columns: Mapping[str, Column] = {
+            col.db_name: asset_type.columns[index]
+            for index, col in enumerate(db_asset_type.columns)
+        }
+
+        self.db_connection.update_columns(updated_table_name, update_columns)
+
+        updated: datetime = datetime.now().replace(microsecond=0)
 
         # Creating a query dict as required by update
         values = {
@@ -155,6 +177,7 @@ class AssetTypeManager(AAssetTypeManager):
             'asset_name': asset_type.asset_name,
             'asset_table_name': updated_table_name,
             self.CREATED: int(asset_type.created.timestamp()),
+            self.UPDATED: int(updated.timestamp()),
             'asset_columns': self.generate_column_str_from_columns(asset_type.columns),
             'super_type': asset_type.super_type
         }
@@ -314,8 +337,8 @@ class AssetTypeManager(AAssetTypeManager):
         return AssetType(
             asset_name=result['asset_name'],
             columns=AssetTypeManager.generate_columns_from_columns_str(result['asset_columns']),
-            created=datetime.fromtimestamp(result[self.UPDATED]),
-            updated=datetime.fromtimestamp(result[self.CREATED]),
+            created=datetime.fromtimestamp(result[self.CREATED]),
+            updated=datetime.fromtimestamp(result[self.UPDATED]),
             asset_table_name=result.get('asset_table_name', None),
             asset_type_id=result[self.PRIMARY_KEY],
             super_type=result['super_type'],
