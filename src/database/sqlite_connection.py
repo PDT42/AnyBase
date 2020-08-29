@@ -6,12 +6,15 @@ This is the implementation of DbConnection for Connections to sqlite databases.
 """
 import sqlite3
 from datetime import datetime
-from typing import Any, List, Mapping, OrderedDict, Sequence, Tuple
+from typing import Any, List, Mapping, MutableMapping, OrderedDict, Sequence, Tuple
 
 from database import DataType, DataTypes
 from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
 from exceptions.common import IllegalStateException, MissingArgumentException
-from exceptions.database import MissingValueException, TableAlreadyExistsException, UniqueConstraintError
+from exceptions.database import ColumnAlreadyExistsException, ColumnDoesNotExistException, DataTypeChangedException, \
+    MissingValueException, \
+    TableAlreadyExistsException, \
+    UniqueConstraintError
 from exceptions.database import TableDoesNotExistException
 from src.database.db_connection import Column, DbConnection
 
@@ -319,7 +322,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        table_name = table_name.replace(' ', '_')
+        table_name = table_name.replace(' ', '_').lower()
 
         if not self.check_table_exists(table_name):
             raise TableDoesNotExistException(f"Table {table_name} does not exist!")
@@ -365,7 +368,8 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        table_name = table_name.replace(' ', '_')
+        table_name = table_name.replace(' ', '_').lower()
+        new_table_name = new_table_name.replace(' ', '_').lower()
 
         if not self.check_table_exists(table_name):
             raise TableDoesNotExistException(f"Table {table_name} does not exist!")
@@ -376,13 +380,15 @@ class SqliteConnection(DbConnection):
         query = f"ALTER TABLE {table_name} RENAME TO {new_table_name}"
         self.cursor.execute(query)
 
-    def update_table_columns(self, table_name: str, columns: Sequence[Column]):
-        """Update the columns of a table in the database."""
+    def update_columns(self, table_name: str, update_columns: Mapping[str, Column]):
+        """Update columns of the database table ``table_name``. The columns
+        with the ``db_names`` used as keys in ``update_columns`` will be updated
+        to the respective value in ``update_columns``. """
 
         # Initialize connection
         self._connect()
 
-        table_name = table_name.replace(' ', '_')
+        table_name = table_name.replace(' ', '_').lower()
 
         # Making sure table exists
         if not self.check_table_exists(table_name):
@@ -391,18 +397,139 @@ class SqliteConnection(DbConnection):
         # Get info on ``table_name`` from database
         table_info = self.get_table_info(table_name)
 
-        # Making sure any columns we create have required = False
-        remote_columns = [column['name'] for column in table_info]
-        for column in columns:
-            if column.db_name not in remote_columns:
-                column.required = False
+        db_columns: MutableMapping[str, Column] = {
+            column['name']: Column(
+                column['name'], column['name'],
+                DataTypes[column['type']].value,
+                required=bool(column['notnull'])
+            ) for column in table_info
+            if column['name'] != 'primary_key'
+        }
 
-        temp_table_name = f"temp_{table_name}"
+        for old_name, update_column in update_columns.items():
 
-        self.create_table(temp_table_name, columns)
+            if old_name not in db_columns.keys():
+                raise ColumnDoesNotExistException(
+                    f"The column {old_name}, you just tried " +
+                    f"to update does not exist in {table_name}!")
 
-        column_str = ', '.join([column.db_name for column in columns[:len(remote_columns) - 1]]) + ', primary_key'
-        query = f"INSERT INTO {temp_table_name}({column_str}) SELECT {', '.join(remote_columns)} FROM {table_name}"
+            if update_column.datatype is not db_columns[old_name].datatype:
+                if self.count(table_name) > 0:
+                    raise DataTypeChangedException(
+                        "Can't update the column datatype of a none empty table!"
+                    )
+            db_columns[old_name] = update_column
+
+        # Creating a temp table for the transition
+        temp_table_name: str = f"temp_{table_name}"
+        temp_table_columns: List[Column] = []
+
+        # TODO: This could be done way cleaner
+        old_column_names: List[str] = []
+        new_column_names: List[str] = []
+
+        for old_name, column in db_columns.items():
+            old_column_names.append(old_name)
+            new_column_names.append(column.db_name)
+            temp_table_columns.append(column)
+        self.create_table(temp_table_name, temp_table_columns)
+
+        old_column_names.append('primary_key')
+        new_column_names.append('primary_key')
+
+        query = f"INSERT INTO {temp_table_name}({', '.join(new_column_names)}) " + \
+                f"SELECT {', '.join(old_column_names)} FROM {table_name}"
+        self.cursor.execute(query)
+
+        self.delete_table(table_name)
+        self.update_table_name(temp_table_name, table_name)
+
+    def update_append_column(self, table_name: str, append_column: Column):
+        """Append ``append_column`` to db table named ``table_name``."""
+
+        # Initialize connection
+        self._connect()
+
+        table_name = table_name.replace(' ', '_').lower()
+
+        # Making sure table exists
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
+        # Get info on ``table_name`` from database
+        table_info = self.get_table_info(table_name)
+        db_column_names = [column['name'] for column in table_info]
+
+        # Making sure a column with the same name does
+        # not already exist for this database table
+        if append_column.db_name in db_column_names:
+            raise ColumnAlreadyExistsException(
+                f"A column named {append_column.db_name} does already exist in {table_name}!")
+
+        # Columns we append to a table must not
+        # be required. We got no value for em!
+        append_column.required = False
+
+        # Creating a temp table for the transition
+        temp_table_name: str = f"temp_{table_name}"
+        temp_table_columns: List[Column] = [append_column] + [
+            Column(col['name'], col['name'], DataTypes[col['type']].value, required=bool(col['notnull']))
+            for col in table_info if col['name'] != 'primary_key']
+        self.create_table(temp_table_name, temp_table_columns)
+
+        query = f"INSERT INTO {temp_table_name}({', '.join(db_column_names)}) " + \
+                f"SELECT {', '.join(db_column_names)} FROM {table_name}"
+        self.cursor.execute(query)
+
+        self.delete_table(table_name)
+        self.update_table_name(temp_table_name, table_name)
+
+    def update_remove_column(self, table_name: str, remove_column: Column):
+        """Remove column ``remove_column`` from db table named ``table_name``."""
+
+        # Initialize connection
+        self._connect()
+
+        table_name = table_name.replace(' ', '_').lower()
+        # Making sure table exists
+        if not self.check_table_exists(table_name):
+            raise TableDoesNotExistException(f"Table {table_name} does not exist!")
+
+        # Get info on ``table_name`` from database
+        table_info = self.get_table_info(table_name)
+        db_column_names = [column['name'] for column in table_info]
+
+        # Making sure a column with the name does
+        # exist in  this database table
+        if remove_column.db_name not in db_column_names:
+            raise ColumnDoesNotExistException(
+                f"A column named {remove_column.db_name} does not exist in {table_name}!")
+
+        # Creating a temp table for the transition
+        temp_table_name: str = f"temp_{table_name}"
+        temp_table_columns: List[Column] = []
+        temp_table_column_names: List[str] = []
+
+        for col in table_info:
+
+            if col['name'] == remove_column.db_name:
+                continue
+
+            if col['name'] == 'primary_key':
+                temp_table_column_names.append(col['name'])
+                continue
+
+            temp_table_column_names.append(col['name'])
+            temp_table_columns.append(Column(
+                col['name'], col['name'],
+                DataTypes[col['type']].value,
+                required=bool(col['notnull'])
+            ))
+
+        self.create_table(temp_table_name, temp_table_columns)
+
+        query = f"INSERT INTO {temp_table_name}({', '.join(temp_table_column_names)}) " + \
+                f"SELECT {', '.join(temp_table_column_names)} FROM {table_name}"
         self.cursor.execute(query)
 
         self.delete_table(table_name)
@@ -417,13 +544,14 @@ class SqliteConnection(DbConnection):
         primary_key = False
 
         # TODO: Make sure to ignore spaces in column names
+        table_name = table_name.replace(' ', '_').lower()
 
         # Initialize connection
         self._connect()
 
         # Creating Query
         # --------------
-        query = f"CREATE TABLE IF NOT EXISTS {table_name.replace(' ', '_')} ("
+        query = f"CREATE TABLE IF NOT EXISTS {table_name} ("
 
         for column in columns:
 
@@ -452,13 +580,10 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"DROP TABLE {table_name.replace(' ', '_')}"
+        table_name = table_name.replace(' ', '_').lower()
 
-        # If a table doesn't exist, we can't delete it
-        try:
-            self.cursor.execute(query)
-        except sqlite3.OperationalError:
-            pass
+        query = f"DROP TABLE IF EXISTS {table_name}"
+        self.cursor.execute(query)
 
     def get_table_info(self, table_name: str):
         """Get information on ``table_name``."""
@@ -466,7 +591,9 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"PRAGMA table_info('{table_name.replace(' ', '_')}')"
+        table_name = table_name.replace(' ', '_').lower()
+
+        query = f"PRAGMA table_info('{table_name}')"
         self.cursor.execute(query)
 
         result = sorted(self.cursor.fetchall(), key=lambda column: column['cid'])
@@ -478,7 +605,10 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master WHERE type='table' AND name='{table_name.replace(' ', '_')}'"
+        table_name = table_name.replace(' ', '_').lower()
+
+        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master " + \
+                f"WHERE type='table' AND name='{table_name}'"
         self.cursor.execute(query)
 
         result = bool(self.cursor.fetchall()[0]['exists'])
@@ -490,7 +620,9 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
-        query = f"SELECT COUNT(*) FROM {table_name.replace(' ', '_')}"
+        table_name = table_name.replace(' ', '_').lower()
+
+        query = f"SELECT COUNT(*) FROM {table_name}"
         self.cursor.execute(query)
 
         result = self.cursor.fetchall()[0]['COUNT(*)']

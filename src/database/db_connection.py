@@ -93,8 +93,20 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def update_table_columns(self, table_name: str, columns: Sequence[Column]):
-        """Update the columns of a table in the database."""
+    def update_columns(self, table_name: str, update_columns: Mapping[str, Column]):
+        """Update columns of the database table ``table_name``. The columns
+        with the ``db_names`` used as keys in ``update_columns`` will be updated
+        to the respective value in ``update_columns``. """
+        pass
+
+    @abstractmethod
+    def update_append_column(self, table_name: str, append_column: Column):
+        """Append ``append_column`` to db table named ``table_name``."""
+        pass
+
+    @abstractmethod
+    def update_remove_column(self, table_name: str, remove_column: Column):
+        """Remove column ``remove_column`` from db table named ``table_name``."""
         pass
 
     @abstractmethod
