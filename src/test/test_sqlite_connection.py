@@ -17,6 +17,7 @@ from test.test_util import init_test_db
 class TestSqliteConnection(TestCase):
 
     def setUp(self) -> None:
+
         self.tempdir, self.db_connection = init_test_db()
         # print(f"Tempdir used in this tests: {self.tempdir}")
 
@@ -28,17 +29,28 @@ class TestSqliteConnection(TestCase):
         self.row_values = {"textcolumn": "testtext", "numbercolumn": 42}
 
     def tearDown(self) -> None:
+
         self.db_connection.kill()
         rmtree(self.tempdir)
 
     def test_read(self):
         # TODO: Add tests for filters, limit and offset
+
         self.db_connection.create_table(self.table_name, self.db_columns)
+
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
-        self.db_connection.write_dict(self.table_name, self.row_values)
+
+        primary_key = self.db_connection.write_dict(self.table_name, self.row_values)
         self.assertEqual(1, self.db_connection.count(self.table_name))
-        self.row_values["primary_key"] = 1
-        self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
+        self.row_values["primary_key"] = primary_key
+
+        self.assertEqual(
+            [self.row_values],
+            self.db_connection.read(
+                self.table_name,
+                list(self.row_values.keys())
+            )
+        )
 
     def test_unique(self):
 
@@ -46,16 +58,21 @@ class TestSqliteConnection(TestCase):
             Column("TextColumn", "textcolumn", DataTypes.VARCHAR.value, required=True, unique=True),
             Column("NumberColumn", "numbercolumn", DataTypes.NUMBER.value)
         ]
-
         self.db_connection.create_table(self.table_name, self.db_columns)
+
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+
         primary_key = self.db_connection.write_dict(self.table_name, self.row_values)
         self.row_values["primary_key"] = primary_key
 
         result = self.db_connection.read(self.table_name, list(self.row_values.keys()))
         self.assertEqual([self.row_values], result)
 
-        self.assertRaises(UniqueConstraintError, self.db_connection.write_dict, self.table_name, self.row_values)
+        self.assertRaises(
+            UniqueConstraintError,
+            self.db_connection.write_dict,
+            self.table_name, self.row_values
+        )
 
         self.row_values['textcolumn'] = 'another text'
         primary_key = self.db_connection.write_dict(self.table_name, self.row_values)
@@ -68,6 +85,7 @@ class TestSqliteConnection(TestCase):
         self.assertEqual([self.row_values], result)
 
     def test_read_joined(self):
+
         # Create an average Person
         person_table_name: str = 'abasset_table_person'
         self.db_connection.create_table(
@@ -129,6 +147,7 @@ class TestSqliteConnection(TestCase):
         })
 
     def test_delete(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
@@ -140,6 +159,7 @@ class TestSqliteConnection(TestCase):
         self.assertEqual(9, self.db_connection.count(self.table_name))
 
     def test_write_dict(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
@@ -149,6 +169,7 @@ class TestSqliteConnection(TestCase):
         self.assertEqual(10, self.db_connection.count(self.table_name))
 
     def test_update(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.db_connection.write_dict(self.table_name, self.row_values)
@@ -159,16 +180,19 @@ class TestSqliteConnection(TestCase):
         self.assertEqual([self.row_values], self.db_connection.read(self.table_name, list(self.row_values.keys())))
 
     def test_create_table(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
     def test_delete_table(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.db_connection.delete_table(self.table_name)
         self.assertFalse(self.db_connection.check_table_exists(self.table_name))
 
     def test_get_table_info(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.assertEqual(
@@ -178,10 +202,12 @@ class TestSqliteConnection(TestCase):
             self.db_connection.get_table_info(self.table_name))
 
     def test_check_table_exists(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
     def test_count(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
 
@@ -193,20 +219,52 @@ class TestSqliteConnection(TestCase):
         self.assertEqual(9, self.db_connection.count(self.table_name))
 
     def test_update_table_name(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
         self.db_connection.update_table_name(self.table_name, "UpdatedTableName")
         self.assertTrue(self.db_connection.check_table_exists("UpdatedTableName"))
         self.assertFalse(self.db_connection.check_table_exists(self.table_name))
 
-    def test_update_table_columns(self):
+    def test_update_columns(self):
+
         self.db_connection.create_table(self.table_name, self.db_columns)
         self.assertTrue(self.db_connection.check_table_exists(self.table_name))
-        self.db_columns.append(Column("appended_column", "appended_column", DataTypes.VARCHAR.value))
-        self.db_connection.update_table_columns(self.table_name, self.db_columns)
-        self.assertEqual(
-            [{'cid': 0, 'name': 'textcolumn', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
-             {'cid': 1, 'name': 'numbercolumn', 'type': 'REAL', 'notnull': 0, 'dflt_value': None, 'pk': 0},
-             {'cid': 2, 'name': 'appended_column', 'type': 'VARCHAR', 'notnull': 0, 'dflt_value': None, 'pk': 0},
-             {'cid': 3, 'name': 'primary_key', 'type': 'INTEGER', 'notnull': 0, 'dflt_value': None, 'pk': 1}],
-            (self.db_connection.get_table_info(self.table_name)))
+
+        update_columns = {
+            'numbercolumn': Column(
+                "renamed_column",
+                "renamed_column",
+                DataTypes.VARCHAR.value
+            )}
+        self.db_connection.update_columns(self.table_name, update_columns)
+
+        table_info = self.db_connection.get_table_info(self.table_name)
+        self.assertTrue('renamed_column' in [col['name'] for col in table_info])
+        self.assertEqual(len(table_info), 3)
+
+    def test_update_table_columns(self):
+
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+
+        append_column = Column("appended_column", "appended_column", DataTypes.VARCHAR.value)
+
+        self.db_connection.update_append_column(self.table_name, append_column)
+
+        table_info = self.db_connection.get_table_info(self.table_name)
+        self.assertTrue('appended_column' in [col['name'] for col in table_info])
+        self.assertEqual(len(table_info), 4)
+
+    def test_update_remove_column(self):
+
+        self.db_connection.create_table(self.table_name, self.db_columns)
+        self.assertTrue(self.db_connection.check_table_exists(self.table_name))
+
+        # Removing number column
+        remove_column = self.db_columns[1]
+
+        self.db_connection.update_remove_column(self.table_name, remove_column)
+        table_info = self.db_connection.get_table_info(self.table_name)
+        self.assertTrue('numbercolumn' not in [col['name'] for col in table_info])
+        self.assertEqual(len(table_info), 2)

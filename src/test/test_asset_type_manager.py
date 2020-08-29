@@ -1,13 +1,14 @@
 import json
 from copy import deepcopy
 from shutil import rmtree
+from time import sleep
 from typing import Any, List, Tuple
 from unittest import TestCase
 
 from asset import AssetType
 from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
-from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeInconsistencyException
+from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeChangedException, AssetTypeInconsistencyException
 from test.test_util import init_test_db
 
 
@@ -44,20 +45,25 @@ class TestAssetTypeManager(TestCase):
         self.assertIsNone(self.asset_type)
 
     def test_update_asset_type(self):
+        # Trying to update and asset type, that does not exist
         self.assertRaises(AttributeError, self.asset_type_manager.update_asset_type, self.asset_type)
-        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
-        self.assertEqual('TestAsset', self.asset_type.asset_name)
 
+        # Creating an asset type
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
+
+        # Ensuring differing timestamps
+        sleep(1)
+
+        # Updating the AssetType
         update_asset_type = AssetType(
             asset_name='UpdatedAssetType',
             columns=[
                 Column('TestText', 'testtext', DataTypes.VARCHAR.value, required=True),
-                Column('TextNumber', 'textnumber', DataTypes.NUMBER.value, required=True),
-                Column("AppendedColumn", "appendedcolumn", DataTypes.VARCHAR.value)
+                Column('renamed_column', 'renamed_column', DataTypes.NUMBER.value, required=True),
             ],
             asset_type_id=1,
-            created=self.asset_type.created
-        )
+            created=self.asset_type.created,
+            updated=self.asset_type.updated)
         self.asset_type_manager.update_asset_type(update_asset_type)
 
         updated_asset_type = self.asset_type_manager.get_one(1)
@@ -65,9 +71,37 @@ class TestAssetTypeManager(TestCase):
         self.assertEqual(update_asset_type.columns, updated_asset_type.columns)
         self.assertFalse(self.asset_type_manager.check_asset_type_exists(self.asset_type))
 
-        self.asset_type.asset_type_id = None
-        self.asset_type_manager.create_asset_type(self.asset_type)
-        update_asset_type.asset_type_id = 2
+        # Updating again, without reloading self.asset_type after
+        # the previous update. This is basically the scenario:
+        # -------------------------------------------------------
+        # User1 opens edit asset type at time 1
+        # User2 opens edit asset type at time 2
+        # User2 stores his changes in the database at time 3
+        # User1 stores his changes in the database at time 4
+        # User1 receives an error, since the asset type he
+        # is trying to edit, has been updated in the meantime.
+
+        invalid_update = AssetType(
+            asset_name='UpdatedAssetType',
+            columns=[
+                Column('TestText', 'testtext', DataTypes.VARCHAR.value, required=True),
+                Column('invalid_rename', 'invalid_rename', DataTypes.NUMBER.value, required=True),
+            ],
+            asset_type_id=1,
+            created=self.asset_type.created,
+            updated=self.asset_type.updated)
+        self.assertRaises(AssetTypeChangedException, self.asset_type_manager.update_asset_type, invalid_update)
+
+        invalid_update.updated = updated_asset_type.updated
+        valid_asset_type = self.asset_type_manager.update_asset_type(invalid_update)
+
+        # Creating 'another' AssetType
+        self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
+
+        update_asset_type.asset_type_id = self.asset_type.asset_type_id
+        update_asset_type.created = self.asset_type.created
+        update_asset_type.updated = self.asset_type.updated
+
         self.assertRaises(AssetTypeAlreadyExistsException, self.asset_type_manager.update_asset_type, update_asset_type)
 
     def test_check_asset_type_exists(self):
