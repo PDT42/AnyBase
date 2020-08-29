@@ -155,7 +155,6 @@ class AssetTypeManager(AAssetTypeManager):
                 updated_table_name)
 
         # Updating the "abasset.." tables columns
-
         if len(db_asset_type.columns) != len(asset_type.columns):
             # TODO: implement remove, append columns
             raise NotImplementedError(

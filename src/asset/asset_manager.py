@@ -15,7 +15,7 @@ from asset.asset_type_manager import AssetTypeManager
 from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import AssetTypeDoesNotExistException, SuperAssetDoesNotExistException, \
+from exceptions.asset import AssetChangedException, AssetTypeDoesNotExistException, SuperAssetDoesNotExistException, \
     SuperTypeDoesNotExistException
 from exceptions.common import KeyConstraintException
 
@@ -158,6 +158,11 @@ class AssetManager(AAssetManager):
             }
 
             self.update_asset(super_type, super_asset)
+
+        old_asset: Asset = self.get_one(asset.asset_id, asset_type)
+
+        if old_asset.updated > asset.updated:
+            raise AssetChangedException("The asset you are trying to update has changed!")
 
         updated: datetime = datetime.now().replace(microsecond=0)
 
