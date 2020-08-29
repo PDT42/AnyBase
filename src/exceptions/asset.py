@@ -18,6 +18,18 @@ class AssetTypeInconsistencyException(Exception):
     pass
 
 
+class TooFewColumnsException(Exception):
+    pass
+
+
+class AssetTypeChangedException(Exception):
+    pass
+
+
+class AssetChangedException(Exception):
+    pass
+
+
 class SuperTypeDoesNotExistException(Exception):
     pass
 
