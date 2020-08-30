@@ -7,13 +7,13 @@ This is the abstract super class for the implementations of a PageManager.
 
 from abc import abstractmethod
 from re import findall
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping
 
-from asset import Asset, AssetType
+from asset import AssetType
 from asset.asset_manager import AssetManager
 from asset.asset_type_manager import AssetTypeManager
 from database.db_connection import DbConnection
-from pages import AssetPageLayout, ColumnInfo, PageLayout
+from pages import ColumnInfo, PageLayout
 
 
 class APageManager:
@@ -43,17 +43,17 @@ class APageManager:
         pass
 
     @abstractmethod
-    def check_page_exists(self, page_layout: PageLayout):
+    def check_page_exists(self, asset_type_id: int, asset_page: bool) -> bool:
         """Check if an ``AssetPage`` for ``asset_type_id`` exists in the database."""
         pass
 
     @abstractmethod
-    def get_page(self, asset_type: AssetType, asset: Asset):
+    def get_page(self, asset_type_id: int, asset_type_page: bool):
         """Get the ``AssetPage`` for ``asset_type_id`` from the database"""
         pass
 
     @abstractmethod
-    def get_column_info(self, column_id: int):
+    def _get_column_info(self, column_id: int):
         """Get the plugin with ``column_id``. """
         pass
 
@@ -62,28 +62,22 @@ class APageManager:
         """Convert a PageLayout Type to a row."""
 
         # Constructing the layout string
-        layout_str: str = "["
+        layout_str: str = ""
 
         for row_info in page_layout.layout:
             columns = ";".join([
                 f"{col.column_width}, {col.column_id}"
                 for col in row_info
             ])
-            layout_str += "{" + str(columns) + "}"
-        layout_str += "]"
-
-        asset_id = None
-        if isinstance(page_layout, AssetPageLayout) and isinstance(page_layout.asset, Asset):
-            asset_id = page_layout.asset.asset_id
+            layout_str += '{' + str(columns) + '}'
 
         # Creating a dict as required by db query
         layout_row: Mapping[str, Any] = {
-            'primary_key': page_layout.layout_id,
-            'items_url': page_layout.items_url,
-            'asset_id': asset_id,
-            'asset_type_id': page_layout.asset_type.asset_type_id,
+            'asset_type_id': page_layout.asset_type_id,
+            'asset_page_layout': int(page_layout.asset_page_layout),
             'layout': str(layout_str),
-            'field_mappings': str(page_layout.field_mappings)
+            'field_mappings': str(page_layout.field_mappings),
+            'primary_key': page_layout.layout_id,
         }
         return layout_row
 
@@ -97,23 +91,22 @@ class APageManager:
 
         # row_data: "[{column_width, column_id; ...}, ...]"
 
-        # row: "{column_width, column_id; ...}"
         for row in findall("{([^}]*)}", row_data['layout']):
+
+            # row: "{column_width, column_id; ...}"
 
             row_info: List[ColumnInfo] = []
 
-            # column: "column_width, column_id"
             for column in row.split(';'):
+                # column: "column_width, column_id"
+
                 column_width, column_id = column.split(', ')
-                row_info.append(self.get_column_info(int(column_id)))
+                row_info.append(self._get_column_info(int(column_id)))
 
             layout.append(row_info)
 
         # Getting the asset type using the manager
         # filled by the child of this superclass.
-
-        asset_type: AssetType = self.asset_type_manager \
-            .get_one(row_data['asset_type_id'])
 
         field_mappings: Dict[str, str] = {
             key: value for key, value in [
@@ -121,22 +114,10 @@ class APageManager:
                     .replace('{', '').replace('}', '').replace("'", '').split(', ')]
         }
 
-        if asset_id := row_data['asset_id']:
-            asset = self.asset_manager.get_one(asset_id, asset_type)
-
-            return AssetPageLayout(
-                layout=layout,
-                asset_type=asset_type,
-                items_url=row_data['items_url'],
-                asset=asset,
-                layout_id=row_data['primary_key'],
-                field_mappings=field_mappings
-            )
-
         return PageLayout(
+            asset_type_id=row_data['asset_type_id'],
+            asset_page_layout=bool(row_data['asset_page_layout']),
             layout=layout,
-            asset_type=asset_type,
-            items_url=row_data['items_url'],
             layout_id=row_data['primary_key'],
             field_mappings=field_mappings
         )
