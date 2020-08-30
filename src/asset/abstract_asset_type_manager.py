@@ -11,7 +11,7 @@ interoperability.
 """
 
 from abc import abstractmethod
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 from asset import AssetType
 from database import Column, DataTypes
@@ -36,7 +36,7 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def check_asset_type_exists(self, asset_type: AssetType) -> bool:
+    def check_asset_type_exists(self, asset_type: Union[str, AssetType]) -> bool:
         """Check if ``asset_type_id`` with that name already exists."""
         pass
 
