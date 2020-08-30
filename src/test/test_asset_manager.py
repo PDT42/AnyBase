@@ -79,7 +79,7 @@ class TestAssetManager(TestCase):
         student_type: AssetType = AssetType(
             asset_name="Student",
             columns=[
-                Column('subject', 'subject_of_study', DataTypes.VARCHAR.value, required=True)
+                Column('subject', 'subject', DataTypes.VARCHAR.value, required=True)
             ],
             super_type=created_person_type
         )
@@ -99,7 +99,7 @@ class TestAssetManager(TestCase):
                 'name': 'Olaf',
                 'age': 64,
                 'city_of_birth': 'Bielefeld',
-                'subject_of_study': 'Modern Arts'
+                'subject': 'Modern Arts'
             }
         )
 
@@ -131,7 +131,7 @@ class TestAssetManager(TestCase):
                     'name': 'Olaf',
                     'age': age,
                     'city_of_birth': 'Bielefeld',
-                    'subject_of_study': 'Modern Arts'
+                    'subject': 'Modern Arts'
                 }
             )
             created_olafs.append(self.asset_manager.create_asset(created_student_type, olaf))
@@ -153,7 +153,7 @@ class TestAssetManager(TestCase):
                 'name': 'Olaf',
                 'age': 64,
                 'city_of_birth': 'Bielefeld',
-                'subject_of_study': 'Modern Arts'
+                'subject': 'Modern Arts'
             }
         )
 
