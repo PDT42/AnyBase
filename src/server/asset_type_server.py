@@ -240,7 +240,7 @@ class AssetTypeServer:
         page_manager: PageManager = PageManager()
         asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
+        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id, extend_columns=True)
 
         # If no layout is defined for the asset type yet
         # this will a layout-editor html page.
@@ -289,7 +289,7 @@ class AssetTypeServer:
         """Delete the ``AssetType`` with id ``asset_type_id``."""
 
         asset_type_manager: AssetTypeManager = AssetTypeManager()
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
+        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
 
         # Deleting the assets of the super type, that are referenced
         # by the assets of the type being deleted.
@@ -298,7 +298,7 @@ class AssetTypeServer:
 
             asset_manager: AssetManager = AssetManager()
 
-            super_type: AssetType = asset_type_manager.get_one(super_type_id)
+            super_type: AssetType = asset_type_manager.get_one_by_id(super_type_id)
 
             for asset in asset_manager.get_all(asset_type):
                 asset_manager.delete_asset(super_type, asset)

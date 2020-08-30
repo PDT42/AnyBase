@@ -33,15 +33,15 @@ class TestAssetTypeManager(TestCase):
 
     def test_create_asset_type(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
-        self.assertEqual('TestAsset', self.asset_type_manager.get_one(1).asset_name)
+        self.assertEqual('TestAsset', self.asset_type_manager.get_one_by_id(1).asset_name)
         self.assertRaises(AssetTypeAlreadyExistsException, self.asset_type_manager.create_asset_type, self.asset_type)
 
     def test_delete_asset_type(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.get_one_by_id(1)
         self.assertEqual('TestAsset', self.asset_type.asset_name)
         self.asset_type_manager.delete_asset_type(self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.get_one_by_id(1)
         self.assertIsNone(self.asset_type)
 
     def test_update_asset_type(self):
@@ -66,7 +66,7 @@ class TestAssetTypeManager(TestCase):
             updated=self.asset_type.updated)
         self.asset_type_manager.update_asset_type(update_asset_type)
 
-        updated_asset_type = self.asset_type_manager.get_one(1)
+        updated_asset_type = self.asset_type_manager.get_one_by_id(1)
         self.assertEqual(update_asset_type.asset_name, updated_asset_type.asset_name)
         self.assertEqual(update_asset_type.columns, updated_asset_type.columns)
         self.assertFalse(self.asset_type_manager.check_asset_type_exists(self.asset_type))
@@ -106,7 +106,7 @@ class TestAssetTypeManager(TestCase):
 
     def test_check_asset_type_exists(self):
         self.asset_type_manager.create_asset_type(self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.get_one_by_id(1)
         self.assertTrue(self.asset_type_manager.check_asset_type_exists(self.asset_type))
         self.asset_type_manager.delete_asset_type(self.asset_type)
         self.assertFalse(self.asset_type_manager.check_asset_type_exists(self.asset_type))
@@ -193,12 +193,12 @@ class TestAssetTypeManager(TestCase):
 
     def test_get_one(self):
         self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
-        asset_type = self.asset_type_manager.get_one(1)
+        asset_type = self.asset_type_manager.get_one_by_id(1)
         self.assertEqual(self.asset_type, asset_type)
 
     def test__check_asset_type_consistency(self):
         self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
-        asset_type = self.asset_type_manager.get_one(1)
+        asset_type = self.asset_type_manager.get_one_by_id(1)
         self.asset_type.asset_type_id = 1
         self.asset_type.asset_table_name = 'abasset_table_testasset'
         self.assertEqual(self.asset_type, asset_type)

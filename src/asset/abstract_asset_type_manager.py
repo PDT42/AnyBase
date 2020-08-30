@@ -66,13 +66,18 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def get_one(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
+    def get_one_by_id(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
         """Get the ``AssetType`` with ident ``asset_type_id``."""
         pass
 
     @abstractmethod
+    def get_one_by_name(self, asset_type_name: str, extend_columns: bool = False) -> Optional[AssetType]:
+        """Get the ``AssetType`` called ``asset_type_name``."""
+        pass
+
+    @abstractmethod
     def get_slaves(self, asset_type: AssetType) -> List[AssetType]:
-        """Get the slaves of this ``asset_type``."""
+        """Get the slaves of this ``asset_type_id``."""
         pass
 
     @staticmethod

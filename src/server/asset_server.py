@@ -183,8 +183,8 @@ class AssetServer:
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_manager: AAssetManager = AssetManager()
 
-        extended_type: AssetType = asset_type_manager.get_one(asset_type_id, extend_columns=True)
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
+        extended_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id, extend_columns=True)
+        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
 
         sync_form = await request.form
         asset_data: MutableMapping[str, Any] = {}
@@ -227,7 +227,7 @@ class AssetServer:
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
 
-        asset_type: AssetType = asset_type_manager.get_one(
+        asset_type: AssetType = asset_type_manager.get_one_by_id(
             asset_type_id, extend_columns=True)
 
         assets: Dict[int, List[Asset]] = {}
@@ -236,15 +236,13 @@ class AssetServer:
         # that contain other assets, we need to load them
         # so we can present them to the user.
 
-        if field_asset_ids := \
-                [column.asset_type_id for column in asset_type.columns
-                 if column.asset_type_id]:
+        if field_asset_ids := [col.asset_type_id for col in asset_type.columns if col.asset_type_id]:
 
             # Create only one asset_manager, if required
             asset_manager: AAssetManager = AssetManager()
 
             for asset_id in field_asset_ids:
-                asset_t = asset_type_manager.get_one(asset_id)
+                asset_t = asset_type_manager.get_one_by_id(asset_id)
                 result = asset_manager.get_all(asset_t)
                 assets[asset_t.asset_type_id] = result  # [asset.asset_id for asset in results]
 
@@ -252,7 +250,7 @@ class AssetServer:
 
         if AssetServer.get().json_response:
             return jsonify({
-                'asset_type': asset_type.as_dict(),
+                'asset_type_id': asset_type.as_dict(),
                 'assets': assets
             })
         return await render_template("create-asset.html", asset_type=asset_type, assets=assets)
@@ -265,22 +263,22 @@ class AssetServer:
         asset_manager: AAssetManager = AssetManager()
         page_manager: PageManager = PageManager()
 
-        asset_type: AssetType = asset_type_manager.get_one(asset_type_id)
+        asset_type: AssetType = asset_type_manager\
+            .get_one_by_id(asset_type_id, extend_columns=True)
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
-        if not (asset_page_layout := page_manager.get_page(asset_type, asset)):
+        # Setting a default page layout TODO: remove this
+        if not (asset_page_layout := page_manager.get_page(asset_type.asset_type_id, asset.asset_id)):
             asset_page_layout = AssetPageLayout(
                 layout=[
                     [
                         ColumnInfo(
-                            plugin_name='asset-details',
-                            plugin_path='plugins/asset-details-plugin.html',
-                            column_width=6,
+                            plugin=PluginRegister.ASSET_DETAILS.value,
+                            column_width=12,
                             field_mappings={
-                                'field1': 'straße',
-                                'field2': 'hausnummer',
-                                'field3': 'postleitzahl',
-                                'field4': 'stadt'
+                                'field1': 'title',
+                                'field2': 'isbn',
+                                'field3': 'number_of_pages'
                             }
                         )
                     ]
@@ -289,11 +287,13 @@ class AssetServer:
                 items_url=None,
                 asset=asset,
                 field_mappings={
-                    'header': 'name'
+                    'header': 'title'
                 }
             )
             page_manager.create_page(asset_page_layout)
-            asset_page_layout = page_manager.get_page(asset_type, asset)
+            asset_page_layout = page_manager\
+                .get_page(asset_type.asset_type_id, asset.asset_id)
+        # --
 
         if AssetServer.get().json_response:
             return jsonify({
@@ -308,7 +308,7 @@ class AssetServer:
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_manager: AAssetManager = AssetManager()
 
-        asset_type = asset_type_manager.get_one(
+        asset_type = asset_type_manager.get_one_by_id(
             int(asset_type_id), extend_columns=False)
         asset = asset_manager.get_one(asset_id, asset_type)
         asset_manager.delete_asset(asset_type, asset)

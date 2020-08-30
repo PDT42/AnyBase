@@ -37,7 +37,7 @@ class TestPageManager(TestCase):
                 Column('TestNumber', 'testnumber', DataTypes.NUMBER.value, required=True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.get_one_by_id(1)
 
         self.asset = Asset(asset_id=None, data={"testtext": "Test Asset Test", "testnumber": 5})
         self.asset_manager.create_asset(self.asset_type, self.asset)

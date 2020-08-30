@@ -97,13 +97,13 @@ class AAssetManager:
                 field = self._conversions[column.datatype](row_value)
 
             if field and column.datatype is DataTypes.ASSET.value and depth > 0:
-                asset_type = self.asset_type_manager.get_one(column.asset_type_id)
+                asset_type = self.asset_type_manager.get_one_by_id(column.asset_type_id)
                 asset = self.get_one(field, asset_type, depth - 1)
 
                 received_data[column.db_name] = asset
 
             elif field and column.datatype is DataTypes.ASSETLIST.value and depth > 0:
-                asset_type = self.asset_type_manager.get_one(column.asset_type_id)
+                asset_type = self.asset_type_manager.get_one_by_id(column.asset_type_id)
 
                 received_data[column.db_name] = [
                     self.get_one(int(asset), asset_type, depth - 1) for asset in field

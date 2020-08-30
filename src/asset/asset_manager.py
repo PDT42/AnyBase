@@ -64,7 +64,7 @@ class AssetManager(AAssetManager):
 
         if (super_id := asset_type.get_super_type_id()) > 0:
 
-            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+            super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
 
             if not super_type:
                 raise SuperTypeDoesNotExistException()
@@ -108,7 +108,7 @@ class AssetManager(AAssetManager):
         # TODO: Ensure that AssetType does not contain extension columns
 
         if (super_id := asset_type.get_super_type_id()) > 0:
-            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+            super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
             super_asset: Asset = self.get_one(asset.extended_by_id, super_type)
             self.delete_asset(super_type, super_asset)
 
@@ -134,7 +134,7 @@ class AssetManager(AAssetManager):
 
         if (super_id := asset_type.get_super_type_id()) > 0:
 
-            super_type: AssetType = self.asset_type_manager.get_one(super_id)
+            super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
 
             if not super_type:
                 raise SuperTypeDoesNotExistException()
@@ -192,7 +192,7 @@ class AssetManager(AAssetManager):
             -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
 
-        # Creating the list of headers_sequence required for this result_columns
+        # Creating the list of headers required for this asset
         headers: List[str] = [column.db_name for column in asset_type.columns]
         headers.extend(self.ASSET_HEADERS)
 
@@ -201,15 +201,16 @@ class AssetManager(AAssetManager):
 
         if asset_type.get_super_type_id() > 0:
 
-            table_headers, result_columns = self._extract_joined_parameters(asset_type)
-            table_name: str = self.asset_type_manager.generate_asset_table_name(asset_type)
+            table_name, table_headers, result_columns = \
+                self._extract_joined_parameters(asset_type)
 
-            result: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
-                and_filters=[f'{table_name}.primary_key = {asset_id}'],
-                table_headers=table_headers
-            )
+            result: Sequence[MutableMapping[str, Any]] = \
+                self.db_connection.read_joined(
+                    and_filters=[f'{table_name}.primary_key = {asset_id}'],
+                    table_headers=table_headers
+                )
 
-        # If not we don't need to use read_joined
+        # Or we don't need to use read_joined
 
         else:
             result_columns: List[Column] = asset_type.columns

@@ -37,7 +37,7 @@ class TestAssetManager(TestCase):
                 Column('TestNumber', 'testnumber', DataTypes.INTEGER.value, required=True)
             ])
         self.asset_type_manager.create_asset_type(self.asset_type)
-        self.asset_type = self.asset_type_manager.get_one(1)
+        self.asset_type = self.asset_type_manager.get_one_by_id(1)
 
         self.test_asset = Asset(
             asset_id=None, data={"testtext": "Test Asset Test", "testnumber": 5}
@@ -235,7 +235,7 @@ class TestAssetManager(TestCase):
 
         self.asset_type_manager.create_asset_type(asset_type)
         self.assertEqual(2, len(self.asset_type_manager.get_all()))
-        asset_type = self.asset_type_manager.get_one(2)
+        asset_type = self.asset_type_manager.get_one_by_id(2)
         self.assertEqual("DatatypeTestAsset", asset_type.asset_name)
 
         self.asset_manager.create_asset(self.asset_type, self.test_asset)

@@ -123,11 +123,8 @@ class AssetTypeManager(AAssetTypeManager):
                 "you are trying to update must exist!"
             )
 
-        # Ensuring the table, to update the asset types in exists
-        self._init_asset_types_table()
-
         # Getting the old asset type from the database
-        db_asset_type = self.get_one(asset_type.asset_type_id)
+        db_asset_type = self.get_one_by_id(asset_type.asset_type_id)
 
         if not db_asset_type:
             raise AssetTypeDoesNotExistException(
@@ -173,7 +170,7 @@ class AssetTypeManager(AAssetTypeManager):
         # Creating a query dict as required by update
         values = {
             self.PRIMARY_KEY: asset_type.asset_type_id,
-            'asset_name': asset_type.asset_name,
+            self.ASSET_NAME: asset_type.asset_name,
             'asset_table_name': updated_table_name,
             self.CREATED: int(asset_type.created.timestamp()),
             self.UPDATED: int(updated.timestamp()),
@@ -183,21 +180,27 @@ class AssetTypeManager(AAssetTypeManager):
         self.db_connection.update(self._asset_types_table_name, values)
 
         # TODO: extend columns here?
-        return self.get_one(asset_type.asset_type_id, extend_columns=True)
+        return self.get_one_by_id(asset_type.asset_type_id, extend_columns=True)
 
-    def check_asset_type_exists(self, asset_type: AssetType) -> bool:
+    def check_asset_type_exists(self, asset_type: Union[str, AssetType]) -> bool:
         """Check if ``asset_type_id`` with that name already exists."""
 
-        # Making sure we aren't wandering blindly into the night
-        self._init_asset_types_table()
+        if isinstance(asset_type, str):
+            or_filters = [f"asset_name = '{asset_type}'"]
 
-        or_filters = [f"asset_name = '{asset_type.asset_name}'"]
-        if asset_type.asset_type_id:
-            or_filters = [f"primary_key = {asset_type.asset_type_id}"]
+        elif isinstance(asset_type, AssetType):
+            or_filters = [f"asset_name = '{asset_type.asset_name}'"]
+            if asset_type.asset_type_id:
+                or_filters = [f"primary_key = {asset_type.asset_type_id}"]
+        else:
+            raise InvalidArgumentError(
+                "The asset_type_id parameter of the AssetTypeManager " +
+                "must be filled with either an asset_name str or " +
+                "an AssetType!")
 
         db_response = self.db_connection.read(
             table_name=self._asset_types_table_name,
-            headers=[self.PRIMARY_KEY, 'asset_name'],
+            headers=[self.PRIMARY_KEY, self.ASSET_NAME],
             or_filters=or_filters
         )
 
@@ -205,21 +208,15 @@ class AssetTypeManager(AAssetTypeManager):
             AssetTypeManager.generate_asset_table_name(asset_type))
         return bool(db_response) and table_exists
 
-    def get_one(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
+    def get_one_by_id(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
         """Get the ``AssetType`` with ident ``asset_type_id``."""
-
-        # Ensuring the table to get asset types from exists
-        self._init_asset_types_table()
 
         # Reading asset types from the database
         result: Sequence[Mapping[str, Any]] = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=self.ASSET_TYPE_HEADERS,
-            and_filters=[f'primary_key = {asset_type_id}']
+            and_filters=[f'{self.PRIMARY_KEY} = {asset_type_id}']
         )
-
-        if len(result) < 1:
-            return None
 
         if len(result) > 1:
             raise KeyConstraintException(
@@ -227,14 +224,39 @@ class AssetTypeManager(AAssetTypeManager):
                 "The primary key constraint is broken!"
             )
 
-        asset_type_columns: List[Column] = \
-            self.generate_columns_from_columns_str(result[0]['asset_columns'])
+        return self._get_one(result, extend_columns)
+
+    def get_one_by_name(self, asset_type_name: str, extend_columns: bool = False) -> Optional[AssetType]:
+        """Get the ``AssetType`` called ``asset_type_name``."""
+
+        # Reading asset types from the database
+        result: Sequence[Mapping[str, Any]] = self.db_connection.read(
+            table_name=self._asset_types_table_name,
+            headers=self.ASSET_TYPE_HEADERS,
+            and_filters=[f'asset_name = {asset_type_name}']
+        )
+
+        if len(result) > 1:
+            raise KeyConstraintException(
+                "There is a real big problem here! Real biggy - trust me." +
+                "The asset_name unique constraint is broken!"
+            )
+
+        return self._get_one(result, extend_columns)
+
+    def _get_one(self, result: Sequence[Mapping], extend_columns: bool = False) -> Optional[AssetType]:
+        """Get the ``AssetType`` with ident ``asset_type_id``."""
+
+        if len(result) < 1:
+            return None
+
+        asset_type: AssetType = self._convert_result_to_asset_type(result[0])
 
         if (super_type_id := int(result[0]['super_type'])) > 0 and extend_columns:
-            super_type: AssetType = self.get_one(super_type_id, extend_columns=True)
-            asset_type_columns.extend(super_type.columns)
+            super_type: AssetType = self.get_one_by_id(super_type_id, extend_columns=True)
+            asset_type.columns.extend(super_type.columns)
 
-        return self._convert_result_to_asset_type(result[0])
+        return asset_type
 
     def get_all(self, ignore_slaves: bool = True) -> List[AssetType]:
         """Get all ``AssetTypes`` registered in the database."""
