@@ -9,32 +9,64 @@
 
         // --
 
-        console.log(fieldMappings)
+        let root = document.getElementById('column-{{ column_id }}');
 
-        let column = document.getElementById('column-{{ column_id }}');
+        for (let field in fieldMappings) {
 
-        for (let field of fieldMappings) {
-            let value = fieldMappings[key];
-            console.log('stuff');
+            let mapping = fieldMappings[field];
+            let value = asset['data'][mapping];
+
+            let column = assetType['columns'].filter(col =>
+                col['db_name'] === mapping)[0];
+            let columnName = column['name'];
+            let columnDataTypeName = column['datatype']['typename'];
+
+            console.log(field, value, asset, assetType, columnName);
+
             let fieldContainer = document.createElement('div');
             fieldContainer.setAttribute('class', 'row');
-            column.appendChild(fieldContainer);
+            fieldContainer.style.paddingTop = '10px';
+            root.appendChild(fieldContainer);
 
-            let fieldLabelColumn = document.createElement('div');
-            fieldLabelColumn.setAttribute('class', 'col-6');
-            fieldContainer.appendChild(fieldLabelColumn);
+            {
+                let fieldLabelColumn = document.createElement('div');
+                fieldLabelColumn.setAttribute('class', 'col-6');
+                fieldContainer.appendChild(fieldLabelColumn);
 
-            let fieldLabelText = document.createElement('span');
-            fieldLabelText.textContent = field.toString();
-            fieldLabelColumn.appendChild(fieldLabelText);
+                let fieldLabelText = document.createElement('span');
+                fieldLabelText.textContent = columnName.toString() + ':';
+                fieldLabelColumn.appendChild(fieldLabelText);
 
-            let fieldValueColumn = document.createElement('div');
-            fieldValueColumn.setAttribute('class', 'col-6');
-            fieldContainer.appendChild(fieldValueColumn);
+                let fieldValueColumn = document.createElement('div');
+                fieldValueColumn.setAttribute('class', 'col-6');
+                fieldContainer.appendChild(fieldValueColumn);
 
-            let fieldValueText = document.createElement('span');
-            fieldValueText.textContent = field.toString();
-            fieldLabelColumn.appendChild(fieldValueText);
+                if (columnDataTypeName === 'ASSET') {
+
+                    let fieldValueText = document.createElement('a');
+                    fieldValueText.setAttribute('href',
+                        '/asset-type:' + assetType['asset_type_id'] +
+                        '/asset:' + asset['asset_id']);
+                    fieldValueText.textContent = value.toString();
+                    fieldValueColumn.appendChild(fieldValueText);
+
+                } else if (columnDataTypeName === 'ASSETLIST') {
+
+                    let fieldValueText = document.createElement('a');
+                    fieldValueText.setAttribute('href',
+                        '/asset-type:' + assetType['asset_type_id']);
+                    fieldValueText.textContent = assetType.asset_name;
+                    fieldValueColumn.appendChild(fieldValueText);
+
+                } else {
+
+                    let fieldValueText = document.createElement('input');
+                    fieldValueText.value = value.toString();
+                    fieldValueText.setAttribute('class', 'form-control');
+                    fieldValueText.disabled = true;
+                    fieldValueColumn.appendChild(fieldValueText);
+                }
+            }
         }
     }
 

@@ -48,7 +48,7 @@
     let itemsPubSub = pubSub();
 
     source.addEventListener('items-data', function (event) {
-        console.log(event.data)
+
         let received_data = JSON.parse(event.data.replace(/'/g, '"'))[0];
 
         if (!item_count) {
@@ -88,7 +88,7 @@ to this container.
 
     {% set column_id = column_info.column_id %}
     {% set column_width = column_info.column_width %}
-    {% set plugin_path = column_info.plugin_path %}
+    {% set plugin_path = column_info.plugin.path %}
 
     {# Defining a column div, that the plugin macro can append to. #}
 

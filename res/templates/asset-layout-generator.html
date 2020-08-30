@@ -94,7 +94,7 @@ content to this container.
 
     {% set column_id = column_info.column_id %}
     {% set column_width = column_info.column_width %}
-    {% set plugin_path = column_info.plugin_path %}
+    {% set plugin_path = column_info.plugin.path %}
     {% set field_mappings = column_info.field_mappings %}
 
     <div class="col-md-{{ column_width }}" id="column-{{ column_id }}"></div>
