@@ -247,7 +247,7 @@ class AssetManager(AAssetManager):
 
         if asset_type.get_super_type_id() > 0:
 
-            table_headers, result_columns = \
+            _, table_headers, result_columns = \
                 self._extract_joined_parameters(asset_type)
 
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
@@ -277,7 +277,7 @@ class AssetManager(AAssetManager):
 
         if asset_type.get_super_type_id() > 0:
 
-            table_headers, result_columns = \
+            _, table_headers, result_columns = \
                 self._extract_joined_parameters(asset_type)
 
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
@@ -306,7 +306,7 @@ class AssetManager(AAssetManager):
 
         if asset_type.get_super_type_id() > 0:
 
-            table_headers, result_columns = \
+            _, table_headers, result_columns = \
                 self._extract_joined_parameters(asset_type)
 
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
@@ -357,20 +357,25 @@ class AssetManager(AAssetManager):
     def _extract_joined_parameters(self, asset_type: AssetType):
         """Extract the parameters required for a joined read from an asset type."""
 
+        # Making sure we are working with an un-extended asset type
+        asset_type = self.asset_type_manager.get_one_by_id(asset_type.asset_type_id)
+
         table_headers: OrderedDict[str, Tuple[str, Sequence[str]]] = OrderedDict()
         result_columns: List[Column] = []
 
-        table_name: str = self.asset_type_manager.generate_asset_table_name(asset_type)
-        table_headers[table_name] = \
+        table_headers[asset_type.asset_table_name] = \
             (self.JOIN_ON, self.ASSET_HEADERS + [c.db_name for c in asset_type.columns])
         result_columns.extend(asset_type.columns)
 
         inspected_type: AssetType = asset_type
 
         while (super_id := inspected_type.get_super_type_id()) > 0:
-            inspected_type = self.asset_type_manager.get_one(super_id)
+            inspected_type = self.asset_type_manager.get_one_by_id(super_id)
+
             result_columns.extend(inspected_type.columns)
+
+            headers: Set[str] = set(column.db_name for column in inspected_type.columns)
             table_headers[inspected_type.asset_table_name] = \
                 (self.JOIN_ON, [column.db_name for column in inspected_type.columns])
 
-        return table_headers, result_columns
+        return asset_type.asset_table_name, table_headers, result_columns
