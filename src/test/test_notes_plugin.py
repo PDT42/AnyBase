@@ -26,35 +26,44 @@ class TestAssetManager(TestCase):
         # print(f"Tempdir used in this tests: {self.tempdir}")
 
         # Initializing managers
+        # ---------------------
+
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
         self.asset_manager: AssetManager = AssetManager()
 
         # Creating a new AssetType to create Notes on
+        # -------------------------------------------
+
         self.asset_type = AssetType(
-            asset_name='NoteOnAsset',
+            asset_name='Person',
             columns=[
                 Column('name', 'name', DataTypes.VARCHAR.value, required=True),
             ])
         self.asset_type = self.asset_type_manager.create_asset_type(self.asset_type)
 
         # Creating a new Asset to create Notes on
+        # ---------------------------------------
+
         self.asset = Asset(
             asset_id=None,
             data={
-                "name": "Something"
+                "name": "Olaf"
             })
         self.asset = self.asset_manager.create_asset(self.asset_type, self.asset)
 
+        # Initializing a plugin for both Asset and AssetType
+        # --------------------------------------------------
+
         plugin: Plugin = PluginRegister.BASIC_NOTES.value
 
-        # Initializing a plugin for both Asset and AssetType
-        self.notes_plugin_at: NotesPluginServer = NotesPluginServer.get() \
+        self.notes_server_at: NotesPluginServer = NotesPluginServer.get() \
             .initialize(plugin.name, self.asset_type)
 
-        self.notes_plugin_a: NotesPluginServer = NotesPluginServer.get() \
+        self.notes_server_a: NotesPluginServer = NotesPluginServer.get() \
             .initialize(plugin.name, self.asset_type, self.asset)
 
     def tearDown(self) -> None:
         """Clean up after each test."""
+
         self.db_connection.kill()
         rmtree(self.tempdir)
