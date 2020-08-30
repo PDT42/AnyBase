@@ -61,7 +61,7 @@ class PluginRegister(Enum):
 
     ASSET_DETAILS = Plugin(
         name='asset-details',
-        path='plugins/asset-detail-plugin.html',
+        path='plugins/asset-details-plugin.html',
         server=None,
         type=PluginType.ASSET
     )
