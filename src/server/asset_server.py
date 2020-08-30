@@ -23,6 +23,7 @@ from database import DataTypes
 from exceptions.server import ServerAlreadyInitializedError
 from pages import AssetPageLayout, ColumnInfo
 from pages.page_manager import PageManager
+from plugins import PluginRegister
 
 
 class AssetServer:
@@ -91,7 +92,7 @@ class AssetServer:
         AssetServer.get()._initialized = True
 
     @staticmethod
-    async def th_request_asset_data(th_offset, asset_type, depth):
+    async def _th_request_asset_data(th_offset, asset_type, depth):
         """Threaded method that loads a batch of assets."""
 
         asset_manager: AAssetManager = AssetManager()
@@ -104,21 +105,39 @@ class AssetServer:
 
     @staticmethod
     async def stream_asset_data(asset_type_id: int, depth: int = 0):
-        """Check if more assets are available."""
+        """TODO"""
 
         # Get AssetType and number of assets of this type
-        asset_type = AssetTypeManager().get_one(asset_type_id)
+        asset_type = AssetTypeManager().get_one_by_id(asset_type_id)
         asset_count = AssetManager().count(asset_type)
 
         event_name = "items-data"
 
         async def generate_response():
-            """Generate utf-8 encoded messages containing
-             """
+            """Generate a valid stream response."""
 
             # Creating a set to store tasks in, so we
             # can check for updates on their status
             tasks: Set[Task] = set()
+
+            # We don't need to schedule and execute
+            # any additional tasks, if there are no
+            # items available as of yet.
+
+            if asset_count < 1:
+
+                result_dict: Mapping[str, Any] = {
+                    "items": [],
+                    "item_count": asset_count
+                }
+
+                result_str: str = str(result_dict).replace('\"', '\'')
+
+                result_message: str = f"data: [{result_str}]"
+                result_message += f"\nevent: {event_name}"
+                result_message += "\r\n\r\n"
+
+                yield result_message.encode('utf-8')
 
             # Counting up an offset by DB_BATCH_SIZE
             # in each step of the iteration. In each
@@ -129,7 +148,8 @@ class AssetServer:
 
             offset = 0
             while offset < asset_count:
-                task = asyncio.create_task(AssetServer.th_request_asset_data(offset, asset_type, depth))
+                task = asyncio.create_task(
+                    AssetServer._th_request_asset_data(offset, asset_type, depth))
                 tasks.add(task)
                 offset += AssetServer.get().DB_BATCH_SIZE
 
@@ -138,13 +158,13 @@ class AssetServer:
             # earlier.
 
             for result_task in asyncio.as_completed(tasks):
+
                 # Each result task will have completed
                 # here. We process the result and yield
                 # an encoded message that can be sent.
 
                 result = await result_task
 
-                # Get the items
                 result_dict: Mapping[str, Any] = {
                     "items": [asset.as_dict() for asset in result],
                     "item_count": asset_count
@@ -206,13 +226,19 @@ class AssetServer:
             # Column is present
             # TODO: This should be done in a cleaner way - The DataTypes feel kinda muddled
             else:
+
                 # TODO: Validate input
+
                 if column.datatype is DataTypes.DATETIME.value:
-                    asset_data[column.db_name] = datetime.strptime(sync_form[column.db_name], '%Y-%m-%dT%H:%M')
+                    asset_data[column.db_name] = datetime.strptime(
+                        sync_form[column.db_name], '%Y-%m-%dT%H:%M')
                     continue
+
                 if column.datatype is DataTypes.DATE.value:
-                    asset_data[column.db_name] = datetime.strptime(sync_form[column.db_name], '%Y-%m-%d')
+                    asset_data[column.db_name] = datetime.strptime(
+                        sync_form[column.db_name], '%Y-%m-%d')
                     continue
+
                 asset_data[column.db_name] = str(sync_form[column.db_name])
 
         # Init new Asset and store it in the database
