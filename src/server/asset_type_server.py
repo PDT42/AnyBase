@@ -20,6 +20,7 @@ from exceptions.common import IllegalStateException
 from exceptions.server import ServerAlreadyInitializedError
 from pages import ColumnInfo, PageLayout
 from pages.page_manager import PageManager
+from plugins import PluginRegister
 
 
 class AssetTypeServer:
@@ -249,18 +250,16 @@ class AssetTypeServer:
 
         # Comment this out, if you dont want to create a
         # PageLayout for each Type by default
-        if not page_manager.get_page(asset_type):
+        if not page_manager.get_page(asset_type.asset_type_id):
             page_manager.create_page(PageLayout(
                 layout=[
                     [
                         ColumnInfo(
-                            plugin_name='list-assets',
-                            plugin_path='plugins/list-assets-plugin.html',
+                            plugin=PluginRegister.LIST_ASSETS.value,
                             column_width=12,
                             field_mappings={
                                 'title': 'name'
                             },
-                            column_id=0
                         )
                     ]
                 ],
@@ -270,11 +269,11 @@ class AssetTypeServer:
             ))
         # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
-        if not (page_layout := page_manager.get_page(asset_type)):
+        if not (page_layout := page_manager.get_page(asset_type.asset_type_id)):
 
             if AssetTypeServer.get().json_response:
                 return jsonify({
-                    'asset_type': asset_type.as_dict()
+                    'asset_type_id': asset_type.as_dict()
                 })
             return await render_template("layout-editor.html", asset_type=asset_type)
 
