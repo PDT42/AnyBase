@@ -165,6 +165,7 @@ class TestAssetManager(TestCase):
         self.assertEqual(self.asset_manager.update_asset(created_student_type, updated_olaf), updated_olaf)
 
     def test_delete_asset(self):
+
         # Creating an asset
         self.test_asset = self.asset_manager.create_asset(self.asset_type, self.test_asset)
 
