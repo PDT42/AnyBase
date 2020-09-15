@@ -11,9 +11,10 @@ from shutil import rmtree
 from typing import List
 from unittest import TestCase
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from test.test_util import init_test_db

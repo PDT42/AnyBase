@@ -2,11 +2,10 @@ import json
 from copy import deepcopy
 from shutil import rmtree
 from time import sleep
-from typing import Any, List, Tuple
 from unittest import TestCase
 
-from asset import AssetType
-from asset.asset_type_manager import AssetTypeManager
+from asset_type import AssetType
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from exceptions.asset import AssetTypeAlreadyExistsException, AssetTypeChangedException, AssetTypeInconsistencyException
 from test.test_util import init_test_db

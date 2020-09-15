@@ -7,13 +7,13 @@ These are tests for the ``NotesPluginServer``.
 from shutil import rmtree
 from unittest import TestCase
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from plugins import Plugin, PluginRegister
 from plugins.notes_plugin import NotesPluginServer
-from plugins.abstract_plugin import APluginServer
 from test.test_util import init_test_db
 
 

@@ -10,8 +10,9 @@ by the system.
 from abc import abstractmethod
 from typing import Any, List, Mapping, MutableMapping, Optional, Sequence
 
-from asset import Asset, AssetType
-from asset.asset_type_manager import AssetTypeManager
+from asset import Asset
+from asset_type import AssetType
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataType, DataTypes
 from database.db_connection import DbConnection
 from exceptions.common import MissingKeyException
