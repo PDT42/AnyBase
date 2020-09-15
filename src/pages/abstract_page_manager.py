@@ -7,11 +7,10 @@ This is the abstract super class for the implementations of a PageManager.
 
 from abc import abstractmethod
 from re import findall
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional, Set
 
-from asset import AssetType
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from database.db_connection import DbConnection
 from pages import ColumnInfo, PageLayout
 
@@ -53,7 +52,7 @@ class APageManager:
         pass
 
     @abstractmethod
-    def _get_column_info(self, column_id: int):
+    def _get_column_info(self, column_id: int) -> ColumnInfo:
         """Get the plugin with ``column_id``. """
         pass
 
@@ -77,6 +76,7 @@ class APageManager:
             'asset_page_layout': int(page_layout.asset_page_layout),
             'layout': str(layout_str),
             'field_mappings': str(page_layout.field_mappings),
+            'sources': ";".join(page_layout.sources) if page_layout.sources else None,
             'primary_key': page_layout.layout_id,
         }
         return layout_row
@@ -85,6 +85,7 @@ class APageManager:
         """Convert a row to a PageLayout."""
 
         layout: List[List[ColumnInfo]] = []
+        sources: Optional[Set[str]] = row_data.get('sources')
 
         # Using the create syntax used in convert_layout_to_row
         # to extract ColumnInfo objects from db row.
@@ -98,20 +99,31 @@ class APageManager:
             row_info: List[ColumnInfo] = []
 
             for column in row.split(';'):
+
                 # column: "column_width, column_id"
 
                 column_width, column_id = column.split(', ')
-                row_info.append(self._get_column_info(int(column_id)))
+                column_info = self._get_column_info(int(column_id))
+                row_info.append(column_info)
+
+                if column_info.sources and not sources:
+                    sources = column_info.sources
+
+                elif column_info.sources:
+                    sources.update(column_info.sources)
 
             layout.append(row_info)
 
         # Getting the asset type using the manager
         # filled by the child of this superclass.
 
+        field_mappings_str = row_data['field_mappings'][1:-2]\
+            .replace("'", '').split(', ')
+
         field_mappings: Dict[str, str] = {
             key: value for key, value in [
-                item.split(': ') for item in row_data['field_mappings']
-                    .replace('{', '').replace('}', '').replace("'", '').split(', ')]
+                item.split(': ') for item in field_mappings_str if len(item) > 0
+            ]
         }
 
         return PageLayout(
@@ -119,5 +131,6 @@ class APageManager:
             asset_page_layout=bool(row_data['asset_page_layout']),
             layout=layout,
             layout_id=row_data['primary_key'],
-            field_mappings=field_mappings
+            field_mappings=field_mappings,
+            sources=sources
         )

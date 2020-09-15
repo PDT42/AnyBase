@@ -6,7 +6,8 @@ This is the module for the ``AssetTypePageManager``.
 """
 from typing import Any, List, Mapping, Optional, Union
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from database import Column, DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
@@ -20,19 +21,21 @@ class PageManager(APageManager):
     """This is the ``PageManager``."""
 
     asset_type_layout_table_name: str = 'abintern_layouts'
-    layout_table_columns: List[str] = [
+    layout_table_headers: List[str] = [
         'primary_key',
         'asset_type_id',
         'asset_page_layout',
         'layout',
-        'field_mappings'
+        'field_mappings',
+        'sources'
     ]
     plugin_table_name: str = 'abintern_plugins'
-    asset_type_plugin_table_columns: List[str] = [
+    asset_type_plugin_table_headers: List[str] = [
         'plugin_name',
         'column_width',
         'field_mappings',
-        'primary_key'
+        'primary_key',
+        'sources'
     ]
 
     db_connection: DbConnection = None
@@ -56,14 +59,18 @@ class PageManager(APageManager):
                 # Creating a query dict from each column
                 # and storing it in a separate database
 
+                field_mappings = ";".join([
+                    f"{field},{mapping}" for field, mapping in column.field_mappings.items()
+                ])
+
+                sources = set(";".join(column.sources)) if column.sources else None
+
                 column_row: Mapping[str: Any] = {
                     'primary_key': None,
                     'column_width': column.column_width,
                     'plugin_name': column.plugin.name.replace('-', '_').upper(),
-                    'field_mappings': ";".join([
-                        f"{field},{mapping}"
-                        for field, mapping in column.field_mappings.items()
-                    ]),
+                    'field_mappings': field_mappings,
+                    'sources': sources
                 }
 
                 # Storing the column and getting its pk
@@ -72,6 +79,7 @@ class PageManager(APageManager):
 
                 # Updating the column id, so we can build
                 # a connection between layout and plugin
+
                 column.column_id = column_id
 
         layout_row = self.convert_layout_to_row(page_layout)
@@ -114,7 +122,7 @@ class PageManager(APageManager):
 
         result = self.db_connection.read(
             self.asset_type_layout_table_name,
-            headers=self.layout_table_columns,
+            headers=self.layout_table_headers,
             and_filters=[
                 f'asset_type_id = {asset_type_id}',
                 f'asset_page_layout = {int(asset_type_page)}'
@@ -125,7 +133,7 @@ class PageManager(APageManager):
 
         return self.convert_row_data_to_layout(result[0])
 
-    def _get_column_info(self, column_id: int):
+    def _get_column_info(self, column_id: int) -> ColumnInfo:
         """Get Column info on column with ``column_id``."""
 
         # Ensuring the required database tables exist
@@ -133,7 +141,7 @@ class PageManager(APageManager):
 
         result = self.db_connection.read(
             self.plugin_table_name,
-            self.asset_type_plugin_table_columns,
+            self.asset_type_plugin_table_headers,
             and_filters=[f'primary_key = {column_id}'])
 
         if len(result) < 1:
@@ -147,10 +155,13 @@ class PageManager(APageManager):
                 fm.split(',') for fm in result['field_mappings'].split(';')
             ]}
 
+        sources = set(result['sources'].split(';')) if result['sources'] else None
+
         column_info: ColumnInfo = ColumnInfo(
             plugin=PluginRegister[result['plugin_name']].value,
             column_width=result['column_width'],
             field_mappings=field_mappings,
+            sources=sources,
             column_id=result['primary_key'])
 
         return column_info
@@ -169,7 +180,8 @@ class PageManager(APageManager):
                 Column('asset_type_id', 'asset_type_id', DataTypes.INTEGER.value, True),
                 Column('asset_page_layout', 'asset_page_layout', DataTypes.BOOLEAN.value, True),
                 Column('layout', 'layout', DataTypes.VARCHAR.value, True),
-                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True)
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
+                Column('sources', 'sources', DataTypes.VARCHAR.value, False)
             ]
 
             self.db_connection.create_table(self.asset_type_layout_table_name, columns)
@@ -179,7 +191,8 @@ class PageManager(APageManager):
                 # The column primary_key will be created automatically -> column_id
                 Column('plugin_name', 'plugin_name', DataTypes.VARCHAR.value, True),
                 Column('column_width', 'column_width', DataTypes.INTEGER.value, True),
-                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True)
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
+                Column('sources', 'sources', DataTypes.VARCHAR.value, False)
             ]
 
             self.db_connection.create_table(self.plugin_table_name, columns)
