@@ -8,20 +8,30 @@ These are the routes for the ``AssetTypeManager``.
 import asyncio
 from asyncio import Task
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, MutableMapping, Set
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Mapping
+from typing import MutableMapping
+from typing import Set
 
 from flask import jsonify
-from quart import make_response, redirect, render_template, request
+from quart import make_response
+from quart import redirect
+from quart import render_template
+from quart import request
 
-from asset import Asset, AssetType
+from asset import Asset
 from asset.abstract_asset_manager import AAssetManager
-from asset.abstract_asset_type_manager import AAssetTypeManager
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type import AssetType
+from asset_type.abstract_asset_type_manager import AAssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from config import Config
 from database import DataTypes
 from exceptions.server import ServerAlreadyInitializedError
-from pages import AssetPageLayout, ColumnInfo
+from pages import ColumnInfo
+from pages import PageLayout
 from pages.page_manager import PageManager
 from plugins import PluginRegister
 
@@ -37,12 +47,14 @@ class AssetServer:
     @classmethod
     def get(cls):
         """Get the instance of this singleton."""
+
         if not cls._instance:
             cls._instance = AssetServer()
         return cls._instance
 
     def __init__(self):
         """Create a new AssetServer."""
+
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
@@ -55,7 +67,7 @@ class AssetServer:
             raise ServerAlreadyInitializedError("AssetServer already initialized!")
 
         app.add_url_rule(
-            '/asset-type:<int:asset_type_id>/stream-items',
+            '/asset-type:<int:asset_type_id>/<string:channel>',
             'stream-asset-data',
             AssetServer.stream_asset_data,
             methods=['GET']
@@ -104,14 +116,12 @@ class AssetServer:
         )
 
     @staticmethod
-    async def stream_asset_data(asset_type_id: int, depth: int = 0):
+    async def stream_asset_data(asset_type_id: int, channel: str, depth: int = 0):
         """TODO"""
 
         # Get AssetType and number of assets of this type
         asset_type = AssetTypeManager().get_one_by_id(asset_type_id)
         asset_count = AssetManager().count(asset_type)
-
-        event_name = "items-data"
 
         async def generate_response():
             """Generate a valid stream response."""
@@ -125,7 +135,6 @@ class AssetServer:
             # items available as of yet.
 
             if asset_count < 1:
-
                 result_dict: Mapping[str, Any] = {
                     "items": [],
                     "item_count": asset_count
@@ -134,7 +143,7 @@ class AssetServer:
                 result_str: str = str(result_dict).replace('\"', '\'')
 
                 result_message: str = f"data: [{result_str}]"
-                result_message += f"\nevent: {event_name}"
+                result_message += f"\nevent: {channel}"
                 result_message += "\r\n\r\n"
 
                 yield result_message.encode('utf-8')
@@ -158,7 +167,6 @@ class AssetServer:
             # earlier.
 
             for result_task in asyncio.as_completed(tasks):
-
                 # Each result task will have completed
                 # here. We process the result and yield
                 # an encoded message that can be sent.
@@ -173,7 +181,7 @@ class AssetServer:
                 result_str: str = str(result_dict).replace('\"', '\'')
 
                 result_message: str = f"data: [{result_str}]"
-                result_message += f"\nevent: {event_name}"
+                result_message += f"\nevent: {channel}"
                 result_message += "\r\n\r\n"
 
                 yield result_message.encode('utf-8')
@@ -279,6 +287,7 @@ class AssetServer:
                 'asset_type_id': asset_type.as_dict(),
                 'assets': assets
             })
+
         return await render_template("create-asset.html", asset_type=asset_type, assets=assets)
 
     @staticmethod
@@ -289,13 +298,13 @@ class AssetServer:
         asset_manager: AAssetManager = AssetManager()
         page_manager: PageManager = PageManager()
 
-        asset_type: AssetType = asset_type_manager\
+        asset_type: AssetType = asset_type_manager \
             .get_one_by_id(asset_type_id, extend_columns=True)
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
         # Setting a default page layout TODO: remove this
-        if not (asset_page_layout := page_manager.get_page(asset_type.asset_type_id, asset.asset_id)):
-            asset_page_layout = AssetPageLayout(
+        if not (asset_page_layout := page_manager.get_page(asset_type.asset_type_id, True)):
+            asset_page_layout = PageLayout(
                 layout=[
                     [
                         ColumnInfo(
@@ -309,23 +318,27 @@ class AssetServer:
                         )
                     ]
                 ],
-                asset_type=asset_type,
-                items_url=None,
-                asset=asset,
+                asset_type_id=asset_type,
                 field_mappings={
                     'header': 'title'
                 }
             )
             page_manager.create_page(asset_page_layout)
-            asset_page_layout = page_manager\
-                .get_page(asset_type.asset_type_id, asset.asset_id)
+            asset_page_layout = page_manager \
+                .get_page(asset_type.asset_type_id, True)
         # --
 
         if AssetServer.get().json_response:
             return jsonify({
+                'asset_type': asset_type.as_dict(),
+                'asset': asset.as_dict(),
                 'asset_page_layout': asset_page_layout.as_dict()
             })
-        return await render_template("asset.html", asset_page_layout=asset_page_layout)
+
+        return await render_template(
+            template_name_or_list="asset.html",
+            asset_page_layout=asset_page_layout
+        )
 
     @staticmethod
     def delete_asset(asset_type_id: int, asset_id: int):
@@ -337,5 +350,7 @@ class AssetServer:
         asset_type = asset_type_manager.get_one_by_id(
             int(asset_type_id), extend_columns=False)
         asset = asset_manager.get_one(asset_id, asset_type)
+
         asset_manager.delete_asset(asset_type, asset)
+
         return redirect(f'/asset-type:{asset_type_id}')
