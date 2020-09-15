@@ -5,11 +5,12 @@
 This is the NotesPluginServer. It does stuff TODO.
 """
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from asset.abstract_asset_manager import AAssetManager
-from asset.abstract_asset_type_manager import AAssetTypeManager
+from asset_type.abstract_asset_type_manager import AAssetTypeManager
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from plugins.abstract_plugin import APluginServer
 
