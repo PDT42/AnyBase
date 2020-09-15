@@ -4,14 +4,15 @@
 
 This is the main application of AnyBase. Run this.
 """
+
 from quart import Quart
 
+from common_server import CommonServer
 from config import Config
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from server import favicon, index
-from server.asset_server import AssetServer
-from server.asset_type_server import AssetTypeServer
+from asset.asset_server import AssetServer
+from asset_type.asset_type_server import AssetTypeServer
 
 # Getting config values
 # ---------------------
@@ -43,16 +44,12 @@ app.secret_key = "SomeSecret"
 db_path = Config.get().read('local database', 'path')
 db_connection: DbConnection = SqliteConnection.get(db_path)
 
-# Adding Routes provided in server to app
-# ---------------------------------------
-
-# General Routes
-# ~~~~~~~~~~~~~~
-app.add_url_rule('/', 'index', index, methods=['GET'])
-app.add_url_rule('/favicon', 'favicon', favicon, methods=['GET'])
+# Adding Routes provided by the server to app
+# -------------------------------------------
 
 # Server Routes
 # ~~~~~~~~~~~~~
+CommonServer.get().register_routes(app=app)
 AssetServer.get().register_routes(app=app)
 AssetTypeServer.get().register_routes(app=app)
 
