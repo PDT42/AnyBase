@@ -7,11 +7,13 @@ works basically just the same as the Asset and AssetType Servers do.
 It is a singleton, that provides static methods alongside an
 initialization method, that binds these static methods to routes.
 """
+
 from abc import abstractmethod
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from asset.abstract_asset_manager import AAssetManager
-from asset.abstract_asset_type_manager import AAssetTypeManager
+from asset_type.abstract_asset_type_manager import AAssetTypeManager
 
 
 class APluginServer:
