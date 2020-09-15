@@ -2,24 +2,30 @@
 :Author: PDT
 :Since: 2020/06/02
 
-This is the module for the AssetTypeManager.
+This is the module for the ``AssetTypeManager``.
 """
 
 from datetime import datetime
-from typing import Any, List, Mapping, Optional, Sequence, Union
+from typing import Any
+from typing import List
+from typing import Mapping
+from typing import Optional
+from typing import Sequence
+from typing import Union
 from warnings import warn
 
-from asset import AssetType
-from asset.abstract_asset_type_manager import AAssetTypeManager
-from database import Column, DataTypes
+from asset_type import AssetType
+from asset_type.abstract_asset_type_manager import AAssetTypeManager
+from database import Column
+from database import DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import \
-    AssetTypeAlreadyExistsException, \
-    AssetTypeChangedException, \
-    AssetTypeDoesNotExistException, \
-    AssetTypeInconsistencyException
-from exceptions.common import InvalidArgumentError, KeyConstraintException
+from exceptions.asset import AssetTypeAlreadyExistsException
+from exceptions.asset import AssetTypeChangedException
+from exceptions.asset import AssetTypeDoesNotExistException
+from exceptions.asset import AssetTypeInconsistencyException
+from exceptions.common import InvalidArgumentError
+from exceptions.common import KeyConstraintException
 
 
 class AssetTypeManager(AAssetTypeManager):
@@ -352,6 +358,22 @@ class AssetTypeManager(AAssetTypeManager):
             and_filters=[f'owner_id = {asset_type.asset_type_id}'], ignore_slaves=False)
 
         return slaves
+
+    def count(self, ignore_child_types: bool = False, ignore_slaves: bool = False):
+        """Get the number of ``AssetTypes`` stored in the database."""
+
+        query_filter: Optional[str] = None
+
+        if ignore_child_types:
+            query_filter = "super_type > 0"
+
+            if ignore_slaves:
+                query_filter = f"{query_filter} AND owner_id > 0"
+
+        elif ignore_slaves:
+            query_filter = "owner_id > 0"
+
+        return self.db_connection.count(self._asset_types_table_name, query_filter=query_filter)
 
     def _convert_result_to_asset_type(self, result: Mapping) -> AssetType:
         """Convert one result row to an asset type."""

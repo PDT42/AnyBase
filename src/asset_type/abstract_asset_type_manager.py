@@ -13,7 +13,7 @@ interoperability.
 from abc import abstractmethod
 from typing import List, Optional, Sequence, Union
 
-from asset import AssetType
+from asset_type import AssetType
 from database import Column, DataTypes
 
 
@@ -78,6 +78,11 @@ class AAssetTypeManager:
     @abstractmethod
     def get_slaves(self, asset_type: AssetType) -> List[AssetType]:
         """Get the slaves of this ``asset_type_id``."""
+        pass
+
+    @abstractmethod
+    def count(self, ignore_child_types: bool = False, ignore_slaves: bool = False):
+        """Get the number of ``AssetTypes`` stored in the database."""
         pass
 
     @staticmethod

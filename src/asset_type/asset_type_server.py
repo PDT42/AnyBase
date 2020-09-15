@@ -5,20 +5,33 @@
 These are the routes for the ``AssetTypeManager``.
 """
 
-from typing import List, Mapping, Set
+import asyncio
+from asyncio import Task
+from typing import Any
+from typing import List
+from typing import Mapping
+from typing import Set
 
-from quart import jsonify, redirect, render_template, request
+from quart import jsonify
+from quart import make_response
+from quart import redirect
+from quart import render_template
+from quart import request
 
-from asset import AssetType
-from asset.abstract_asset_type_manager import AAssetTypeManager
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type import AssetType
+from asset_type.abstract_asset_type_manager import AAssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from config import Config
-from database import Column, DataType, DataTypes
-from exceptions.asset import AssetTypeDoesNotExistException, ColumnNameTakenError
+from database import Column
+from database import DataType
+from database import DataTypes
+from exceptions.asset import AssetTypeDoesNotExistException
+from exceptions.asset import ColumnNameTakenError
 from exceptions.common import IllegalStateException
 from exceptions.server import ServerAlreadyInitializedError
-from pages import ColumnInfo, PageLayout
+from pages import ColumnInfo
+from pages import PageLayout
 from pages.page_manager import PageManager
 from plugins import PluginRegister
 
@@ -31,6 +44,8 @@ class AssetTypeServer:
     _initialized = False
     json_response = None
 
+    DB_BATCH_SIZE = None
+
     @staticmethod
     def get():
         """Get the instance of this singleton."""
@@ -42,6 +57,7 @@ class AssetTypeServer:
     def __init__(self):
         """Create a new AssetTypeServer."""
 
+        self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
 
@@ -51,6 +67,13 @@ class AssetTypeServer:
 
         if AssetTypeServer.get()._initialized:
             raise ServerAlreadyInitializedError("AssetTypeServer already initialized!")
+
+        app.add_url_rule(
+            '/asset-types',
+            'stream-asset-type-data',
+            AssetTypeServer.stream_asset_type_data,
+            methods=['GET']
+        )
 
         app.add_url_rule(
             '/asset-type/list',
@@ -94,7 +117,107 @@ class AssetTypeServer:
             methods=['GET']
         )
 
-        AssetTypeServer.get()._initialized = False
+        AssetTypeServer.get()._initialized = True
+
+    @staticmethod
+    async def _th_request_asset_type_data(th_offset):
+        """Threaded method that loads a batch of assets."""
+
+        asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        return asset_type_manager.get_batch(
+            limit=th_offset + AssetTypeServer.get().DB_BATCH_SIZE,
+            offset=th_offset)
+
+    @staticmethod
+    async def stream_asset_type_data():
+        """TODO"""
+
+        # Get AssetType and number of assets of this type
+        asset_type_count = AssetTypeManager().count(ignore_slaves=True)
+
+        event_name = "asset-types"
+
+        async def generate_response():
+            """Generate a valid stream response."""
+
+            # Creating a set to store tasks in, so we
+            # can check for updates on their status
+            tasks: Set[Task] = set()
+
+            # We don't need to schedule and execute
+            # any additional tasks, if there are no
+            # items available as of yet.
+
+            if asset_type_count < 1:
+                result_dict: Mapping[str, Any] = {
+                    "items": [],
+                    "item_count": asset_type_count
+                }
+
+                result_str: str = str(result_dict).replace('\"', '\'')
+
+                result_message: str = f"data: [{result_str}]"
+                result_message += f"\nevent: {event_name}"
+                result_message += "\r\n\r\n"
+
+                yield result_message.encode('utf-8')
+
+            # Counting up an offset by DB_BATCH_SIZE
+            # in each step of the iteration. In each
+            # step we create an asyncio task, that
+            # queries asset types from the database
+            # using offset and offset + DB_BATCH_SIZE
+            # from the database.
+
+            offset = 0
+            while offset < asset_type_count:
+                task = asyncio.create_task(
+                    AssetTypeServer._th_request_asset_type_data(offset))
+                tasks.add(task)
+                offset += AssetTypeServer.get().DB_BATCH_SIZE
+
+            # Asyncio as_completed will yield completed
+            # tasks from the set of tasks, we filled
+            # earlier.
+
+            for result_task in asyncio.as_completed(tasks):
+
+                # Each result task will have completed
+                # here. We process the result and yield
+                # an encoded message that can be sent.
+
+                result = await result_task
+
+                result_dict: Mapping[str, Any] = {
+                    "items": [asset.as_dict() for asset in result],
+                    "item_count": asset_type_count
+                }
+
+                result_str: str = str(result_dict).replace('\"', '\'')
+
+                result_message: str = f"data: [{result_str}]"
+                result_message += f"\nevent: {event_name}"
+                result_message += "\r\n\r\n"
+
+                yield result_message.encode('utf-8')
+
+        # Using a generator function as the first
+        # parameter of quarts make_response, will
+        # yield results to a client initiated one
+        # way connection. -> Read up on SSE
+
+        response = await make_response(
+            generate_response(),
+            {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Transfer-Encoding': 'chunked',
+            }
+        )
+
+        response.timeout = None
+
+        return response
 
     @staticmethod
     async def get_list_asset_types():
@@ -108,6 +231,7 @@ class AssetTypeServer:
             return jsonify({
                 "asset_types": asset_types
             })
+
         return await render_template("asset-types.html", asset_types=asset_types)
 
     @staticmethod
@@ -241,47 +365,52 @@ class AssetTypeServer:
         page_manager: PageManager = PageManager()
         asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id, extend_columns=True)
-
-        # If no layout is defined for the asset type yet
-        # this will a layout-editor html page.
+        asset_type: AssetType = asset_type_manager \
+            .get_one_by_id(asset_type_id, extend_columns=True)
 
         # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
         # Comment this out, if you dont want to create a
         # PageLayout for each Type by default
-        if not page_manager.get_page(asset_type.asset_type_id):
+        if not page_manager.get_page(asset_type.asset_type_id, False):
             page_manager.create_page(PageLayout(
+                asset_type_id=asset_type_id,
+                asset_page_layout=False,
                 layout=[
-                    [
-                        ColumnInfo(
-                            plugin=PluginRegister.LIST_ASSETS.value,
-                            column_width=12,
-                            field_mappings={
-                                'title': 'name'
-                            },
-                        )
-                    ]
-                ],
-                asset_type=asset_type,
-                items_url=f'/asset-type:{asset_type.asset_type_id}/stream-items',
-                field_mappings={'created': 'abintern_created'}
+                    [ColumnInfo(
+                        plugin=PluginRegister.LIST_ASSETS.value,
+                        column_width=12,
+                        field_mappings={
+                            'title': 'title'
+                        },
+                        sources=None
+                    )
+                    ]],
+                field_mappings={},
+                sources={asset_type.asset_name.lower().replace(' ', '_').replace('-', '_')}
             ))
         # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
 
-        if not (page_layout := page_manager.get_page(asset_type.asset_type_id)):
-
+        # If there is no layout for this asset type yet, we render the layout editor.
+        if not (page_layout := page_manager.get_page(asset_type.asset_type_id, False)):
             if AssetTypeServer.get().json_response:
                 return jsonify({
-                    'asset_type_id': asset_type.as_dict()
+                    'asset_type': asset_type.as_dict()
                 })
             return await render_template("layout-editor.html", asset_type=asset_type)
 
+        # If there is, we render it.
         if AssetTypeServer.get().json_response:
             return jsonify({
+                'asset_type': asset_type.as_dict(),
                 'page_layout': page_layout.as_dict()
             })
-        return await render_template("asset-type.html", page_layout=page_layout)
+
+        return await render_template(
+            template_name_or_list="asset-type.html",
+            asset_type=asset_type,
+            page_layout=page_layout
+        )
 
     @staticmethod
     async def delete_asset_type(asset_type_id):
