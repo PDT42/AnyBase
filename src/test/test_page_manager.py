@@ -4,13 +4,15 @@
 
 These are tests for the PageManager.
 """
+
 from shutil import rmtree
 from typing import Any, Mapping
 from unittest import TestCase
 
-from asset import Asset, AssetType
+from asset import Asset
+from asset_type import AssetType
 from asset.asset_manager import AssetManager
-from asset.asset_type_manager import AssetTypeManager
+from asset_type.asset_type_manager import AssetTypeManager
 from database import Column, DataTypes
 from pages import ColumnInfo, PageLayout
 from pages.abstract_page_manager import APageManager
@@ -66,7 +68,8 @@ class TestPageManager(TestCase):
             'asset_page_layout': 0,
             'layout': '{12, 0}',
             'field_mappings': "{'header': 'name'}",
-            'primary_key': None
+            'primary_key': None,
+            'sources': None
         }
 
         # Defining a Page Layout with asset_type_page = True
@@ -91,7 +94,8 @@ class TestPageManager(TestCase):
             'asset_page_layout': 1,
             'layout': '{12, 1}',
             'field_mappings': "{'header': 'name'}",
-            'primary_key': None
+            'primary_key': None,
+            'sources': None
         }
 
     def tearDown(self) -> None:
@@ -102,16 +106,31 @@ class TestPageManager(TestCase):
     def test_convert_layout_to_row(self):
         """Test superclass method ``convert_layout_to_row``."""
 
-        asset_type_layout_row = self.page_manager.convert_layout_to_row(self.asset_type_layout)
-        self.assertEqual(asset_type_layout_row, self.asset_type_layout_row)
+        asset_type_layout_row = self.page_manager\
+            .convert_layout_to_row(self.asset_type_layout)
 
-        asset_layout_row = self.page_manager.convert_layout_to_row(self.asset_layout)
-        self.assertEqual(asset_layout_row, self.asset_layout_row)
+        self.assertEqual(
+            asset_type_layout_row,
+            self.asset_type_layout_row
+        )
+
+        asset_layout_row = self.page_manager\
+            .convert_layout_to_row(self.asset_layout)
+        self.assertEqual(
+            asset_layout_row,
+            self.asset_layout_row
+        )
 
     def test_create_page_get_page(self):
         """Test Create Page."""
 
-        created_asset_type_layout = self.page_manager.create_page(self.asset_type_layout)
-        gotten_asset_type_layout = self.page_manager.get_page(self.asset_type.asset_type_id, False)
+        created_asset_type_layout = self.page_manager\
+            .create_page(self.asset_type_layout)
 
-        self.assertEqual(gotten_asset_type_layout, created_asset_type_layout)
+        gotten_asset_type_layout = self.page_manager\
+            .get_page(self.asset_type.asset_type_id, False)
+
+        self.assertEqual(
+            gotten_asset_type_layout,
+            created_asset_type_layout
+        )
