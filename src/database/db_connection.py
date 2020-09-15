@@ -132,7 +132,7 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def count(self, table_name: str) -> int:
+    def count(self, table_name: str, query_filter=None) -> int:
         """Count the number ob items in ``table_name``."""
         pass
 
