@@ -7,16 +7,28 @@ This is the the module for the AssetManager.
 
 from collections import OrderedDict
 from datetime import datetime
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
+from typing import Any
+from typing import List
+from typing import Mapping
+from typing import MutableMapping
+from typing import Optional
+from typing import Sequence
+from typing import Set
+from typing import Tuple
 
-from asset import Asset, AssetType
+from asset import Asset
 from asset.abstract_asset_manager import AAssetManager
-from asset.asset_type_manager import AssetTypeManager
-from database import Column, DataType, DataTypes
+from asset_type import AssetType
+from asset_type.asset_type_manager import AssetTypeManager
+from database import Column
+from database import DataType
+from database import DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
-from exceptions.asset import AssetChangedException, AssetTypeDoesNotExistException, SuperAssetDoesNotExistException, \
-    SuperTypeDoesNotExistException
+from exceptions.asset import AssetChangedException
+from exceptions.asset import AssetTypeDoesNotExistException
+from exceptions.asset import SuperAssetDoesNotExistException
+from exceptions.asset import SuperTypeDoesNotExistException
 from exceptions.common import KeyConstraintException
 
 
