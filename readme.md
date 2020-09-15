@@ -10,4 +10,4 @@ This is AnyBase. Think of it as a Backoffice Version of Wordpress.
 [Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
 
 [//]: # (IMAGES)
-[concept_diagram]: graphics/AnyBase.svg
+[concept_diagram]: doc/graphics/AnyBase.svg
