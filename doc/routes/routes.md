@@ -20,7 +20,6 @@ AnyBase servers are its outermost layer and provide an interface to AnyBase's ma
 <img src='graphics/draw_io_rendered/anybase_layers.png' width='100%' height='auto' style="margin-top: 15px">
 
 
-
 [//]: # (LINKS)
 [Quart]: https://github.com/pgjones/quart
 [HTTP]: https://www.w3schools.com/whatis/whatis_http.asp
