@@ -8,9 +8,15 @@ database.
 """
 
 from abc import abstractmethod
-from typing import Any, List, Mapping, MutableMapping, OrderedDict, Sequence, Tuple
+from typing import Any
+from typing import Mapping
+from typing import MutableMapping
+from typing import OrderedDict
+from typing import Sequence
+from typing import Tuple
 
-from database import Column, DataType
+from database import Column
+from database import DataType
 from exceptions.common import MissingKeyException
 
 

@@ -4,19 +4,32 @@
 
 This is the implementation of DbConnection for Connections to sqlite databases.
 """
+
 import sqlite3
 from datetime import datetime
-from typing import Any, List, Mapping, MutableMapping, OrderedDict, Sequence, Tuple
+from typing import Any
+from typing import List
+from typing import Mapping
+from typing import MutableMapping
+from typing import OrderedDict
+from typing import Sequence
+from typing import Tuple
 
-from database import DataType, DataTypes
-from database.util import convert_asset_to_dbtype, convert_assetlist_to_dbtype
-from exceptions.common import IllegalStateException, MissingArgumentException
-from exceptions.database import ColumnAlreadyExistsException, ColumnDoesNotExistException, DataTypeChangedException, \
-    MissingValueException, \
-    TableAlreadyExistsException, \
-    UniqueConstraintError
+from database import DataType
+from database import DataTypes
+from database.util import convert_asset_to_dbtype
+from database.util import convert_assetlist_to_dbtype
+from exceptions.common import IllegalStateException
+from exceptions.common import MissingArgumentException
+from exceptions.database import ColumnAlreadyExistsException
+from exceptions.database import ColumnDoesNotExistException
+from exceptions.database import DataTypeChangedException
+from exceptions.database import MissingValueException
+from exceptions.database import TableAlreadyExistsException
 from exceptions.database import TableDoesNotExistException
-from src.database.db_connection import Column, DbConnection
+from exceptions.database import UniqueConstraintError
+from src.database.db_connection import Column
+from src.database.db_connection import DbConnection
 
 
 class SqliteConnection(DbConnection):
