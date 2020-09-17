@@ -42,10 +42,10 @@ from plugins import PluginRegister
 class AssetServer:
     """This is a server singleton."""
 
-    _instance = None
-    _initialized = False
+    _instance: 'AssetServer' = None
+    _initialized: bool = False
 
-    DB_BATCH_SIZE = None
+    DB_BATCH_SIZE: int = None  # The batch size for streaming
 
     @classmethod
     def get(cls):
