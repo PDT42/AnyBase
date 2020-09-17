@@ -18,14 +18,14 @@ from database import Column
 class AssetType:
     """This is a ``AssetType``, it defines an asset."""
 
-    asset_name: str
-    columns: List[Column]
-    created: datetime = None
-    updated: datetime = None
-    asset_table_name: str = None
-    asset_type_id: int = None
+    asset_name: str  # Name of the asset this type defines
+    columns: List[Column]  # Fields of the defined asset
+    created: datetime = None  # When the type was created
+    updated: datetime = None  # When the type was last updated
+    asset_table_name: str = None  # Name of the table the assets of this type are stored in
+    asset_type_id: int = None  # Database unique id of this type
     super_type: Union['AssetType', int] = 0  # this is either the actual item or its id
-    owner_id: int = 0
+    owner_id: int = 0  # Id of the owner of assets of this type
 
     def __hash__(self):
         return hash(uuid4())

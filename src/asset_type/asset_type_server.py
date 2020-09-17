@@ -40,11 +40,12 @@ class AssetTypeServer:
     """This is the AssetTypeServer. This is created as a singleton
     so we don't need to init all the constants again and again."""
 
-    _instance = None
-    _initialized = False
-    json_response = None
+    _instance: 'AssetTypeServer' = None
+    _initialized: bool = False
 
-    DB_BATCH_SIZE = None
+    JSON_RESPONSE: bool = None
+    DB_BATCH_SIZE: int = None
+    MAX_COLUMNS_PER_TYPE: int = None
 
     @staticmethod
     def get():
@@ -57,9 +58,11 @@ class AssetTypeServer:
     def __init__(self):
         """Create a new AssetTypeServer."""
 
+        # Getting setting constants from the config
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
+        self.MAX_COLUMNS_PER_TYPE = int(Config.get().read("general", "max_columns_per_type"), 15)
 
     @staticmethod
     def register_routes(app):
@@ -130,7 +133,9 @@ class AssetTypeServer:
 
     @staticmethod
     async def stream_asset_type_data():
-        """TODO"""
+        """Handle requests to ``stream-asset-type-data``.
+        The result is formatted as ``text/event-stream``.
+        """
 
         # Get AssetType and number of assets of this type
         asset_type_count = AssetTypeManager().count(ignore_slaves=True)
@@ -155,6 +160,8 @@ class AssetTypeServer:
                 }
 
                 result_str: str = str(result_dict).replace('\"', '\'')
+
+                # We yield a correctly formatted standard result
 
                 result_message: str = f"data: [{result_str}]"
                 result_message += f"\nevent: {event_name}"
@@ -181,7 +188,6 @@ class AssetTypeServer:
             # earlier.
 
             for result_task in asyncio.as_completed(tasks):
-
                 # Each result task will have completed
                 # here. We process the result and yield
                 # an encoded message that can be sent.
@@ -194,6 +200,8 @@ class AssetTypeServer:
                 }
 
                 result_str: str = str(result_dict).replace('\"', '\'')
+
+                # We yield a correctly formatted result message
 
                 result_message: str = f"data: [{result_str}]"
                 result_message += f"\nevent: {event_name}"
@@ -215,6 +223,9 @@ class AssetTypeServer:
             }
         )
 
+        # Checkout : Setting the timeout to None had
+        # Checkout : some reason. What was it again?
+
         response.timeout = None
 
         return response
@@ -222,6 +233,9 @@ class AssetTypeServer:
     @staticmethod
     async def get_list_asset_types():
         """Handle get requests to ``asset-types``."""
+
+        # TODO: Deprecated this. This should be replaced
+        # TODO: using a PageLayout and stream_asset_type_data
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_types: List[Mapping] = [at.as_dict() for at in asset_type_manager.get_all()]
@@ -238,6 +252,9 @@ class AssetTypeServer:
     async def get_configure_asset_types():
         """Return Configuration page_layout."""
 
+        # TODO: Deprecated this. This should be replaced
+        # TODO: using a PageLayout and stream_asset_type_data
+
         asset_type_manager = AssetTypeManager()
         asset_types: List[Mapping] = [at.as_dict() for at in asset_type_manager.get_all()]
 
@@ -250,6 +267,12 @@ class AssetTypeServer:
         This will create the asset type in the database
         defined by the request parameters."""
 
+        # Getting the values we require to create
+        # an asset type from the form submitted by
+        # the post request.
+
+        # Checkout: submit json instead of form data
+
         sync_form = await request.form
 
         asset_name: str = sync_form.get('assetName')
@@ -259,9 +282,12 @@ class AssetTypeServer:
         columns: List[Column] = []
         column_names: Set[str] = set()
 
-        for column_number in range(0, 15):
+        # We allow a maximum of 15 columns or fields per
+        # asset type. This is meant to prevent
 
-            column_name_id = f'column-name-{column_number}'
+        for column_number in range(0, AssetTypeServer.get().MAX_COLUMNS_PER_TYPE):
+
+            column_name_id = f'column-id-{column_number}'
             column_datatype_id = f'column-data-type-{column_number}'
             column_required_id = f'column-required-{column_number}'
             column_asset_type_id = f'column-asset-type-{column_number}'
@@ -279,7 +305,7 @@ class AssetTypeServer:
 
                 # Get the columns datatype from the form
                 datatype_str = sync_form.get(column_datatype_id)
-                asset_type = sync_form.get(column_asset_type_id)
+                asset_type = sync_form.get(column_asset_type_id, 0)  # if no asset type is supplied we assume 0
 
                 # Checking if the set data type is know to the system
                 if datatype_str in DataTypes.get_all_type_names():
@@ -306,6 +332,8 @@ class AssetTypeServer:
                     asset_type_id=asset_type_id,
                     required=required
                 ))
+            else:
+                break
 
         # Raise an error, if no columns could
         # be constructed from from input.
@@ -338,6 +366,9 @@ class AssetTypeServer:
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
 
+        # Getting a dict of all the asset types,
+        # so we can offer them as field types.
+
         asset_types = {
             asset_type.asset_type_id: asset_type
             for asset_type in asset_type_manager.get_all()
@@ -351,6 +382,7 @@ class AssetTypeServer:
                 "data_types": [d.as_dict() for d in data_types],
                 "asset_types": {k: v.as_dict() for k, v in asset_types.items()}
             })
+
         return await render_template(
             "create-asset-type.html",
             data_types=[d.as_dict() for d in data_types],
@@ -393,14 +425,14 @@ class AssetTypeServer:
 
         # If there is no layout for this asset type yet, we render the layout editor.
         if not (page_layout := page_manager.get_page(asset_type.asset_type_id, False)):
-            if AssetTypeServer.get().json_response:
+            if AssetTypeServer.get().JSON_RESPONSE:
                 return jsonify({
                     'asset_type': asset_type.as_dict()
                 })
             return await render_template("layout-editor.html", asset_type=asset_type)
 
         # If there is, we render it.
-        if AssetTypeServer.get().json_response:
+        if AssetTypeServer.get().JSON_RESPONSE:
             return jsonify({
                 'asset_type': asset_type.as_dict(),
                 'page_layout': page_layout.as_dict()
@@ -418,6 +450,10 @@ class AssetTypeServer:
 
         asset_type_manager: AssetTypeManager = AssetTypeManager()
         asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
+
+        if not asset_type:
+            raise AssetTypeDoesNotExistException(
+                "The asset type you are trying to delete does not exist!")
 
         # Deleting the assets of the super type, that are referenced
         # by the assets of the type being deleted.

@@ -145,6 +145,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
+        # Making sure we use unique headers
         headers = set(headers)
         headers.add('primary_key')
 
@@ -153,6 +154,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
+        # TODO: This should be made injection proof
         query = f"SELECT {', '.join(headers)} FROM {table_name.replace(' ', '_')}"
 
         # Adding Filters
@@ -211,6 +213,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
+        # TODO: This should be made injection proof
         query_headers: List[str] = []
         for table_name, (_, headers) in table_headers.items():
             query_headers += [f"{table_name}.{header}" for header in headers]
@@ -256,6 +259,7 @@ class SqliteConnection(DbConnection):
         # Initialize connection
         self._connect()
 
+        # TODO: This should be made injection proof
         query = f"DELETE FROM {table_name} WHERE {' AND '.join(and_filters)}"
 
         self.cursor.execute(query)
@@ -278,6 +282,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
+        # TODO: This should be made injection proof
         query = f"INSERT INTO {table_name} VALUES ("
 
         for column_info in table_info:
@@ -345,6 +350,7 @@ class SqliteConnection(DbConnection):
 
         # Creating Query
         # --------------
+        # TODO: This should be made injection proof
         query = f"UPDATE {table_name} SET "
 
         for column_info in table_info:
@@ -390,6 +396,7 @@ class SqliteConnection(DbConnection):
         if self.check_table_exists(new_table_name):
             raise TableAlreadyExistsException(f"Table {new_table_name} does already exist!")
 
+        # TODO: This should be made injection proof
         query = f"ALTER TABLE {table_name} RENAME TO {new_table_name}"
         self.cursor.execute(query)
 
@@ -409,6 +416,11 @@ class SqliteConnection(DbConnection):
 
         # Get info on ``table_name`` from database
         table_info = self.get_table_info(table_name)
+
+        # TODO: This whole method feels clumsy
+        # TODO: Musta done it while high
+
+        # Creating a mapping for column renames
 
         db_columns: MutableMapping[str, Column] = {
             column['name']: Column(
@@ -450,10 +462,14 @@ class SqliteConnection(DbConnection):
         old_column_names.append('primary_key')
         new_column_names.append('primary_key')
 
+        # TODO: This should be made injection proof
         query = f"INSERT INTO {temp_table_name}({', '.join(new_column_names)}) " + \
                 f"SELECT {', '.join(old_column_names)} FROM {table_name}"
         self.cursor.execute(query)
 
+        # Finally deleting the old table and
+        # renaming the temp table to it's now
+        # free table id.
         self.delete_table(table_name)
         self.update_table_name(temp_table_name, table_name)
 

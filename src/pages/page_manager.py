@@ -55,7 +55,8 @@ class PageManager(APageManager):
         # query dict format for the database
 
         for row in page_layout.layout:
-            for column in row:
+            for column in row:  # TODO: I dont like the expression column. The name should differ more from asset column
+
                 # Creating a query dict from each column
                 # and storing it in a separate database
 
@@ -68,7 +69,7 @@ class PageManager(APageManager):
                 column_row: Mapping[str: Any] = {
                     'primary_key': None,
                     'column_width': column.column_width,
-                    'plugin_name': column.plugin.name.replace('-', '_').upper(),
+                    'plugin_id': column.plugin.id.replace('-', '_').upper(),
                     'field_mappings': field_mappings,
                     'sources': sources
                 }

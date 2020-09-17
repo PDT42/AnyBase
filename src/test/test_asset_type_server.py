@@ -39,7 +39,7 @@ def set_up() -> Quart:
     test_app: Quart = Quart(import_name='test_app')
 
     AssetTypeServer.get().register_routes(app=test_app)
-    AssetTypeServer.json_response = True
+    AssetTypeServer.JSON_RESPONSE = True
 
     asset_type_manager = AssetTypeManager()
 

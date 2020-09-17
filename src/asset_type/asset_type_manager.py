@@ -256,6 +256,9 @@ class AssetTypeManager(AAssetTypeManager):
         if len(result) < 1:
             return None
 
+        # TODO: Think about marking columns as extended columns
+        # TODO: So the asset type server does not have to load
+
         asset_type: AssetType = self._convert_result_to_asset_type(result[0])
 
         if (super_type_id := int(result[0]['super_type'])) > 0 and extend_columns:

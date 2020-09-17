@@ -163,7 +163,6 @@ class DbConnection:
                 raise MissingKeyException(
                     f'The required column {column.db_name} is missing!')
 
-            else:
-                row[column.db_name] = self._conversions[column.datatype](data_value)
+            row[column.db_name] = self._conversions[column.datatype](data_value)
 
         return row

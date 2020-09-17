@@ -37,7 +37,7 @@ class AAssetTypeManager:
 
     @abstractmethod
     def check_asset_type_exists(self, asset_type: Union[str, AssetType]) -> bool:
-        """Check if ``asset_type_id`` with that name already exists."""
+        """Check if ``asset_type_id`` with that id already exists."""
         pass
 
     @abstractmethod
