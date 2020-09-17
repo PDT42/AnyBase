@@ -143,7 +143,9 @@ class AssetServer:
 
         if not asset_type:
             raise AssetTypeDoesNotExistException(
-                f"No AssetType with id: {asset_type_id} exists!")
+                f"Error in GET to 'stream-asset-data'. There is no " +
+                f"AssetType with the id: {asset_type_id}!"
+            )
 
         asset_count = AssetManager().count(asset_type)
 
@@ -235,8 +237,17 @@ class AssetServer:
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
         asset_manager: AAssetManager = AssetManager()
 
-        extended_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id, extend_columns=True)
-        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
+        asset_type: AssetType = asset_type_manager \
+            .get_one_by_id(asset_type_id)
+        extended_type: AssetType = asset_type_manager \
+            .get_one_by_id(asset_type_id, extend_columns=True)
+
+        # Check if an asset type with the specified type exists
+        if not asset_type:
+            return AssetTypeDoesNotExistException(
+                f"Error in GET to 'post_create_asset'. There is no " +
+                f"AssetType with the the id: {asset_type_id}!"
+            )
 
         # Get the values from form specified
         sync_form = await request.form
@@ -245,10 +256,9 @@ class AssetServer:
         for column in extended_type.columns:
 
             # Column is missing in form but is required
-            if column.required and (
-                    column.db_name not in sync_form.keys() or
-                    sync_form[column.db_name] in ['']):
-                return 1  # TODO: Validation
+            if column.required and (column.db_name not in sync_form.keys() or
+                                    sync_form[column.db_name] in ['']):
+                raise MissingValueException(f"The required value {column.db_name} is missing in the submitted form!")
 
             # Column is missing and isn't required
             elif not column.required and (
@@ -288,6 +298,12 @@ class AssetServer:
 
         asset_type: AssetType = asset_type_manager.get_one_by_id(
             asset_type_id, extend_columns=True)
+
+        if not asset_type:
+            return AssetTypeDoesNotExistException(
+                f"Error in GET to 'get_create_asset'. There is no " +
+                f"asset type with the the id: {asset_type_id}!"
+            )
 
         assets: Dict[int, List[Asset]] = {}
 
