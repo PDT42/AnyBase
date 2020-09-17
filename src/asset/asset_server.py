@@ -50,6 +50,18 @@ class AssetServer:
     # Conversion function to convert values gotten
     # from the frontend, to the type used for that
     # datatype in the backend. TODO: (¬_¬ )
+
+    _conversions: Mapping[DataType, callable] = {
+        DataTypes.TEXT.value: str,
+        DataTypes.NUMBER.value: float,
+        DataTypes.INTEGER.value: int,
+        DataTypes.BOOLEAN.value: bool,
+        DataTypes.DATETIME.value: lambda dt: datetime.strptime(dt, '%Y-%m-%dT%H:%M'),
+        DataTypes.DATE.value: lambda d: datetime.strptime(d, '%Y-%m-%d'),
+        DataTypes.ASSET.value: int,
+        DataTypes.ASSETLIST.value: lambda al: [int(a) for a in al.split(',')]
+    }
+
     @classmethod
     def get(cls):
         """Get the instance of this singleton."""
