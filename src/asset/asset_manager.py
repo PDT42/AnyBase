@@ -35,6 +35,10 @@ from exceptions.common import KeyConstraintException
 class AssetManager(AAssetManager):
     """This is the ``AssetManager``."""
 
+    # Conversion function to convert values gotten
+    # from the database, to the type used for that
+    # datatype in the backend. TODO: (¬_¬ )
+
     _conversions: Mapping[DataType, callable] = {
         DataTypes.TEXT.value: str,
         DataTypes.NUMBER.value: float,
@@ -56,6 +60,7 @@ class AssetManager(AAssetManager):
         self.db_connection: DbConnection = SqliteConnection.get()
         self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
+        # Defining constants
         self.PRIMARY_KEY = 'primary_key'
         self.JOIN_ON: str = 'abintern_extended_by_id'
         self.CREATED: str = 'abintern_created'
@@ -90,9 +95,11 @@ class AssetManager(AAssetManager):
                 header: asset.data[header] for header in super_headers
             }
 
+            # Creating the super asset, using the data _not used_ by the sub
             super_asset: Asset = self.create_asset(super_type, Asset(data=super_data))
             asset.extended_by_id = super_asset.asset_id
 
+        # This is WHEN the asset is created
         created: datetime = datetime.now().replace(microsecond=0)
 
         values = self.db_connection.convert_data_to_row(asset.data, asset_type.columns)
@@ -117,17 +124,17 @@ class AssetManager(AAssetManager):
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
 
-        # TODO: Ensure that AssetType does not contain extension columns
-
+        # Checking for and deleting super assets
         if (super_id := asset_type.get_super_type_id()) > 0:
+
             super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
             super_asset: Asset = self.get_one(asset.extended_by_id, super_type)
             self.delete_asset(super_type, super_asset)
 
         self.db_connection.delete(
             self.asset_type_manager.generate_asset_table_name(asset_type),
-            [f"primary_key = {asset.asset_id}"]
-        )
+            [f"primary_key = {asset.asset_id}"])
+
         self.db_connection.commit()
 
     def update_asset(self, asset_type: AssetType, asset: Asset):
