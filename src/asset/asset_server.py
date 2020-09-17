@@ -266,23 +266,11 @@ class AssetServer:
                     sync_form[column.db_name] in ['']):
                 continue
 
-            # Column is present
-            # TODO: This should be done in a cleaner way - The DataTypes feel kinda muddled
-            else:
+            # TODO: Validate input
 
-                # TODO: Validate input
-
-                if column.datatype is DataTypes.DATETIME.value:
-                    asset_data[column.db_name] = datetime.strptime(
-                        sync_form[column.db_name], '%Y-%m-%dT%H:%M')
-                    continue
-
-                if column.datatype is DataTypes.DATE.value:
-                    asset_data[column.db_name] = datetime.strptime(
-                        sync_form[column.db_name], '%Y-%m-%d')
-                    continue
-
-                asset_data[column.db_name] = str(sync_form[column.db_name])
+            # Column present
+            asset_data[column.db_name] = AssetServer \
+                ._conversions[column.datatype](sync_form[column.db_name])
 
         # Init new Asset and store it in the database
         asset: Asset = Asset(data=asset_data)
