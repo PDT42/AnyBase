@@ -25,8 +25,8 @@ class PluginType(Enum):
 class Plugin:
     """This is a plugin. It is crucial - trust me."""
 
-    name: str
-    path: str
+    id: str  # The id doubles as name
+    view: str  # Path to jinja view template -> later _source_?
     server: Optional[Type[APluginServer]]
     type: PluginType
 
@@ -34,15 +34,15 @@ class Plugin:
         """Get a dict representation of a Plugin."""
 
         return {
-            'name': self.name,
-            'path': self.path,
+            'id': self.id,
+            'view': self.view,
             # TODO: Add missing fields
         }
 
     def __eq__(self, other):
         if not isinstance(other, Plugin):
             return False
-        if not self.path == other.path and not self.name == other.name:
+        if not self.view == other.view and not self.id == other.id:
             return False
         return True
 
@@ -50,25 +50,25 @@ class Plugin:
 @unique
 class PluginRegister(Enum):
     """This is the ``PluginRegister``. It represents the connection
-    between the ``name`` stored in the ``ColumnInfo``"""
+    between the ``id`` stored in the ``ColumnInfo``"""
 
     BASIC_NOTES = Plugin(
-        name='basic-notes',
-        path='plugins/basic-notes-plugin.html',
+        id='basic-notes',
+        view='plugins/basic-notes-plugin.html',
         server=NotesPluginServer,
         type=PluginType.HYBRID
     )
 
     ASSET_DETAILS = Plugin(
-        name='asset-details',
-        path='plugins/asset-details-plugin.html',
+        id='asset-details',
+        view='plugins/asset-details-plugin.html',
         server=None,
         type=PluginType.ASSET
     )
 
     LIST_ASSETS = Plugin(
-        name='list-assets',
-        path='plugins/list-assets-plugin.html',
+        id='list-assets',
+        view='plugins/list-assets-plugin.html',
         server=None,
         type=PluginType.ASSET_TYPE
     )

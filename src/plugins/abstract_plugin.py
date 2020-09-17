@@ -31,7 +31,7 @@ class APluginServer:
         pass
 
     @abstractmethod
-    def initialize(self, plugin_name: str, asset_type: AssetType, asset: Asset = None):
+    def initialize(self, asset_type: AssetType, asset: Asset = None):
         """Initialize everything this server requires."""
         pass
 
@@ -45,4 +45,9 @@ class APluginServer:
         asset_name += f'a{asset.asset_id}' if asset else ''
 
         return asset_name
+
+    def as_dict(self):
+        """Get a dict representation of the server."""
+
+
 
