@@ -140,6 +140,11 @@ class AssetServer:
 
         # Get AssetType and number of assets of this type
         asset_type = AssetTypeManager().get_one_by_id(asset_type_id)
+
+        if not asset_type:
+            raise AssetTypeDoesNotExistException(
+                f"No AssetType with id: {asset_type_id} exists!")
+
         asset_count = AssetManager().count(asset_type)
 
         async def generate_response():
