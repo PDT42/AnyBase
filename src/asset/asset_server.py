@@ -47,6 +47,9 @@ class AssetServer:
 
     DB_BATCH_SIZE: int = None  # The batch size for streaming
 
+    # Conversion function to convert values gotten
+    # from the frontend, to the type used for that
+    # datatype in the backend. TODO: (¬_¬ )
     @classmethod
     def get(cls):
         """Get the instance of this singleton."""
@@ -58,6 +61,7 @@ class AssetServer:
     def __init__(self):
         """Create a new AssetServer."""
 
+        # Get relevant info from the config
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
             'frontend', 'json_response', False) in ["True", "true", 1]
@@ -217,6 +221,7 @@ class AssetServer:
         extended_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id, extend_columns=True)
         asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
 
+        # Get the values from form specified
         sync_form = await request.form
         asset_data: MutableMapping[str, Any] = {}
 
@@ -275,7 +280,7 @@ class AssetServer:
 
         if field_asset_ids := [col.asset_type_id for col in asset_type.columns if col.asset_type_id]:
 
-            # Create only one asset_manager, if required
+            # Create asset_manager only if required
             asset_manager: AAssetManager = AssetManager()
 
             for asset_id in field_asset_ids:
@@ -283,6 +288,7 @@ class AssetServer:
                 result = asset_manager.get_all(asset_t)
                 assets[asset_t.asset_type_id] = result  # [asset.asset_id for asset in results]
 
+        # converting t
         assets = {key: [a.as_dict() for a in value] for key, value in assets.items()}
 
         if AssetServer.get().json_response:
