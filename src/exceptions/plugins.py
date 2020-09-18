@@ -10,5 +10,9 @@ class ItemNotFoundException(Exception):
     pass
 
 
+class PageAlreadyExistsException(Exception):
+    pass
+
+
 class PageDoesNotExistException(Exception):
     pass

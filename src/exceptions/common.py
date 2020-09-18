@@ -28,3 +28,7 @@ class InvalidArgumentError(Exception):
 
 class InvalidTypeError(Exception):
     pass
+
+
+class OutdatedDataException(Exception):
+    pass
