@@ -4,86 +4,127 @@
 
 These are tests for the AssetTypeServer.
 """
-
+import json
 from datetime import datetime
-from shutil import rmtree
-from typing import Optional
+from time import sleep
+from typing import List
+from unittest import TestCase
 
-import pytest
-from quart import Quart
+import requests
 
 from asset_type import AssetType
 from asset_type.asset_type_manager import AssetTypeManager
-from database import Column, DataTypes
+from database import Column
+from database import DataType
+from database import DataTypes
 from database.db_connection import DbConnection
-from asset_type.asset_type_server import AssetTypeServer
-from test.test_util import init_test_db
-
-db_connection: Optional[DbConnection] = None
-tempdir = None
+from database.sqlite_connection import SqliteConnection
+from plugins import PluginRegister
 
 
-@pytest.fixture
-def asset_type_manager():
-    return AssetTypeManager()
+class TestAssetTypeServer(TestCase):
 
+    def setUp(self) -> None:
+        """Set up."""
 
-def set_up() -> Quart:
-    """Set up before tests."""
+        self.BASE_URL: str = 'http://localhost:4200'
 
-    global tempdir, db_connection
+        # print(f"Tempdir used in this tests: {self.tempdir}")
 
-    tempdir, db_connection = init_test_db()
-    # print(f"Tempdir used in this tests: {self.tempdir}")
+        self.db_connection: DbConnection = SqliteConnection.get()
+        self.asset_type_manager: AssetTypeManager = AssetTypeManager()
 
-    test_app: Quart = Quart(import_name='test_app')
+        self.asset_type = AssetType(
+            'Media Article',
+            [
+                Column('Name', 'name', DataTypes.VARCHAR.value, required=True),
+                Column('ISBN', 'isbn', DataTypes.VARCHAR.value, required=True)
+            ])
 
-    AssetTypeServer.get().register_routes(app=test_app)
-    AssetTypeServer.JSON_RESPONSE = True
+    def tearDown(self) -> None:
+        """Tear down."""
+        pass
 
-    asset_type_manager = AssetTypeManager()
+    def _post_create_asset_type(self):
+        """Send request to 'post-create-asset-type'."""
 
-    created: datetime = datetime.now()
-    media_article = AssetType(
-        asset_name='Media Article',
-        columns=[
-            Column('Title', 'title', DataTypes.VARCHAR.value, required=True),
-            Column('ISBN', 'isbn', DataTypes.VARCHAR.value, required=True, unique=True)
-        ], created=created,
-        updated=created
-    )
-    media_article = asset_type_manager \
-        .create_asset_type(media_article)
+        request_url: str = f'{self.BASE_URL}/asset-type/create'
+        request_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        request_body = "assetName=Media Article" + \
+                       "&column-name-0=Title" \
+                       "&column-data-type-0=VARCHAR" \
+                       "&column-required-0=checkboxTrue" \
+                       "&column-name-1=ISBN" \
+                       "&column-data-type-1=VARCHAR" \
+                       "&column-required-1=checkboxTrue"
 
-    book = AssetType(
-        asset_name='Book',
-        columns=[
-            Column('Number of Pages', 'number_of_pages', DataTypes.INTEGER.value)
-        ], super_type=media_article.asset_type_id,
-        created=created,
-        updated=created
-    )
-    book = asset_type_manager \
-        .create_asset_type(book)
+        requests.post(
+            url=request_url,
+            headers=request_headers,
+            data=request_body)
 
-    return test_app
+    def test_get_create_asset_types(self):
+        """Test 'get-configuration'."""
 
+        create_type_url: str = f'{self.BASE_URL}/asset-type/create'
+        request = requests.get(create_type_url)
 
-def tear_down(self) -> None:
-    """Clean up after each test."""
+        self.assertEqual(request.status_code, 200)
 
-    global tempdir, db_connection
+    def test_post_create_asset_type(self):
+        """Test 'post-create-asset'."""
 
-    db_connection.kill()
-    rmtree(self.tempdir)
+        self._post_create_asset_type()
+        sleep(.6)  # Wait for the request to complete
 
+        asset_type: AssetType = self.asset_type_manager.get_one_by_id(1)
 
-@pytest.mark.asyncio
-async def test_get_list_asset_types():
-    """Test the route 'list-asset-type'."""
+        self.assertEqual(asset_type.asset_name, 'Media Article')
+        self.assertEqual(asset_type.columns[0].name, 'Title')
+        self.assertEqual(asset_type.columns[1].name, 'ISBN')
 
-    test_app = set_up()
+    def test_get_one_asset_type(self):
+        """Test GET 'asset-type'."""
 
-    with test_app.test_client() as test_client:
-        get_list_request = await test_client.get('/asset-type/list')
-        assert (get_list_request.status_code == 200)
+        self._post_create_asset_type()
+        sleep(.6)  # Wait for the request to complete
+
+        db_asset_type: AssetType = self.asset_type_manager.get_one_by_id(1)
+
+        self.assertEqual(db_asset_type.asset_name, 'Media Article')
+        self.assertEqual(db_asset_type.columns[0].name, 'Title')
+        self.assertEqual(db_asset_type.columns[1].name, 'ISBN')
+
+        request_url: str = f'{self.BASE_URL}/asset-type:{db_asset_type.asset_type_id}'
+        request = requests.get(request_url)
+
+        self.assertEqual(request.status_code, 200)
+
+        json_content = json.loads(request.content)
+
+        asset_type_dict = json_content['asset_type']
+
+        columns: List[Column] = []
+        for column_dict in asset_type_dict['columns']:
+            column: Column = Column(**column_dict)
+            column.datatype = DataType(**column_dict['datatype'])
+            columns.append(column)
+
+        request_asset_type: AssetType = AssetType(
+            asset_name=asset_type_dict['asset_name'],
+            asset_table_name=asset_type_dict['asset_table_name'],
+            asset_type_id=asset_type_dict['asset_type_id'],
+            created=datetime.fromtimestamp(asset_type_dict['created']),
+            updated=datetime.fromtimestamp(asset_type_dict['updated']),
+            owner_id=asset_type_dict['owner_id'],
+            super_type=asset_type_dict['super_type'],
+            columns=columns)
+
+        available_plugins = [
+            PluginRegister[pt['id'].upper().replace('-', '_')].value
+            for pt in json_content['available_plugins']
+        ]
+
+        self.assertEqual(request_asset_type, db_asset_type)
