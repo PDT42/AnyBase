@@ -6,11 +6,15 @@ This is the plugins package. In this module we define the plugin register.
 """
 
 from dataclasses import dataclass
-from enum import Enum, unique
-from typing import Any, Dict, Optional, Type
+from enum import Enum
+from enum import unique
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Type
+from uuid import uuid4
 
 from plugins.abstract_plugin import APluginServer
-from plugins.notes_plugin import NotesPluginServer
 
 
 class PluginType(Enum):
@@ -30,14 +34,8 @@ class Plugin:
     server: Optional[Type[APluginServer]]
     type: PluginType
 
-    def as_dict(self) -> Dict[str, Any]:
-        """Get a dict representation of a Plugin."""
-
-        return {
-            'id': self.id,
-            'view': self.view,
-            # TODO: Add missing fields
-        }
+    def __hash__(self):
+        return int(uuid4())
 
     def __eq__(self, other):
         if not isinstance(other, Plugin):
@@ -46,11 +44,21 @@ class Plugin:
             return False
         return True
 
+    def as_dict(self) -> Dict[str, Any]:
+        """Get a dict representation of a Plugin."""
+
+        return {
+            'id': self.id,
+            'view': self.view,
+        }
+
 
 @unique
 class PluginRegister(Enum):
     """This is the ``PluginRegister``. It represents the connection
     between the ``id`` stored in the ``ColumnInfo``"""
+
+    from plugins.notes_plugin import NotesPluginServer
 
     BASIC_NOTES = Plugin(
         id='basic-notes',
@@ -76,11 +84,15 @@ class PluginRegister(Enum):
     # --
 
     @classmethod
-    def get_all_data_types(cls):
+    def get_all_plugins(cls):
         """Get all distinct field values from enum."""
-        return list(set([data_type.value for data_type in cls.__members__.values()]))
+        return list(set(
+            [mapping.value for
+             mapping in cls.__members__.values()
+             if isinstance(mapping.value, Plugin)
+             ]))
 
     @classmethod
-    def get_all_type_names(cls):
+    def get_all_plugin_ids(cls):
         """Get the names of all available data types."""
         return list(cls.__members__.keys())
