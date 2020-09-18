@@ -5,15 +5,18 @@
 This module exists to contain a test server for API tests.
 """
 
+from threading import Thread
+
 from quart import Quart
 
 from asset.asset_server import AssetServer
 from asset_type.asset_type_server import AssetTypeServer
 from common_server import CommonServer
 from config import Config
+from test.test_util import init_test_db
+
 # Getting config values
 # ---------------------
-from test.test_util import init_test_db
 
 Config.get().change_path('U:/projects/anybase_modular_management/res/config.ini')
 template_folder = Config.get().read('frontend', 'template_folder', '/res/templates')
@@ -54,5 +57,21 @@ CommonServer.get().register_routes(app=app)
 AssetServer.get().register_routes(app=app)
 AssetTypeServer.get().register_routes(app=app)
 
+AssetTypeServer.get().JSON_RESPONSE = True
+
 if __name__ == '__main__':
     app.run('localhost', port=4200, debug=True)
+
+
+def th_run_app():
+    thread = Thread(
+        target=app.run,
+        args=('localhost',),
+        kwargs={
+            'port': 4200,
+            'debug': True
+        })
+    thread.daemon = True
+    thread.start()
+
+    return app, thread, tempdir
