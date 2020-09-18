@@ -1,9 +1,14 @@
 # Column
-Columns are entities, that define what the content of an asset should be. The [AssetType] of an [Asset] has a list of columns and by those, defines the expected content of the [Asset]s ``data`` field. 
+Columns are entities, that define what the content of an asset should be. The [AssetType] 
+of an [Asset] has a list of columns and by those, defines the expected content of the 
+[Asset]s ``data`` field. 
 
 ![Column Class][column_class]
 
-The fields of the Column class are pretty self explanatory. The ``name`` of the Column stores the name the user, who created the [AssetType] this Column belongs to, gave it. The field ``db_name`` is an generic conversion of the ``name`` into a format, which the database will accept as a column name. Right now it is created by: 
+The fields of the Column class are pretty self explanatory. The ``name`` of the Column
+stores the name the user, who created the [AssetType] this Column belongs to, gave it.
+The field ``db_name`` is an generic conversion of the ``name`` into a format, which 
+the database will accept as a column name. Right now it is created by: 
 
 ```python
 column_db_name = column_name.replace(' ', '_').lower()
@@ -16,4 +21,4 @@ The ``datatype`` field contains the DataType object, that describes the data typ
 [Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
 
 [//]: # (IMAGES)
-[column_class]: graphics/plantuml_rendered/column.png
+[column_class]: graphics/rendered images/column.png

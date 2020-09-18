@@ -1,0 +1,14 @@
+@startuml
+
+class PageLayout {
+    int: asset_type_id
+    boolean: asset_page_layout
+    List[List[ColumnInfo]]: layout
+    Mapping: field_mappings
+    datetime: created
+    datetime: updated
+    Set[str]: sources
+    int: layout_id
+}
+
+@enduml

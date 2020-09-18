@@ -60,4 +60,4 @@ in the database.
 [Quart]: https://github.com/pgjones/quart
 
 [//]: # (IMAGES)
-[concept_diagram]: doc/graphics/AnyBase.png
+[concept_diagram]: doc/graphics/rendered_images/AnyBase.png

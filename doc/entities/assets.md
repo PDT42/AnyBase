@@ -8,4 +8,4 @@ Assets are the entities that populate AnyBase. Every Asset is defined by its [As
 [Column]: https://github.com/PDT420/AnyBase/blob/master/doc/components/column.md
 
 [//]: # (IMAGES)
-[asset_class]: graphics/plantuml_rendered/asset.png
+[asset_class]: graphics/rendered_images/asset.png
