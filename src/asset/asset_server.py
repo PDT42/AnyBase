@@ -235,7 +235,6 @@ class AssetServer:
         """This is a FlaskAppRoute that lets you create an ``Asset``."""
 
         asset_type_manager: AAssetTypeManager = AssetTypeManager()
-        asset_manager: AAssetManager = AssetManager()
 
         asset_type: AssetType = asset_type_manager \
             .get_one_by_id(asset_type_id)
@@ -272,6 +271,8 @@ class AssetServer:
             asset_data[column.db_name] = AssetServer \
                 ._conversions[column.datatype](sync_form[column.db_name])
 
+        asset_manager: AAssetManager = AssetManager()
+
         # Init new Asset and store it in the database
         asset: Asset = Asset(data=asset_data)
         asset_manager.create_asset(asset_type, asset)
@@ -299,7 +300,7 @@ class AssetServer:
         # that contain other assets, we need to load them
         # so we can present them to the user.
 
-        if field_asset_ids := [col.asset_type_id for col in asset_type.columns if col.asset_type_id]:
+        if field_asset_ids := [field.asset_type_id for field in asset_type.columns if field.asset_type_id]:
 
             # Create asset_manager only if required
             asset_manager: AAssetManager = AssetManager()
@@ -344,18 +345,34 @@ class AssetServer:
                                 'field1': 'title',
                                 'field2': 'isbn',
                                 'field3': 'number_of_pages'
-                            }
-                        )
+                            }),
+                        ColumnInfo(
+                            plugin=PluginRegister.BASIC_NOTES.value,
+                            column_width=12,
+                            field_mappings={})
                     ]
                 ],
-                asset_type_id=asset_type,
+                asset_type_id=asset_type.asset_type_id,
+                created=datetime.now(),
+                updated=datetime.now(),
+                asset_page_layout=True,
                 field_mappings={
                     'header': 'title'
-                }
-            )
+                }, sources={})
+
             page_manager.create_page(asset_page_layout)
             asset_page_layout = page_manager \
                 .get_page(asset_type.asset_type_id, True)
+
+        # Initialize all plugins required
+        for row in asset_page_layout.layout:
+            for column_info in row:
+
+                if (server := column_info.plugin.server) is not None:
+
+                    column_info.sources = server.get().initialize(asset_type, asset)
+                    asset_page_layout.sources.update(column_info.sources)
+
         # --
 
         if AssetServer.get().json_response:

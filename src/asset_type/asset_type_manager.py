@@ -181,7 +181,8 @@ class AssetTypeManager(AAssetTypeManager):
             self.CREATED: int(asset_type.created.timestamp()),
             self.UPDATED: int(updated.timestamp()),
             'asset_columns': self.generate_column_str_from_columns(asset_type.columns),
-            'super_type': asset_type.super_type
+            'super_type': asset_type.super_type,
+            'owner_id': asset_type.owner_id
         }
         self.db_connection.update(self._asset_types_table_name, values)
 

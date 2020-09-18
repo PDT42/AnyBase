@@ -10,6 +10,7 @@ from asyncio import Task
 from typing import Any
 from typing import List
 from typing import Mapping
+from typing import MutableMapping
 from typing import Set
 
 from quart import jsonify
@@ -29,11 +30,14 @@ from database import DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from exceptions.asset import ColumnNameTakenError
 from exceptions.common import IllegalStateException
+from exceptions.plugins import PageAlreadyExistsException
 from exceptions.server import ServerAlreadyInitializedError
 from pages import ColumnInfo
 from pages import PageLayout
 from pages.page_manager import PageManager
+from plugins import Plugin
 from plugins import PluginRegister
+from plugins import PluginType
 
 
 class AssetTypeServer:
@@ -43,6 +47,7 @@ class AssetTypeServer:
     _instance: 'AssetTypeServer' = None
     _initialized: bool = False
 
+    # Getting constants
     JSON_RESPONSE: bool = None
     DB_BATCH_SIZE: int = None
     MAX_COLUMNS_PER_TYPE: int = None
@@ -111,6 +116,13 @@ class AssetTypeServer:
             'asset-type',
             AssetTypeServer.get_one_asset_type,
             methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type:<int:asset_type_id>/create-overview-view',
+            'post-create-overview-page-layout',
+            AssetTypeServer.post_create_overview_page_layout,
+            methods=['POST']
         )
 
         app.add_url_rule(
@@ -252,7 +264,7 @@ class AssetTypeServer:
     async def get_configure_asset_types():
         """Return Configuration page_layout."""
 
-        # TODO: Deprecated this. This should be replaced
+        # TODO: Deprecate this. This should be replaced
         # TODO: using a PageLayout and stream_asset_type_data
 
         asset_type_manager = AssetTypeManager()
@@ -276,7 +288,7 @@ class AssetTypeServer:
         sync_form = await request.form
 
         asset_name: str = sync_form.get('assetName')
-        super_type = int(sync_form.get('superType', 0))
+        super_type_id = int(sync_form.get('superType', 0))
         owner_id = int(sync_form.get('ownerId', 0))
 
         columns: List[Column] = []
@@ -287,7 +299,7 @@ class AssetTypeServer:
 
         for column_number in range(0, AssetTypeServer.get().MAX_COLUMNS_PER_TYPE):
 
-            column_name_id = f'column-id-{column_number}'
+            column_name_id = f'column-name-{column_number}'
             column_datatype_id = f'column-data-type-{column_number}'
             column_required_id = f'column-required-{column_number}'
             column_asset_type_id = f'column-asset-type-{column_number}'
@@ -347,7 +359,7 @@ class AssetTypeServer:
         new_asset_type = AssetType(
             asset_name=asset_name,
             columns=columns,
-            super_type=super_type,
+            super_type=super_type_id,
             owner_id=owner_id
         )
 
@@ -391,7 +403,7 @@ class AssetTypeServer:
         )
 
     @staticmethod
-    async def get_one_asset_type(asset_type_id):
+    async def get_one_asset_type(asset_type_id: int):
         """Show the Detail Page for an ``AssetType``."""
 
         page_manager: PageManager = PageManager()
@@ -400,36 +412,17 @@ class AssetTypeServer:
         asset_type: AssetType = asset_type_manager \
             .get_one_by_id(asset_type_id, extend_columns=True)
 
-        # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
-
-        # Comment this out, if you dont want to create a
-        # PageLayout for each Type by default
-        if not page_manager.get_page(asset_type.asset_type_id, False):
-            page_manager.create_page(PageLayout(
-                asset_type_id=asset_type_id,
-                asset_page_layout=False,
-                layout=[
-                    [ColumnInfo(
-                        plugin=PluginRegister.LIST_ASSETS.value,
-                        column_width=12,
-                        field_mappings={
-                            'title': 'title'
-                        },
-                        sources=None
-                    )
-                    ]],
-                field_mappings={},
-                sources={asset_type.asset_name.lower().replace(' ', '_').replace('-', '_')}
-            ))
-        # TODO: REMOVE! ALARM, FIRE EVERYTHING! AGAIN!
-
         # If there is no layout for this asset type yet, we render the layout editor.
         if not (page_layout := page_manager.get_page(asset_type.asset_type_id, False)):
-            if AssetTypeServer.get().JSON_RESPONSE:
-                return jsonify({
-                    'asset_type': asset_type.as_dict()
-                })
-            return await render_template("layout-editor.html", asset_type=asset_type)
+            return await AssetTypeServer.get_create_overview_page_layout(asset_type)
+
+        # Initialize all required plugins
+        for row in page_layout.layout:
+            for column_info in row:
+
+                if (server := column_info.plugin.server) is not None:
+                    column_info.sources = server.get().initialize(asset_type)
+                    page_layout.sources.update(column_info.sources)
 
         # If there is, we render it.
         if AssetTypeServer.get().JSON_RESPONSE:
@@ -443,6 +436,87 @@ class AssetTypeServer:
             asset_type=asset_type,
             page_layout=page_layout
         )
+
+    @staticmethod
+    async def get_create_overview_page_layout(asset_type: AssetType):
+        """Getting a page to create a layout for the overview view of this ``asset_type``."""
+
+        available_plugins: List[Plugin] = list(filter(
+            lambda plugin: plugin.type in [PluginType.ASSET_TYPE, PluginType.HYBRID],
+            PluginRegister.get_all_plugins()))
+
+        if AssetTypeServer.get().JSON_RESPONSE:
+            return jsonify({
+                'asset_type': asset_type.as_dict(),
+                'available_plugins': [plugin.as_dict() for plugin in available_plugins]
+            })
+
+        return await render_template(
+            "layout-editor.html",
+            asset_type=asset_type,
+            available_plugins=available_plugins
+        )
+
+    @staticmethod
+    async def post_create_overview_page_layout(asset_type_id: int):
+        """Setting the page layout for the overview page of this ``AssetType``."""
+
+        page_manager: PageManager = PageManager()
+
+        # Check if there already is a PageLayout for this asset_type_id
+        if page_manager.check_page_exists(asset_type_id, False):
+            raise PageAlreadyExistsException(
+                f"The overview view for asset_type_id: {asset_type_id} already exists!")
+
+        # Get Form Data
+        sync_form = await request.form
+
+        layout: List[List[ColumnInfo]] = []
+        sources: MutableMapping[str, str] = {}
+        field_mappings: MutableMapping[str, str] = {}  # TODO: get field mappings
+
+        # Generate the form ids and get the values required
+        # for constructing the layout from sync_form.
+
+        for row_number in range(0, 15):
+
+            layout.append([])
+
+            for column_number in range(0, 3):
+
+                # Generate general form id prefix.
+                form_field_str = f'row-{row_number}-col-{column_number}'
+
+                # Getting required values from sync-form
+                plugin_id = int(sync_form.get(f'{form_field_str}-plugin-id'))
+                column_width = int(sync_form.get(f'{form_field_str}-column-width'))
+                column_field_mappings = {}  # TODO: get field mappings
+
+                # Getting dependant values
+                plugin = PluginRegister[plugin_id].value
+                column_sources = plugin.server.get().initialize(asset_type_id, None)
+                sources.update(column_sources)
+
+                # Creating ColumnInfo object
+                column_info: ColumnInfo = ColumnInfo(
+                    plugin=plugin, column_width=column_width,
+                    field_mappings=column_field_mappings,
+                    sources=column_sources)
+
+                # Adding the column info into the layout
+                layout[row_number].append(column_info)
+
+        # Creating the PageLayout object
+        page_layout: PageLayout = PageLayout(
+            asset_type_id=asset_type_id,
+            asset_page_layout=False,
+            layout=layout,
+            field_mappings=field_mappings,
+            sources=sources)
+
+        page_manager.create_page(page_layout)
+
+        redirect(f'/asset-type:{asset_type_id}')
 
     @staticmethod
     async def delete_asset_type(asset_type_id):

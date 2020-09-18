@@ -6,6 +6,7 @@ This is the abstract super class for the implementations of a PageManager.
 """
 
 from abc import abstractmethod
+from datetime import datetime
 from re import findall
 from typing import Any, Dict, List, Mapping, Optional, Set
 
@@ -32,7 +33,7 @@ class APageManager:
         pass
 
     @abstractmethod
-    def delete_page(self, page_layout: PageLayout):
+    def delete_page(self, asset_type_id: int, asset_page_layout: bool):
         """Delete the ``AssetPage`` of a given ``asset_type_id``."""
         pass
 
@@ -63,11 +64,14 @@ class APageManager:
         # Constructing the layout string
         layout_str: str = ""
 
+        # Formatting column info and appending it to layout_str
         for row_info in page_layout.layout:
+
             columns = ";".join([
                 f"{col.column_width}, {col.column_id}"
                 for col in row_info
             ])
+
             layout_str += '{' + str(columns) + '}'
 
         # Creating a dict as required by db query
@@ -76,8 +80,10 @@ class APageManager:
             'asset_page_layout': int(page_layout.asset_page_layout),
             'layout': str(layout_str),
             'field_mappings': str(page_layout.field_mappings),
+            'created': int(page_layout.created.timestamp()) if page_layout.updated else None,
+            'updated': int(page_layout.updated.timestamp()) if page_layout.updated else None,
             'sources': ";".join(page_layout.sources) if page_layout.sources else None,
-            'primary_key': page_layout.layout_id,
+            'primary_key': page_layout.layout_id
         }
         return layout_row
 
@@ -127,8 +133,10 @@ class APageManager:
         }
 
         return PageLayout(
-            asset_type_id=row_data['asset_type_id'],
+            asset_type_id=int(row_data['asset_type_id']),
             asset_page_layout=bool(row_data['asset_page_layout']),
+            created=datetime.fromtimestamp(row_data.get('created')),
+            updated=datetime.fromtimestamp(row_data.get('updated')),
             layout=layout,
             layout_id=row_data['primary_key'],
             field_mappings=field_mappings,
