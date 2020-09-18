@@ -4,12 +4,14 @@
 
 These are tests for the SqliteConnection class.
 """
-from collections import OrderedDict, Sequence
+from collections import OrderedDict
+from collections import Sequence
 from shutil import rmtree
 from typing import Tuple
 from unittest import TestCase
 
-from database import Column, DataTypes
+from database import Column
+from database import DataTypes
 from exceptions.database import UniqueConstraintError
 from test.test_util import init_test_db
 
