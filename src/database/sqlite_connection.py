@@ -356,28 +356,42 @@ class SqliteConnection(DbConnection):
         for column_info in table_info:
 
             column_name = column_info['name']
+            column_required = column_info['notnull']
 
-            if column_name == 'primary_key':
-                continue
+            # We gotta cover some different cases
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-            # If its not supplied, we don't
-            # want to update it
-            if column_name not in values.keys():
-                continue
+            # 'column_name' is not provided on values. Do we need it?
+            # Values for required columns must be present in 'values'
+            if (column_name not in values.keys() or values[column_name] is None) and bool(column_required):
+                raise MissingValueException(f"The required value {column_name} is missing. Please provide it!")
 
-            if isinstance(values[column_name], str):
-                query += f'{column_name} = "{values[column_name]}", '
-            elif isinstance(values[column_name], datetime):
-                timestamp = int(values[column_name].timestamp())
-                query += f'''{query}"{timestamp}", '''
-            else:
-                query += f'{column_name} = {values[column_name]}, '
+            # It's not there, but we don't need it - so we don't care
+            elif (column_name not in values.keys() or values[column_name] is None) and not bool(column_required):
+                query = f'''{query}{column_name} = null, '''
+
+            # The most obvious other case: There are values for the column.
+            elif column_name in values.keys():
+                column_value = values[column_name]
+
+                # Checking if the value we want to enter is a string
+                # Strings are special -> They need an extra sausage
+                if isinstance(column_value, str):
+                    if column_required and not column_value:
+                        MissingValueException("Required fields of type VARCHAR cannot contain an empty string!")
+                    query = f'''{query}{column_name} = "{column_value}", '''
+                else:
+                    query = f'''{query}{column_name} = {column_value}, '''
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         query = f"{''.join(query[:-2])} "
 
         query += f"WHERE primary_key = {values['primary_key']}"
         # --------------
-        result = self.cursor.execute(query)
+        self.cursor.execute(query)
+
+        result: int = self.cursor.lastrowid
 
         return result
 
