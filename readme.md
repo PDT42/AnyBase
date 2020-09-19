@@ -53,11 +53,30 @@ server singletons, which hold static methods serving as route outlets. The route
 are connected to the methods using [Quart]. The Servers use the Managers to do stuff 
 in the database. 
 
+## Modules and their functions
+
+I will list those from _inside to outside_. I hope this will help to get a grasp of 
+_how the building blocks are stacked_.
+
+### DbConnection
+
++-------------------------+--------------------------+-------------------+
+| __Method Name__         | __Tested by__            | __Documented in__ |
++-------------------------+--------------------------+-------------------+
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [db_connection]   |
++-------------------------+--------------------------+-------------------+
+
+#### SqliteConnection
+
+ 
+
+
 [//]: # (LINKS)
 [Column]: https://github.com/PDT420/AnyBase/blob/master/doc/components/column.md
 [Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/components/assets.md
 [AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset_types.md
 [Quart]: https://github.com/pgjones/quart
+[DbConnection]: https://github.com/PDT420/AnyBase/blob/master/doc/database/db_connection.md
 
 [//]: # (IMAGES)
 [concept_diagram]: doc/graphics/rendered_images/AnyBase.png
