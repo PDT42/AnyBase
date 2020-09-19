@@ -60,11 +60,9 @@ _how the building blocks are stacked_.
 
 ### DbConnection
 
-+-------------------------+--------------------------+-------------------+
 | __Method Name__         | __Tested by__            | __Documented in__ |
-+-------------------------+--------------------------+-------------------+
-| ``convert_data_to_row`` | ``TestSqliteConnection`` | [db_connection]   |
-+-------------------------+--------------------------+-------------------+
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
 
 #### SqliteConnection
 
