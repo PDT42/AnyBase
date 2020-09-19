@@ -60,13 +60,83 @@ _how the building blocks are stacked_.
 
 ### DbConnection
 
+The DbConnection layer/abstract class realizes the connection between the manager and
+the actual database. Implementations of DbConnections must provide a number of functions,
+the managers later use to manipulate the managed data.
+
 | __Method Name__         | __Tested by__            | __Documented in__ |
 | ----------------------- |:------------------------:|:----------------- |
 | ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
 
 #### SqliteConnection
 
- 
+The SqliteConnection, as the name suggests, provides the methods necessary to interact with
+a sqlite .db file/database. 
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``read``                | ``TestSqliteConnection`` | [DbConnection]    |
+| ``read_joined``         | ``TestSqliteConnection`` | [DbConnection]    |
+| ``delete``              | ``TestSqliteConnection`` | [DbConnection]    |
+| ``write_dict``          | ``TestSqliteConnection`` | [DbConnection]    |
+| ``update``              | ``TestSqliteConnection`` | [DbConnection]    |
+| ``update_table_name``   | ``TestSqliteConnection`` | [DbConnection]    |
+| ``update_columns``      | ``TestSqliteConnection`` | [DbConnection]    |
+| ``update_append_column``| ``TestSqliteConnection`` | [DbConnection]    |
+| ``update_remove_column``| ``TestSqliteConnection`` | [DbConnection]    |
+| ``create_table``        | ``TestSqliteConnection`` | [DbConnection]    |
+| ``delete_table``        | ``TestSqliteConnection`` | [DbConnection]    |
+| ``get_table_info``      | ``TestSqliteConnection`` | [DbConnection]    |
+| ``check_table_exists``  | ``TestSqliteConnection`` | [DbConnection]    |
+| ``count``               | ``TestSqliteConnection`` | [DbConnection]    |
+
+### Managers
+
+Managers represent the connection between the server and the database layer.
+
+#### AssetTypeManager
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+#### AssetManager
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+#### PageManager
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+### Servers
+
+#### AssetTypeServer
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+#### AssetServer
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+#### PluginServers
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+
+##### NotesPlugin
+
+| __Method Name__         | __Tested by__            | __Documented in__ |
+| ----------------------- |:------------------------:|:----------------- |
+| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
 
 
 [//]: # (LINKS)
