@@ -46,5 +46,5 @@ if __name__ == '__main__':
         SqliteConnection.get().close()
         rmtree(tempdir)
 
-    except RuntimeError:
+    except ConnectionResetError:
         pass

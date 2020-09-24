@@ -127,12 +127,12 @@ class NotesPluginServer(APluginServer):
             .get_one_by_name(notes_type_name)
 
         # Adding table mapping
-        self.table_mappings[asset_type.asset_type_id, asset.asset_id] = {
+        self.table_mappings[asset_type.asset_type_id, asset.asset_id if asset else None] = {
             "notes": notes_asset_type.asset_type_id
         }
 
         # Adding action mappings that use functions of other servers
-        action_mappings = deepcopy(NotesPluginServer.action_mappings)
+        action_mappings = deepcopy(NotesPluginServer.get().action_mappings)
         action_mappings['stream-notes'] = \
             f"/asset-type:{asset_type.asset_type_id}/stream/{notes_type_name}"
 

@@ -343,6 +343,8 @@ class AssetManager(AAssetManager):
     def count(self, asset_type: AssetType):
         """Count the number of assets of the given type."""
 
+        # TODO: Add filtered count
+
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException()
 

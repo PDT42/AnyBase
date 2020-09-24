@@ -11,6 +11,7 @@ from abc import abstractmethod
 from typing import Any
 from typing import Mapping
 from typing import MutableMapping
+from typing import Optional
 from typing import OrderedDict
 from typing import Sequence
 from typing import Tuple
@@ -138,7 +139,7 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def count(self, table_name: str, query_filter=None) -> int:
+    def count(self, table_name: str, query_filters: Optional[Sequence[str]] = None) -> int:
         """Count the number ob items in ``table_name``."""
         pass
 

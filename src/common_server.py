@@ -33,7 +33,7 @@ class CommonServer:
         """Create a new AssetTypeServer."""
 
         self.json_response = Config.get().read(
-            'frontend', 'json_response', False) in ["True", "true", 1]
+            'frontend', 'JSON_RESPONSE', False) in ["True", "true", 1]
 
     @staticmethod
     def register_routes(app):
