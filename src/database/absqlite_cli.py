@@ -6,7 +6,8 @@ This is a command line interface for the sqlite connection.
 """
 
 from argparse import ArgumentParser
-from typing import Any, Iterable
+from typing import Any
+from typing import Iterable
 
 from config import Config
 from database.sqlite_connection import SqliteConnection
@@ -68,16 +69,28 @@ if __name__ == '__main__':
 
 
     def reset_layouts():
-        query: str = "DROP TABLE IF EXISTS abintern_layouts;"
-        sqlite_con.execute_query(query)
-        query = "DROP TABLE IF EXISTS abintern_plugins;"
-        sqlite_con.execute_query(query)
+        sqlite_con.delete_table('abintern_layout')
+        sqlite_con.delete_table('abintern_plugins')
         return 0
 
+
+    def delete_basic_notes_notes():
+        get_tables_query: str = \
+            "SELECT name FROM sqlite_master " \
+            "WHERE type='table' " \
+            "AND name LIKE 'abasset_table_basic_notes_%'"
+        plugin_table_names = sqlite_con.execute_query(get_tables_query)
+
+        for name in [row['name'] for row in plugin_table_names]:
+            sqlite_con.delete_table(name)
+        return 0
+
+    # This implements an action switch
 
     result: Any = {
         'exec': execute_query(),
         'reset_layouts': reset_layouts(),
+        'reset_basic_notes': delete_basic_notes_notes()
     }.get(arguments.get('command'), 'Error: Invalid Command ...')
 
     join_on = '\n'
