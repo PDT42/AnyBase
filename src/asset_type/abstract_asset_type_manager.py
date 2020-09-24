@@ -15,6 +15,7 @@ from typing import List, Optional, Sequence, Union
 
 from asset_type import AssetType
 from database import Column, DataTypes
+from exceptions.common import InvalidArgumentError
 
 
 class AAssetTypeManager:
@@ -133,5 +134,12 @@ class AAssetTypeManager:
         ensure, that future implementations still support the same
         naming convention."""
 
-        asset_table_name = f"abasset_table_{asset_type.asset_name.replace(' ', '_').lower()}"
+        if isinstance(asset_type, AssetType):
+            asset_type_name = asset_type.asset_name.replace(' ', '_').lower()
+        elif isinstance(asset_type, str):
+            asset_type_name = asset_type.replace(' ', '_').lower()
+        else:
+            raise InvalidArgumentError()
+
+        asset_table_name = f"abasset_table_{asset_type_name}"
         return asset_table_name
