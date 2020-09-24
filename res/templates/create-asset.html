@@ -21,11 +21,16 @@
 
 </div>
 
+<script src="/static/jscript/createAsset.js"></script>
 <script>
+
+    // TODO: Get these values differently
+
     const assetType = JSON.parse('{{ asset_type.as_dict()|tojson }}');
     const assets = JSON.parse('{{ assets|tojson }}');
-</script>
 
-<script src="/static/jscript/createAsset.js"></script>
+    createPlugin();
+
+</script>
 
 {% endblock %}

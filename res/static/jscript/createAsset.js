@@ -8,6 +8,8 @@ function createPlugin() {
 
     let root = document.getElementById('create-asset');
 
+    // TODO: Get AssetType and available plugins another way.
+
     let form = document.createElement('form');
     form.setAttribute('class', 'col');
     form.setAttribute('action',
@@ -93,5 +95,3 @@ function createPlugin() {
     submitButton.textContent = 'Create';
     submitButtonColumn.appendChild(submitButton);
 }
-
-createPlugin();
