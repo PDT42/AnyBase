@@ -69,7 +69,7 @@ class NotesPluginServer(APluginServer):
             raise ServerAlreadyInitializedError("AssetServer already initialized!")
 
         # Create name and url based on PLUGIN_NAME.
-        asset_type_post_rule_url = f'/asset-type:<asset_type_id: int>/' \
+        asset_type_post_rule_url = f'/asset-type:<int:asset_type_id>/' \
                                    f'{NotesPluginServer.PLUGIN_NAME}/create-note'
         asset_type_post_rule_name = f'post-create-asset-{NotesPluginServer.PLUGIN_NAME}'
         asset_type_post_rule_outlet = NotesPluginServer.post_create_note
@@ -85,7 +85,7 @@ class NotesPluginServer(APluginServer):
             asset_type_post_rule_url
 
         # Create name and url based on PLUGIN_NAME.
-        asset_post_rule_url = f'/asset-type:<asset_type_id: int>/asset:<asset_id: int>' \
+        asset_post_rule_url = f'/asset-type:<int:asset_type_id>/asset:<int:asset_id>' \
                               f'/{NotesPluginServer.PLUGIN_NAME}/create-note'
         asset_post_rule_name = f'post-create-asset-type-{NotesPluginServer.PLUGIN_NAME}'
         asset_post_rule_outlet = NotesPluginServer.post_create_note
@@ -116,7 +116,7 @@ class NotesPluginServer(APluginServer):
             columns=[
                 Column('title', 'title', DataTypes.VARCHAR.value, required=True),
                 Column('note', 'note', DataTypes.VARCHAR.value, required=True),
-                Column('author', 'author', DataTypes.VARCHAR.value, required=True)
+                Column('author', 'author', DataTypes.VARCHAR.value, required=False)
             ], owner_id=asset_type.asset_type_id  # Notes have an owner
         )
 
