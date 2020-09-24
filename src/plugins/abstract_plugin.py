@@ -9,11 +9,11 @@ initialization method, that binds these static methods to routes.
 """
 
 from abc import abstractmethod
-from typing import Mapping
+from typing import MutableMapping
 
 from asset import Asset
-from asset_type import AssetType
 from asset.abstract_asset_manager import AAssetManager
+from asset_type import AssetType
 from asset_type.abstract_asset_type_manager import AAssetTypeManager
 
 
@@ -32,7 +32,7 @@ class APluginServer:
         pass
 
     @abstractmethod
-    def initialize(self, asset_type: AssetType, asset: Asset = None) -> Mapping[str, str]:
+    def initialize(self, asset_type: AssetType, asset: Asset = None) -> MutableMapping[str, str]:
         """Initialize everything this server requires."""
         pass
 
@@ -49,6 +49,3 @@ class APluginServer:
 
     def as_dict(self):
         """Get a dict representation of the server."""
-
-
-
