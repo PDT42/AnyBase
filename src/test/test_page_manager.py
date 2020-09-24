@@ -58,13 +58,14 @@ class TestPageManager(TestCase):
                 ColumnInfo(
                     plugin=PluginRegister.LIST_ASSETS.value,
                     field_mappings={'header': 'name'},
+                    sources={'st-assets': 'some/url'},
                     column_width=12,
+                    column_offset=0,
                     column_id=0
                 )]
             ], field_mappings={
                 'header': 'name'
-            }
-        )
+            }, sources={'st-assets': 'some/url'})
 
         self.asset_type_layout_row: MutableMapping[str, Any] = {
             'asset_type_id': 1,
@@ -74,7 +75,7 @@ class TestPageManager(TestCase):
             'created': None,
             'updated': None,
             'primary_key': None,
-            'sources': None
+            'sources': "{'st-assets': 'some/url'}"
         }
 
         # Defining a Page Layout with asset_type_page = True
@@ -85,14 +86,22 @@ class TestPageManager(TestCase):
             asset_page_layout=True,
             layout=[[
                 ColumnInfo(
+
+                    # We predefine a column id, so we can test the
+                    # conversion methods independently. The conversion
+                    # methods assume the ColumnInfo object defines
+                    # the column_id field, which seems reasonable.
+
                     plugin=PluginRegister.ASSET_DETAILS.value,
                     column_width=12,
+                    column_offset=0,
                     field_mappings={'header': 'name'},
+                    sources={'st-assets': 'some/url'},
                     column_id=1
                 )]
             ], field_mappings={
                 'header': 'name'
-            })
+            }, sources={'st-assets': 'some/url'})
 
         self.asset_layout_row: MutableMapping[str, Any] = {
             'asset_type_id': 1,
@@ -102,7 +111,7 @@ class TestPageManager(TestCase):
             'created': None,
             'updated': None,
             'primary_key': None,
-            'sources': None
+            'sources': "{'st-assets': 'some/url'}"
         }
 
     def tearDown(self) -> None:
