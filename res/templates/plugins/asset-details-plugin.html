@@ -1,75 +1,11 @@
-{% macro asset_plugin_macro(asset, asset_type, field_mappings, column_id) %}
+{% macro plugin_macro(column_id) %}
+
+<script src="/static/jscript/plugins/assetDetailsPlugin.js"></script>
 <script>
 
-    function createPlugin() {
+    let columnId = Number('{{ column_id|int }}');
 
-        const asset = JSON.parse('{{ asset.as_dict()|tojson }}');
-        const assetType = JSON.parse('{{ asset_type.as_dict()|tojson }}');
-        const fieldMappings = JSON.parse('{{ field_mappings|tojson }}');
+    createPlugin(columnId);
 
-        // --
-
-        let root = document.getElementById('column-{{ column_id }}');
-
-        for (let field in fieldMappings) {
-
-            let mapping = fieldMappings[field];
-            let value = asset['data'][mapping];
-
-            let column = assetType['columns'].filter(col =>
-                col['db_name'] === mapping)[0];
-            let columnName = column['name'];
-            let columnDataTypeName = column['datatype']['typename'];
-
-            console.log(field, value, asset, assetType, columnName);
-
-            let fieldContainer = document.createElement('div');
-            fieldContainer.setAttribute('class', 'row');
-            fieldContainer.style.paddingTop = '10px';
-            root.appendChild(fieldContainer);
-
-            {
-                let fieldLabelColumn = document.createElement('div');
-                fieldLabelColumn.setAttribute('class', 'col-6');
-                fieldContainer.appendChild(fieldLabelColumn);
-
-                let fieldLabelText = document.createElement('span');
-                fieldLabelText.textContent = columnName.toString() + ':';
-                fieldLabelColumn.appendChild(fieldLabelText);
-
-                let fieldValueColumn = document.createElement('div');
-                fieldValueColumn.setAttribute('class', 'col-6');
-                fieldContainer.appendChild(fieldValueColumn);
-
-                if (columnDataTypeName === 'ASSET') {
-
-                    let fieldValueText = document.createElement('a');
-                    fieldValueText.setAttribute('href',
-                        '/asset-type:' + assetType['asset_type_id'] +
-                        '/asset:' + asset['asset_id']);
-                    fieldValueText.textContent = value.toString();
-                    fieldValueColumn.appendChild(fieldValueText);
-
-                } else if (columnDataTypeName === 'ASSETLIST') {
-
-                    let fieldValueText = document.createElement('a');
-                    fieldValueText.setAttribute('href',
-                        '/asset-type:' + assetType['asset_type_id']);
-                    fieldValueText.textContent = assetType.asset_name;
-                    fieldValueColumn.appendChild(fieldValueText);
-
-                } else {
-
-                    let fieldValueText = document.createElement('input');
-                    fieldValueText.value = value.toString();
-                    fieldValueText.setAttribute('class', 'form-control');
-                    fieldValueText.disabled = true;
-                    fieldValueColumn.appendChild(fieldValueText);
-                }
-            }
-        }
-    }
-
-    createPlugin();
 </script>
 {% endmacro %}

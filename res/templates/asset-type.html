@@ -16,6 +16,9 @@
 
     <div class="row">
 
+        <!-- Adding Header Row -->
+
+        <!-- TODO: Do this using Javascript -->
         <div class="col">
             <h4>{{ asset_name }}</h4>
         </div>
@@ -23,6 +26,8 @@
         <div class="col">
 
             <div class="row justify-content-end">
+
+                <!-- Adding Buttons -->
 
                 <div class="col-3">
                     <a class="btn btn-block btn-dark" href="/asset-type:{{ asset_type_id }}/create-asset">
@@ -42,9 +47,71 @@
 
     <hr/>
 
-    <!-- Import Layout Macro and apply it -->
-    {% from 'asset-type-layout-generator.html' import layout_generator %}
-    {{ layout_generator(asset_type, page_layout) }}
+    <div id="asset-type-root">
+
+        <script src="../static/jscript/observableFromUrl.js"></script>
+        <script>
+
+            const asset_type_root_id = 'asset-type-root';
+            const asset_type_root = document.getElementById(asset_type_root_id);
+            asset_type_root['stream_data'] = new Map();
+
+            // TODO: Get these values another way.
+            const asset_type = JSON.parse('{{ asset_type.as_dict()|tojson }}');
+            const page_layout = JSON.parse('{{ page_layout|tojson }}');
+            const sources = page_layout['sources'];
+
+            if (sources) {
+
+                Object.entries(sources).map((source) => {
+
+                    let channel = source[0];
+                    let url = source[1];
+
+                    console.log(channel, url);
+
+                    document.getElementById(asset_type_root_id)['stream_data'].set(
+                        channel, observableFromUrl(asset_type_root_id, channel, url));
+                })
+            }
+
+        </script>
+
+        <!--
+        The PageLayouts layout parameter, is filled with a list
+        of rows. Each row is a list of columns. For each column
+        we create a divider with bootstrap class column. This
+        column serves as a container. The plugin_macro method,
+        which creates this macro's contents, can append content
+        to this container.
+        -->
+
+        <!-- TODO: Do this using Javascript -->
+
+        {% for row_info in page_layout.layout %}
+        <div class="row" id="row-{{ loop.index }}">
+
+            {% for column_info in row_info %}
+
+            {% set column_id = column_info.column_id %}
+            {% set column_width = column_info.column_width %}
+            {% set column_offset = column_info.column_offset %}
+            {% set plugin_path = column_info.plugin.view %}
+
+            {# Defining a column div, that the plugin macro can append to. #}
+
+            <div class="col-{{ column_width }} offset-{{ column_offset }}"
+                 id="column-{{ column_id }}">
+            </div>
+
+            {% from plugin_path import plugin_macro %}
+            {{ plugin_macro(column_info, asset_type) }}
+
+            {% endfor %}
+
+        </div>
+        {% endfor %}
+    </div>
 
     {% else %}
     <h1>Error: Page Information is missing.</h1>
