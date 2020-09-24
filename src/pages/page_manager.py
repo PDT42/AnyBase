@@ -4,12 +4,15 @@
 
 This is the module for the ``AssetTypePageManager``.
 """
-import warnings
+import json
 from datetime import datetime
 from typing import Any
 from typing import List
 from typing import Mapping
+from typing import MutableMapping
 from typing import Optional
+
+from quart import logging
 
 from database import Column
 from database import DataTypes
@@ -48,7 +51,7 @@ class PageManager(APageManager):
 
     layout_plugin_table_headers: List[str] = [
         'plugin_id', 'column_width', 'field_mappings',
-        'primary_key', 'sources'
+        'column_offset', 'primary_key', 'sources'
     ]
 
     db_connection: DbConnection = None
@@ -73,24 +76,26 @@ class PageManager(APageManager):
 
         for row in page_layout.layout:
             for column in row:
+
                 # TODO: I dont like the expression column. The
                 # TODO: name should differ more from asset column.
 
                 # Creating a query dict from each column
                 # and storing it in a separate database
 
-                field_mappings = ";".join([
-                    f"{field},{mapping}" for field, mapping in column.field_mappings.items()
-                ])
+                if field_mappings := json.dumps(column.field_mappings) if column.field_mappings else None:
+                    field_mappings = field_mappings.replace('"', "'")
 
-                sources = set(";".join(column.sources)) if column.sources else None
+                if sources_str := json.dumps(column.sources) if column.sources else None:
+                    sources_str = sources_str.replace('"', "'")
 
                 column_row: Mapping[str: Any] = {
                     'primary_key': None,
                     'column_width': column.column_width,
+                    'column_offset': column.column_offset,
                     'plugin_id': column.plugin.id.replace('-', '_').upper(),
                     'field_mappings': field_mappings,
-                    'sources': sources
+                    'sources': sources_str
                 }
 
                 # Storing the column and getting its pk
@@ -140,19 +145,19 @@ class PageManager(APageManager):
         return
 
     def check_page_exists(self, asset_type_id: int, asset_page_layout: bool) -> bool:
-        """Check if an ``PageLayout`` exists for a given item."""
+        """Check if a ``PageLayout`` exists for a given item."""
 
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
 
-        query_filter: List[str] = [
+        query_filters: List[str] = [
             f'{self.ASSET_TYPE_ID} = {asset_type_id}',
             f'{self.ASSET_PAGE_LAYOUT} = {int(asset_page_layout)}'
         ]
 
         count: int = self.db_connection.count(
-            self.layout_plugin_table_name,
-            query_filter=query_filter)
+            self.asset_type_layout_table_name,
+            query_filters=query_filters)
 
         if count == 0:
             return False
@@ -190,7 +195,8 @@ class PageManager(APageManager):
             ])
 
         if len(result) < 1:
-            warnings.warn(
+            logger = logging.getLogger('quart.serving')
+            logger.warning(
                 f"There is no page for the asset type id: " +
                 f"{asset_type_id} with detail-view: {asset_type_page}")
             return None
@@ -219,19 +225,23 @@ class PageManager(APageManager):
         result = result[0]
 
         # Extract the field mappings from fm string
-        field_mappings: Mapping[str, str] = {
-            field: mapping for field, mapping in [
-                fm.split(',') for fm in result['field_mappings'].split(';')
-            ]}
+        field_mappings: Optional[Mapping[str, str]] = None
+        if field_mappings_string := result['field_mappings']:
+            field_mappings_string = field_mappings_string.replace("'", '"')
+            field_mappings = json.loads(field_mappings_string)
 
-        sources = set(result['sources'].split(';')) if result['sources'] else None
+        sources: MutableMapping[str, str] = {}
+        if sources_str := result['sources'] if result['sources'] else None:
+            sources_str = sources_str.replace("'", '"')
+            sources = json.loads(sources_str)
 
         column_info: ColumnInfo = ColumnInfo(
             plugin=PluginRegister[result['plugin_id']].value,
-            column_width=result['column_width'],
+            column_width=result.get('column_width', 3),
+            column_offset=result.get('column_offset', 0),
+            column_id=result['primary_key'],
             field_mappings=field_mappings,
-            sources=sources,
-            column_id=result['primary_key'])
+            sources=sources)
 
         return column_info
 
@@ -244,7 +254,7 @@ class PageManager(APageManager):
                 Column('asset_type_id', 'asset_type_id', DataTypes.INTEGER.value, True),
                 Column('asset_page_layout', 'asset_page_layout', DataTypes.BOOLEAN.value, True),
                 Column('layout', 'layout', DataTypes.VARCHAR.value, True),
-                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, False),
                 Column('created', 'created', DataTypes.DATETIME.value, True),
                 Column('updated', 'updated', DataTypes.DATETIME.value, True),
                 Column('sources', 'sources', DataTypes.VARCHAR.value, False)
@@ -257,7 +267,8 @@ class PageManager(APageManager):
                 # The column primary_key will be created automatically -> column_id
                 Column('plugin_id', 'plugin_id', DataTypes.VARCHAR.value, True),
                 Column('column_width', 'column_width', DataTypes.INTEGER.value, True),
-                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
+                Column('column_offset', 'column_offset', DataTypes.INTEGER.value, True),
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, False),
                 Column('sources', 'sources', DataTypes.VARCHAR.value, False)
             ]
 
