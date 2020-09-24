@@ -4,3 +4,4 @@
 .db
 res/config.ini
 *.db
+node_modules/
