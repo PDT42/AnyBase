@@ -16,6 +16,8 @@ from asset_type.asset_type_server import AssetTypeServer
 
 # Getting config values
 # ---------------------
+from plugins.notes_plugin import NotesPluginServer
+
 Config.get().change_path('U:/projects/anybase_modular_management/res/config.ini')
 template_folder = Config.get().read('frontend', 'template_folder', '/res/templates')
 static_folder = Config.get().read('frontend', 'static_folder', 'res/static')
@@ -52,6 +54,10 @@ db_connection: DbConnection = SqliteConnection.get(db_path)
 CommonServer.get().register_routes(app=app)
 AssetServer.get().register_routes(app=app)
 AssetTypeServer.get().register_routes(app=app)
+
+# Plugin Routes
+# ~~~~~~~~~~~~~
+NotesPluginServer.get().register_routes(app=app)
 
 if __name__ == '__main__':
     app.run('localhost', port=5000, debug=True)
