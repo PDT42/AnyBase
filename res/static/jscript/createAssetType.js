@@ -152,6 +152,3 @@ function dataTypeSelection(name, value) {
 }
 
 addColumn();
-
-let first_entry = document.getElementById('column-data-type-0');
-console.log(first_entry);
