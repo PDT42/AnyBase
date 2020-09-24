@@ -5,3 +5,5 @@
 res/config.ini
 *.db
 node_modules/
+package.json
+package-lock.json
