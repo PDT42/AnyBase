@@ -9,6 +9,8 @@ the [AssetServer], with the [PageLayout]s they send to the user. Just as all the
 of [AnyBase], it represents the connection between the [DbConnection] and the main application. It can 
 be used to store, get, update and overall manager [PageLayout]s in the database.
 
+The information on the [Plugin]s used in the [PageLayout]s ``layout[i][j]`` [ColumnInfo]
+
 [//]: # (LINKS)
 [PageLayout]: https://github.com/PDT420/AnyBase/blob/master/doc/components/page_layouts.md
 [AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/components/asset_types.md

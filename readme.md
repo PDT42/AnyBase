@@ -110,7 +110,7 @@ Managers represent the connection between the server and the database layer.
 
 | __Method Name__         | __Tested by__            | __Documented in__ |
 | ----------------------- |:------------------------:|:----------------- |
-| ``convert_data_to_row`` | ``TestSqliteConnection`` | [DbConnection]    |
+| ``create_page``         | ``TestSqliteConnection`` | [DbConnection]    |
 
 ### Servers
 
