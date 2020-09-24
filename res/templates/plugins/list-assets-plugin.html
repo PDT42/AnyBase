@@ -1,55 +1,12 @@
-{% macro plugin_macro(asset_type, column_info) %}
+{% macro plugin_macro(column_info, asset_type) %}
+
+<script src="../../static/jscript/plugins/listAssetsPlugin.js"></script>
+
 <script>
-    column_info = JSON.parse('{{ column_info.as_dict()|tojson }}');
 
-    // Putting this into a function is important
-    // The variable names used, will otherwise
-    // be globally declared and not be usable
-    // within the same html again. If we want to
-    // use the same plugin twice in one layout
-    // tho - that must be possible.
+    createPlugin(JSON.parse('{{ column_info|tojson }}'),
+        JSON.parse('{{ asset_type.as_dict()|tojson }}'));
 
-    function appendListItems(items, assetList, field_mappings) {
-
-        for (let index in items) {
-
-            let assetData = items[index]
-
-            let assetCard = document.createElement('a');
-            assetCard.setAttribute('id', '{{column_info.column_id}}-asset-' + assetData['asset_id'])
-            assetCard.setAttribute('class', 'list-group-item card');
-            assetCard.setAttribute('href','/asset-type:' +
-                '{{ asset_type.asset_type_id }}/asset:' + assetData['asset_id'])
-            assetCard.setAttribute('style', 'margin-bottom: 15px');
-            assetList.appendChild(assetCard);
-
-            let assetCardBody = document.createElement('div');
-            assetCardBody.setAttribute('class', 'card-body');
-            assetCard.appendChild(assetCardBody);
-
-            let cardTitle = document.createElement('h5');
-            cardTitle.setAttribute('class', 'card-title');
-            cardTitle.innerText = assetData['data'][field_mappings['title']];
-            assetCardBody.appendChild(cardTitle);
-        }
-    }
-
-    function initListAssets() {
-        const root = document.getElementById('column-' + column_info['column_id']);
-
-        let assetList = document.createElement('div');
-        assetList.setAttribute('class', 'list-group');
-        root.appendChild(assetList);
-
-        let field_mappings = column_info['field_mappings'];
-
-        appendListItems(items, assetList, field_mappings)
-
-        itemsPubSub.subscribe('items-data', function (items) {
-            appendListItems(items, assetList, field_mappings)
-        })
-    }
-
-    initListAssets();
 </script>
+
 {% endmacro %}
