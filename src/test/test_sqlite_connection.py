@@ -7,6 +7,7 @@ These are tests for the SqliteConnection class.
 from collections import OrderedDict
 from collections import Sequence
 from shutil import rmtree
+from time import sleep
 from typing import Tuple
 from unittest import TestCase
 
@@ -85,6 +86,29 @@ class TestSqliteConnection(TestCase):
             headers=list(self.row_values.keys()),
             and_filters=[f'primary_key = {primary_key}'])
         self.assertEqual([self.row_values], result)
+
+    def test_misc(self):
+        print("\n#*/?!CHreech#~% ... Hello?")
+        sleep(1)
+        print("Can anybody hear me?!")
+        sleep(.8)
+        print("Help! Anybody?!")
+        sleep(.8)
+        print("...")
+        sleep(.8)
+        print("...")
+        sleep(.8)
+        print("System.out.println('ahh')")
+        sleep(.8)
+        print("...")
+        sleep(1.5)
+        print("(Disgruntled silence)")
+        sleep(.6)
+        print("...")
+        sleep(.8)
+        print("You for real now?")
+        sleep(1.5)
+        print("Well fuck you too!\n")
 
     def test_read_joined(self):
 
