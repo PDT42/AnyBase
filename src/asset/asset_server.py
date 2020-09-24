@@ -32,11 +32,14 @@ from database import DataType
 from database import DataTypes
 from exceptions.asset import AssetTypeDoesNotExistException
 from exceptions.database import MissingValueException
+from exceptions.plugins import PageAlreadyExistsException
 from exceptions.server import ServerAlreadyInitializedError
-from pages import ColumnInfo
 from pages import PageLayout
+from pages.abstract_page_manager import APageManager
 from pages.page_manager import PageManager
+from plugins import Plugin
 from plugins import PluginRegister
+from plugins import PluginType
 
 
 class AssetServer:
@@ -75,8 +78,8 @@ class AssetServer:
 
         # Get relevant info from the config
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
-        self.json_response = Config.get().read(
-            'frontend', 'json_response', False) in ["True", "true", 1]
+        self.JSON_RESPONSE = Config.get().read(
+            'frontend', 'JSON_RESPONSE', False) in ["True", "true", 1]
 
     @staticmethod
     def register_routes(app):
@@ -86,7 +89,7 @@ class AssetServer:
             raise ServerAlreadyInitializedError("AssetServer already initialized!")
 
         app.add_url_rule(
-            '/asset-type:<int:asset_type_id>/<string:channel>',
+            '/asset-type:<int:asset_type_id>/stream/<string:channel>',
             'stream-asset-data',
             AssetServer.stream_asset_data,
             methods=['GET']
@@ -104,6 +107,13 @@ class AssetServer:
             'get-create-asset',
             AssetServer.get_create_asset,
             methods=['GET']
+        )
+
+        app.add_url_rule(
+            '/asset-type:<int:asset_type_id>/asset:<int:asset_id>/create-detail-view',
+            'post-create-detail-view',
+            AssetServer.post_create_detail_page_layout,
+            methods=['POST']
         )
 
         app.add_url_rule(
@@ -313,7 +323,7 @@ class AssetServer:
         # converting t
         assets = {key: [a.as_dict() for a in value] for key, value in assets.items()}
 
-        if AssetServer.get().json_response:
+        if AssetServer.get().JSON_RESPONSE:
             return jsonify({
                 'asset_type_id': asset_type.as_dict(),
                 'assets': assets
@@ -329,63 +339,84 @@ class AssetServer:
         asset_manager: AAssetManager = AssetManager()
         page_manager: PageManager = PageManager()
 
+        # Get the extended AssetType -> it will contain all
+        # the Columns of potential supertype AssetTypes.
         asset_type: AssetType = asset_type_manager \
             .get_one_by_id(asset_type_id, extend_columns=True)
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
-        # Setting a default page layout TODO: remove this
+        # Setting a default page layout
         if not (asset_page_layout := page_manager.get_page(asset_type.asset_type_id, True)):
-            asset_page_layout = PageLayout(
-                layout=[
-                    [
-                        ColumnInfo(
-                            plugin=PluginRegister.ASSET_DETAILS.value,
-                            column_width=12,
-                            field_mappings={
-                                'field1': 'title',
-                                'field2': 'isbn',
-                                'field3': 'number_of_pages'
-                            }),
-                        ColumnInfo(
-                            plugin=PluginRegister.BASIC_NOTES.value,
-                            column_width=12,
-                            field_mappings={})
-                    ]
-                ],
-                asset_type_id=asset_type.asset_type_id,
-                created=datetime.now(),
-                updated=datetime.now(),
-                asset_page_layout=True,
-                field_mappings={
-                    'header': 'title'
-                }, sources={})
-
-            page_manager.create_page(asset_page_layout)
-            asset_page_layout = page_manager \
-                .get_page(asset_type.asset_type_id, True)
+            return await AssetServer.get_create_detail_page_layout(asset_type, asset_id)
 
         # Initialize all plugins required
         for row in asset_page_layout.layout:
             for column_info in row:
 
                 if (server := column_info.plugin.server) is not None:
-
                     column_info.sources = server.get().initialize(asset_type, asset)
                     asset_page_layout.sources.update(column_info.sources)
 
         # --
 
-        if AssetServer.get().json_response:
+        if AssetServer.get().JSON_RESPONSE:
             return jsonify({
                 'asset_type': asset_type.as_dict(),
-                'asset': asset.as_dict(),
-                'asset_page_layout': asset_page_layout.as_dict()
+                'asset_page_layout': asset_page_layout.as_dict(),
+                'asset': asset.as_dict()
             })
 
         return await render_template(
             template_name_or_list="asset.html",
-            asset_page_layout=asset_page_layout
+            asset_page_layout=asset_page_layout,
+            asset_type=asset_type,
+            asset=asset)
+
+    @staticmethod
+    async def get_create_detail_page_layout(asset_type: AssetType, asset_id: int):
+        """Getting a page to create a layout for the detail view of this ``asset_type``."""
+
+        available_plugins: List[Plugin] = list(filter(
+            lambda plugin: plugin.type in [PluginType.ASSET, PluginType.HYBRID],
+            PluginRegister.get_all_plugins()))
+
+        if AssetServer.get().JSON_RESPONSE:
+            return jsonify({
+                'asset_type': asset_type.as_dict(),
+                'available_plugins': [plugin.as_dict() for plugin in available_plugins]
+            })
+
+        return await render_template(
+            "layout-editor.html", asset_type=asset_type, detail_view=True,
+            create_url=f'/asset-type:{asset_type.asset_type_id}/asset:{asset_id}/create-detail-view',
+            available_plugins=[plugin.as_dict() for plugin in available_plugins]
         )
+
+    @staticmethod
+    async def post_create_detail_page_layout(asset_type_id: int, asset_id: int):
+        """Setting the page layout for the detail page of this ``AssetType``."""
+
+        page_manager: PageManager = PageManager()
+        asset_type_manager: AssetTypeManager = AssetTypeManager()
+        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
+
+        # Check if there already is a PageLayout for this asset_type_id
+        if page_manager.check_page_exists(asset_type_id, True):
+            raise PageAlreadyExistsException(
+                f"The detail view for asset_type_id: {asset_type_id} already exists!")
+
+        # Generate the form ids and get the values required
+        # for constructing the layout from sync_form.
+
+        page_layout: PageLayout = APageManager.get_page_layout_from_form_data(
+            asset_type=asset_type, detail_view=True, form_data=await request.form)
+
+        # Adding common sources
+        page_layout.sources.update({})
+
+        page_manager.create_page(page_layout)
+
+        return redirect(f'/asset-type:{asset_type_id}/asset:{asset_id}')
 
     @staticmethod
     def delete_asset(asset_type_id: int, asset_id: int):

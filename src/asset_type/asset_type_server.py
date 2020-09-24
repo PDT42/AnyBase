@@ -10,7 +10,6 @@ from asyncio import Task
 from typing import Any
 from typing import List
 from typing import Mapping
-from typing import MutableMapping
 from typing import Set
 
 from quart import jsonify
@@ -32,8 +31,8 @@ from exceptions.asset import ColumnNameTakenError
 from exceptions.common import IllegalStateException
 from exceptions.plugins import PageAlreadyExistsException
 from exceptions.server import ServerAlreadyInitializedError
-from pages import ColumnInfo
 from pages import PageLayout
+from pages.abstract_page_manager import APageManager
 from pages.page_manager import PageManager
 from plugins import Plugin
 from plugins import PluginRegister
@@ -66,7 +65,7 @@ class AssetTypeServer:
         # Getting setting constants from the config
         self.DB_BATCH_SIZE = int(Config.get().read("local database", "batch_size", 1000))
         self.json_response = Config.get().read(
-            'frontend', 'json_response', False) in ["True", "true", 1]
+            'frontend', 'JSON_RESPONSE', False) in ["True", "true", 1]
         self.MAX_COLUMNS_PER_TYPE = int(Config.get().read("general", "max_columns_per_type"), 15)
 
     @staticmethod
@@ -144,6 +143,26 @@ class AssetTypeServer:
             offset=th_offset)
 
     @staticmethod
+    async def _encode_message(result, item_count, event_name):
+        """Encode the result in the proper format."""
+
+        result_dict: Mapping[str, Any] = {
+            "items": [item.as_dict() for item in result],
+            "item_count": item_count
+        }
+
+        result_str: str = str(result_dict).replace('\"', '\'')
+
+        # We yield a correctly formatted
+        # and encoded result message.
+
+        result_message: str = f"data: [{result_str}]"
+        result_message += f"\nevent: {event_name}"
+        result_message += "\r\n\r\n"
+
+        return result_message.encode('utf-8')
+
+    @staticmethod
     async def stream_asset_type_data():
         """Handle requests to ``stream-asset-type-data``.
         The result is formatted as ``text/event-stream``.
@@ -166,20 +185,12 @@ class AssetTypeServer:
             # items available as of yet.
 
             if asset_type_count < 1:
-                result_dict: Mapping[str, Any] = {
-                    "items": [],
-                    "item_count": asset_type_count
-                }
+                result_message = await AssetTypeServer._encode_message(
+                    item_count=asset_type_count,
+                    event_name=event_name,
+                    result=[])
 
-                result_str: str = str(result_dict).replace('\"', '\'')
-
-                # We yield a correctly formatted standard result
-
-                result_message: str = f"data: [{result_str}]"
-                result_message += f"\nevent: {event_name}"
-                result_message += "\r\n\r\n"
-
-                yield result_message.encode('utf-8')
+                yield result_message
 
             # Counting up an offset by DB_BATCH_SIZE
             # in each step of the iteration. In each
@@ -206,20 +217,12 @@ class AssetTypeServer:
 
                 result = await result_task
 
-                result_dict: Mapping[str, Any] = {
-                    "items": [asset.as_dict() for asset in result],
-                    "item_count": asset_type_count
-                }
+                result_message = await AssetTypeServer._encode_message(
+                    result=[item.as_dict() for item in result],
+                    item_count=asset_type_count,
+                    event_name=event_name)
 
-                result_str: str = str(result_dict).replace('\"', '\'')
-
-                # We yield a correctly formatted result message
-
-                result_message: str = f"data: [{result_str}]"
-                result_message += f"\nevent: {event_name}"
-                result_message += "\r\n\r\n"
-
-                yield result_message.encode('utf-8')
+                yield result_message
 
         # Using a generator function as the first
         # parameter of quarts make_response, will
@@ -434,7 +437,7 @@ class AssetTypeServer:
         return await render_template(
             template_name_or_list="asset-type.html",
             asset_type=asset_type,
-            page_layout=page_layout
+            page_layout=page_layout.as_dict()
         )
 
     @staticmethod
@@ -452,9 +455,9 @@ class AssetTypeServer:
             })
 
         return await render_template(
-            "layout-editor.html",
-            asset_type=asset_type,
-            available_plugins=available_plugins
+            "layout-editor.html", asset_type=asset_type, detail_view=False,
+            create_url=f'/asset-type:{asset_type.asset_type_id}/create-overview-view',
+            available_plugins=[plugin.as_dict() for plugin in available_plugins]
         )
 
     @staticmethod
@@ -462,61 +465,28 @@ class AssetTypeServer:
         """Setting the page layout for the overview page of this ``AssetType``."""
 
         page_manager: PageManager = PageManager()
+        asset_type_manager: AssetTypeManager = AssetTypeManager()
+        asset_type: AssetType = asset_type_manager.get_one_by_id(asset_type_id)
 
         # Check if there already is a PageLayout for this asset_type_id
         if page_manager.check_page_exists(asset_type_id, False):
             raise PageAlreadyExistsException(
                 f"The overview view for asset_type_id: {asset_type_id} already exists!")
 
-        # Get Form Data
-        sync_form = await request.form
-
-        layout: List[List[ColumnInfo]] = []
-        sources: MutableMapping[str, str] = {}
-        field_mappings: MutableMapping[str, str] = {}  # TODO: get field mappings
-
         # Generate the form ids and get the values required
         # for constructing the layout from sync_form.
 
-        for row_number in range(0, 15):
+        page_layout: PageLayout = APageManager.get_page_layout_from_form_data(
+            asset_type=asset_type, detail_view=False, form_data=await request.form)
 
-            layout.append([])
-
-            for column_number in range(0, 3):
-
-                # Generate general form id prefix.
-                form_field_str = f'row-{row_number}-col-{column_number}'
-
-                # Getting required values from sync-form
-                plugin_id = int(sync_form.get(f'{form_field_str}-plugin-id'))
-                column_width = int(sync_form.get(f'{form_field_str}-column-width'))
-                column_field_mappings = {}  # TODO: get field mappings
-
-                # Getting dependant values
-                plugin = PluginRegister[plugin_id].value
-                column_sources = plugin.server.get().initialize(asset_type_id, None)
-                sources.update(column_sources)
-
-                # Creating ColumnInfo object
-                column_info: ColumnInfo = ColumnInfo(
-                    plugin=plugin, column_width=column_width,
-                    field_mappings=column_field_mappings,
-                    sources=column_sources)
-
-                # Adding the column info into the layout
-                layout[row_number].append(column_info)
-
-        # Creating the PageLayout object
-        page_layout: PageLayout = PageLayout(
-            asset_type_id=asset_type_id,
-            asset_page_layout=False,
-            layout=layout,
-            field_mappings=field_mappings,
-            sources=sources)
+        # Adding common sources
+        page_layout.sources.update({
+            'stream-assets': f'/asset-type:{asset_type_id}/stream/stream-assets'
+        })
 
         page_manager.create_page(page_layout)
 
-        redirect(f'/asset-type:{asset_type_id}')
+        return redirect(f'/asset-type:{asset_type_id}')
 
     @staticmethod
     async def delete_asset_type(asset_type_id):
