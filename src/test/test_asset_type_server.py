@@ -8,9 +8,10 @@ import json
 from datetime import datetime
 from time import sleep
 from typing import List
-from unittest import TestCase
 
+import aiounittest
 import requests
+from sseclient import SSEClient
 
 from asset_type import AssetType
 from asset_type.asset_type_manager import AssetTypeManager
@@ -22,12 +23,18 @@ from database.sqlite_connection import SqliteConnection
 from plugins import PluginRegister
 
 
-class TestAssetTypeServer(TestCase):
+class TestAssetTypeServer(aiounittest.AsyncTestCase):
 
     def setUp(self) -> None:
         """Set up."""
 
         self.BASE_URL: str = 'http://localhost:4200'
+
+        # Making sure the test server is running
+        request = requests.get(self.BASE_URL)
+        if not request.status_code == 200:
+            raise Exception(f"{self.BASE_URL} could not be reached." +
+                            f" Make sure the test server is running!")
 
         # print(f"Tempdir used in this tests: {self.tempdir}")
 
@@ -45,8 +52,11 @@ class TestAssetTypeServer(TestCase):
         """Tear down."""
         pass
 
-    def _post_create_asset_type(self):
+    async def _post_create_asset_type(self):
         """Send request to 'post-create-asset-type'."""
+
+        if self.asset_type_manager.check_asset_type_exists("Media Article"):
+            return
 
         request_url: str = f'{self.BASE_URL}/asset-type/create'
         request_headers = {
@@ -60,12 +70,36 @@ class TestAssetTypeServer(TestCase):
                        "&column-data-type-1=VARCHAR" \
                        "&column-required-1=checkboxTrue"
 
-        requests.post(
-            url=request_url,
-            headers=request_headers,
-            data=request_body)
+        request = requests.post(url=request_url, headers=request_headers, data=request_body)
+        self.assertEqual(request.status_code, 200)
 
-    def test_get_create_asset_types(self):
+    async def test_stream_asset_type_data(self):
+        """Test 'stream-asset-type-data'."""
+
+        request_url: str = f'{self.BASE_URL}/asset-types'
+        request_headers = {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Transfer-Encoding': 'chunked',
+        }
+
+        sse_client = SSEClient(request_url)
+
+        for event in sse_client:
+            print(event)
+
+        # async with aiohttp.ClientSession() as session:
+        #     async with session.get(request_url) as response:
+        #
+        #         self.assertEqual(response.status, 200)
+        #
+        #         while True:
+        #             response_text = await response.content.read()
+        #             if not response_text:
+        #                 break
+        #         print(response_text)
+
+    async def test_get_create_asset_types(self):
         """Test 'get-configuration'."""
 
         create_type_url: str = f'{self.BASE_URL}/asset-type/create'
@@ -73,11 +107,10 @@ class TestAssetTypeServer(TestCase):
 
         self.assertEqual(request.status_code, 200)
 
-    def test_post_create_asset_type(self):
+    async def test_post_create_asset_type(self):
         """Test 'post-create-asset'."""
 
-        self._post_create_asset_type()
-        sleep(.6)  # Wait for the request to complete
+        await self._post_create_asset_type()
 
         asset_type: AssetType = self.asset_type_manager.get_one_by_id(1)
 
@@ -85,11 +118,12 @@ class TestAssetTypeServer(TestCase):
         self.assertEqual(asset_type.columns[0].name, 'Title')
         self.assertEqual(asset_type.columns[1].name, 'ISBN')
 
-    def test_get_one_asset_type(self):
+        sleep(1)
+
+    async def test_get_one_asset_type(self):
         """Test GET 'asset-type'."""
 
-        self._post_create_asset_type()
-        sleep(.6)  # Wait for the request to complete
+        await self._post_create_asset_type()
 
         db_asset_type: AssetType = self.asset_type_manager.get_one_by_id(1)
 
@@ -99,6 +133,7 @@ class TestAssetTypeServer(TestCase):
 
         request_url: str = f'{self.BASE_URL}/asset-type:{db_asset_type.asset_type_id}'
         request = requests.get(request_url)
+        sleep(1)
 
         self.assertEqual(request.status_code, 200)
 
@@ -128,3 +163,5 @@ class TestAssetTypeServer(TestCase):
         ]
 
         self.assertEqual(request_asset_type, db_asset_type)
+
+        sleep(1)
