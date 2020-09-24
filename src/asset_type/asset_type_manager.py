@@ -208,12 +208,14 @@ class AssetTypeManager(AAssetTypeManager):
         db_response = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=[self.PRIMARY_KEY, self.ASSET_NAME],
-            or_filters=or_filters
-        )
+            or_filters=or_filters)
+
+        if not bool(db_response):
+            return False
 
         table_exists = self.db_connection.check_table_exists(
             AssetTypeManager.generate_asset_table_name(asset_type))
-        return bool(db_response) and table_exists
+        return table_exists
 
     def get_one_by_id(self, asset_type_id: int, extend_columns: bool = False) -> Optional[AssetType]:
         """Get the ``AssetType`` with ident ``asset_type_id``."""
@@ -240,14 +242,12 @@ class AssetTypeManager(AAssetTypeManager):
         result: Sequence[Mapping[str, Any]] = self.db_connection.read(
             table_name=self._asset_types_table_name,
             headers=self.ASSET_TYPE_HEADERS,
-            and_filters=[f'asset_name = {asset_type_name}']
-        )
+            and_filters=[f"asset_name = '{asset_type_name}'"])
 
         if len(result) > 1:
             raise KeyConstraintException(
                 "There is a real big problem here! Real biggy - trust me." +
-                "The asset_name unique constraint is broken!"
-            )
+                "The asset_name unique constraint is broken!")
 
         return self._get_one(result, extend_columns)
 
@@ -377,7 +377,7 @@ class AssetTypeManager(AAssetTypeManager):
         elif ignore_slaves:
             query_filter = "owner_id > 0"
 
-        return self.db_connection.count(self._asset_types_table_name, query_filter=query_filter)
+        return self.db_connection.count(self._asset_types_table_name, query_filters=[query_filter])
 
     def _convert_result_to_asset_type(self, result: Mapping) -> AssetType:
         """Convert one result row to an asset type."""
