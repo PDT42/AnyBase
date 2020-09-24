@@ -11,6 +11,7 @@ from enum import unique
 from typing import Any
 from typing import Dict
 from typing import Optional
+from typing import Set
 from typing import Type
 from uuid import uuid4
 
@@ -29,9 +30,12 @@ class PluginType(Enum):
 class Plugin:
     """This is a plugin. It is crucial - trust me."""
 
-    id: str  # The id doubles as name
+    name: str
+    id: str
     view: str  # Path to jinja view template -> later _source_?
     server: Optional[Type[APluginServer]]
+    fields: Set[str]
+    allow_custom_fields: bool
     type: PluginType
 
     def __hash__(self):
@@ -48,8 +52,10 @@ class Plugin:
         """Get a dict representation of a Plugin."""
 
         return {
+            'name': self.name,
             'id': self.id,
             'view': self.view,
+            'fields': list(self.fields) if self.fields else []
         }
 
 
@@ -61,22 +67,31 @@ class PluginRegister(Enum):
     from plugins.notes_plugin import NotesPluginServer
 
     BASIC_NOTES = Plugin(
+        name='Basic Notes',
         id='basic-notes',
         view='plugins/basic-notes-plugin.html',
+        fields=set([]),
+        allow_custom_fields=False,
         server=NotesPluginServer,
         type=PluginType.HYBRID
     )
 
     ASSET_DETAILS = Plugin(
+        name='Asset Details',
         id='asset-details',
         view='plugins/asset-details-plugin.html',
+        fields={'value1', 'value2', 'value3'},
+        allow_custom_fields=True,
         server=None,
         type=PluginType.ASSET
     )
 
     LIST_ASSETS = Plugin(
+        name='List Assets',
         id='list-assets',
         view='plugins/list-assets-plugin.html',
+        fields={'field-title'},
+        allow_custom_fields=True,
         server=None,
         type=PluginType.ASSET_TYPE
     )

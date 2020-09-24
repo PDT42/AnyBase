@@ -24,6 +24,7 @@ class ColumnInfo:
 
     plugin: Plugin
     column_width: int
+    column_offset: int
     field_mappings: Mapping[str, str]
     sources: MutableMapping[str, str] = None
     column_id: int = None
@@ -32,8 +33,9 @@ class ColumnInfo:
         return {
             'plugin': self.plugin.as_dict(),
             'column_width': self.column_width,
+            'column_offset': self.column_offset,
             'field_mappings': self.field_mappings,
-            'sources': list(self.sources) if self.sources else [],
+            'sources': self.sources if self.sources else {},
             'column_id': self.column_id
         }
 
@@ -45,7 +47,7 @@ class PageLayout:
     asset_type_id: int
     asset_page_layout: bool
     layout: List[List[ColumnInfo]]
-    field_mappings: MutableMapping[str, str]
+    field_mappings: Optional[MutableMapping[str, str]]
     created: datetime = None
     updated: datetime = None
     sources: MutableMapping[str, str] = None
