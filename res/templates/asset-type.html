@@ -55,9 +55,12 @@
             const asset_type_root_id = 'asset-type-root';
             const asset_type_root = document.getElementById(asset_type_root_id);
             asset_type_root['stream_data'] = new Map();
+            asset_type_root['asset-type'] = JSON.parse('{{ asset_type.as_dict()|tojson }}');
 
             // TODO: Get these values another way.
-            const asset_type = JSON.parse('{{ asset_type.as_dict()|tojson }}');
+            // Both page_layout and sources should be unique
+            // in this template, so we can define them as
+            // constants on the html level.
             const page_layout = JSON.parse('{{ page_layout|tojson }}');
             const sources = page_layout['sources'];
 
@@ -68,10 +71,13 @@
                     let channel = source[0];
                     let url = source[1];
 
-                    console.log(channel, url);
+                    // We only stream sources, that start with stream
+                    // Checkout: split sources into source and actions?
+                    if (channel.startsWith('stream-')) {
 
-                    document.getElementById(asset_type_root_id)['stream_data'].set(
-                        channel, observableFromUrl(asset_type_root_id, channel, url));
+                        document.getElementById(asset_type_root_id)['stream_data'].set(
+                            channel, observableFromUrl(channel, url));
+                    }
                 })
             }
 
@@ -105,7 +111,7 @@
             </div>
 
             {% from plugin_path import plugin_macro %}
-            {{ plugin_macro(column_info, asset_type) }}
+            {{ plugin_macro('asset-type-root', column_info) }}
 
             {% endfor %}
 
