@@ -35,3 +35,15 @@ function observableFromUrl(channel, url) {
 
     return result;
 }
+
+function registerStreamDataCallback(rootId, channel, callback) {
+
+    let root = document.getElementById(rootId);
+    let stream_data_map = root['stream_data'];
+
+    // Call callback on data that already has arrived
+    callback(stream_data_map.get(channel).items);
+
+    // Register the callback on the correct channel
+    root['stream_data'].get(channel).subscribers.push(callback);
+}
