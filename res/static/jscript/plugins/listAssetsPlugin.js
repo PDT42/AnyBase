@@ -85,10 +85,11 @@ function createListItemHeader(item, listItemId, fieldMapping, asset_type_id) {
 // ~~~~~~~~~~~~~~~~~~~~~~
 
 // TODO: Store asset_type in root
-function createPlugin(column_info, asset_type) {
+function createPlugin(root_id, column_info) {
 
-    const asset_type_root = document.getElementById('asset-type-root');
+    const asset_type_root = document.getElementById(root_id);
     const plugin_root = document.getElementById('column-' + column_info.column_id);
+    const asset_type = asset_type_root['asset-type']
 
     let field_mappings = column_info['field_mappings'];
     let column_id = column_info['column_id'];
@@ -96,11 +97,8 @@ function createPlugin(column_info, asset_type) {
     let [item_list_container, item_list_row, item_list_col] = createAssetList(column_info);
     plugin_root.appendChild(item_list_container);
 
-    // Register this plugins callback in stream data
-    asset_type_root['stream_data'].get('stream-assets').subscribers.push((data => {
-
-        data.forEach((item) => {
-            item_list_col.appendChild(createListItem(item, field_mappings, column_id, asset_type))
-        });
-    }))
+    // Register this plugins callback in stream data.
+    registerStreamDataCallback('asset-type-root', 'stream-assets', (items) =>
+        items.forEach((item) => item_list_col.appendChild(
+            createListItem(item, field_mappings, column_id, asset_type))));
 }
