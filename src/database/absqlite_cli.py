@@ -82,6 +82,7 @@ if __name__ == '__main__':
         plugin_table_names = sqlite_con.execute_query(get_tables_query)
 
         for name in [row['name'] for row in plugin_table_names]:
+            sqlite_con.execute_query(f"DELETE FROM abintern_asset_types WHERE asset_name LIKE '{name}'")
             sqlite_con.delete_table(name)
         return 0
 
