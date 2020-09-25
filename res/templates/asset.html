@@ -15,7 +15,7 @@
         {% set asset_id = asset.asset_id %}
 
         {% set data = asset.data %}
-        {% set field_mappings = asset_page_layout.field_mappings %}
+        {% set field_mappings = page_layout.field_mappings %}
 
         <div class="row">
 
@@ -53,15 +53,36 @@
 
         <div id="asset-root"></div>
 
+        <script src="../static/jscript/observableFromUrl.js"></script>
         <script>
 
-            let assetRoot = document.getElementById('asset-root');
+            const asset_root_id = 'asset-root';
+            const assetRoot = document.getElementById(asset_root_id);
+            assetRoot['stream_data'] = new Map();
 
             assetRoot['assetType'] = JSON.parse('{{ asset_type.as_dict()|tojson }}');
             assetRoot['asset'] = JSON.parse('{{ asset.as_dict()|tojson }}');
+
+            // TODO: Get these values another way.
+            const page_layout = JSON.parse('{{ page_layout.as_dict()|tojson }}');
+            const sources = page_layout['sources'];
+
+            if (sources) {
+
+                Object.entries(sources).forEach(([channel, url]) => {
+
+                    // We only stream sources, that start with stream
+                    // Checkout: split sources into source and actions?
+                    if (channel.startsWith('stream-')) {
+
+                        document.getElementById(asset_root_id)['stream_data'].set(
+                            channel, observableFromUrl(channel, url));
+                    }
+                })
+            }
         </script>
 
-        {% for row_info in asset_page_layout.layout %}
+        {% for row_info in page_layout.layout %}
         <div class="row" id="row-{{ loop.index }}">
 
             {% for column_info in row_info %}
@@ -70,18 +91,11 @@
             {% set column_width = column_info.column_width %}
             {% set column_offset = column_info.column_offset %}
             {% set plugin_path = column_info.plugin.view %}
-            {% set field_mappings = column_info.field_mappings %}
 
             <div class="col-md-{{ column_width }} offset-{{ column_offset }}" id="column-{{ column_id }}"></div>
 
-            <script>
-
-                document.getElementById('column-{{ column_id }}')['fieldMappings'] =
-                    JSON.parse('{{ field_mappings|tojson }}');
-            </script>
-
             {% from plugin_path import plugin_macro %}
-            {{ plugin_macro(column_id) }}
+            {{ plugin_macro('asset-root', column_info.as_dict()) }}
 
             {% endfor %}
 
