@@ -50,9 +50,9 @@ class AssetServer:
 
     DB_BATCH_SIZE: int = None  # The batch size for streaming
 
-    # Conversion function to convert values gotten
+    # Conversion functions to convert values gotten
     # from the frontend, to the type used for that
-    # datatype in the backend. TODO: (¬_¬ )
+    # DataType in the backend. TODO: (¬_¬ )
 
     _conversions: Mapping[DataType, callable] = {
         DataTypes.TEXT.value: str,
@@ -146,7 +146,7 @@ class AssetServer:
 
     @staticmethod
     async def stream_asset_data(asset_type_id: int, channel: str, depth: int = 0):
-        """TODO"""
+        """TODO ಥ_ಥ"""
 
         # Get AssetType and number of assets of this type
         asset_type = AssetTypeManager().get_one_by_id(asset_type_id)
@@ -267,7 +267,8 @@ class AssetServer:
             # Column is missing in form but is required
             if column.required and (column.db_name not in sync_form.keys() or
                                     sync_form[column.db_name] in ['']):
-                raise MissingValueException(f"The required value {column.db_name} is missing in the submitted form!")
+                raise MissingValueException(
+                    f"The required value {column.db_name} is missing in the submitted form!")
 
             # Column is missing and isn't required
             elif not column.required and (
@@ -346,29 +347,29 @@ class AssetServer:
         asset: Asset = asset_manager.get_one(asset_id, asset_type)
 
         # Setting a default page layout
-        if not (asset_page_layout := page_manager.get_page(asset_type.asset_type_id, True)):
+        if not (page_layout := page_manager.get_page(asset_type.asset_type_id, True)):
             return await AssetServer.get_create_detail_page_layout(asset_type, asset_id)
 
         # Initialize all plugins required
-        for row in asset_page_layout.layout:
+        for row in page_layout.layout:
             for column_info in row:
 
                 if (server := column_info.plugin.server) is not None:
                     column_info.sources = server.get().initialize(asset_type, asset)
-                    asset_page_layout.sources.update(column_info.sources)
+                    page_layout.sources.update(column_info.sources)
 
         # --
 
         if AssetServer.get().JSON_RESPONSE:
             return jsonify({
                 'asset_type': asset_type.as_dict(),
-                'asset_page_layout': asset_page_layout.as_dict(),
+                'asset_page_layout': page_layout.as_dict(),
                 'asset': asset.as_dict()
             })
 
         return await render_template(
             template_name_or_list="asset.html",
-            asset_page_layout=asset_page_layout,
+            page_layout=page_layout,
             asset_type=asset_type,
             asset=asset)
 
