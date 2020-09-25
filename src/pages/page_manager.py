@@ -11,6 +11,7 @@ from typing import List
 from typing import Mapping
 from typing import MutableMapping
 from typing import Optional
+from typing import Union
 
 from quart import logging
 
@@ -18,6 +19,7 @@ from database import Column
 from database import DataTypes
 from database.db_connection import DbConnection
 from database.sqlite_connection import SqliteConnection
+from exceptions.common import IllegalStateException
 from exceptions.common import OutdatedDataException
 from exceptions.page import ColumnInfoDoesNotExistError
 from exceptions.page import PageLayoutDoesNotExist
@@ -75,16 +77,40 @@ class PageManager(APageManager):
         page_layout.updated = created
 
         for row in page_layout.layout:
+
+            # Creating a query dict from each column
+            # and storing it in a separate database
             for column in row:
 
                 # TODO: I dont like the expression column. The
                 # TODO: name should differ more from asset column.
+                # TODO: Change asset.column name to field
 
-                # Creating a query dict from each column
-                # and storing it in a separate database
+                # Creating a default field mappings dict.
+                field_mappings: Optional[Union[MutableMapping[str, str], str]] = {}
 
-                if field_mappings := json.dumps(column.field_mappings) if column.field_mappings else None:
-                    field_mappings = field_mappings.replace('"', "'")
+                # First use the plugins default field mappings
+                # if there are any. This way the user does not
+                # have to configure a setting for every field.
+
+                if default_mappings := column.plugin.default_field_mappings:
+                    field_mappings.update(default_mappings)
+
+                # If the selected plugin allows custom field
+                # mappings, check if the user supplied any.
+
+                if column.plugin.allow_custom_mappings and column.field_mappings:
+                    field_mappings.update(column.field_mappings)
+
+                if not field_mappings:
+                    raise IllegalStateException(
+                        "If allow_custom_mappings is False or you don't provide " +
+                        "any custom field mappings, you need at least provide " +
+                        "default field mappings!"
+                    )
+
+                if field_mappings_str := json.dumps(field_mappings):
+                    field_mappings_str = field_mappings_str.replace('"', "'")
 
                 if sources_str := json.dumps(column.sources) if column.sources else None:
                     sources_str = sources_str.replace('"', "'")
@@ -94,7 +120,7 @@ class PageManager(APageManager):
                     'column_width': column.column_width,
                     'column_offset': column.column_offset,
                     'plugin_id': column.plugin.id.replace('-', '_').upper(),
-                    'field_mappings': field_mappings,
+                    'field_mappings': field_mappings_str,
                     'sources': sources_str
                 }
 
@@ -268,7 +294,7 @@ class PageManager(APageManager):
                 Column('plugin_id', 'plugin_id', DataTypes.VARCHAR.value, True),
                 Column('column_width', 'column_width', DataTypes.INTEGER.value, True),
                 Column('column_offset', 'column_offset', DataTypes.INTEGER.value, True),
-                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, False),
+                Column('field_mappings', 'field_mappings', DataTypes.VARCHAR.value, True),
                 Column('sources', 'sources', DataTypes.VARCHAR.value, False)
             ]
 
