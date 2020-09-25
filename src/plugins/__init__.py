@@ -10,6 +10,7 @@ from enum import Enum
 from enum import unique
 from typing import Any
 from typing import Dict
+from typing import Mapping
 from typing import Optional
 from typing import Set
 from typing import Type
@@ -27,6 +28,24 @@ class PluginType(Enum):
 
 
 @dataclass
+class PluginField:
+    """This is a PluginField."""
+
+    field_id: str
+    field_label: str
+    mapping: str
+
+    def as_dict(self) -> Dict[str, Any]:
+        """Get a dict representation of a PluginField."""
+
+        return {
+            'field_id': self.field_id,
+            'field_label': self.field_label,
+            'mapping': self.mapping
+        }
+
+
+@dataclass
 class Plugin:
     """This is a plugin. It is crucial - trust me."""
 
@@ -35,7 +54,9 @@ class Plugin:
     view: str  # Path to jinja view template -> later _source_?
     server: Optional[Type[APluginServer]]
     fields: Set[str]
+    allow_custom_mappings: bool
     allow_custom_fields: bool
+    default_field_mappings: Optional[Mapping[str, str]]
     type: PluginType
 
     def __hash__(self):
@@ -70,8 +91,14 @@ class PluginRegister(Enum):
         name='Basic Notes',
         id='basic-notes',
         view='plugins/basic-notes-plugin.html',
-        fields=set([]),
+        fields={'title', 'note', 'author'},
+        allow_custom_mappings=False,
         allow_custom_fields=False,
+        default_field_mappings={
+            'title': 'title',
+            'note': 'note',
+            'author': 'author'
+        },
         server=NotesPluginServer,
         type=PluginType.HYBRID
     )
@@ -80,8 +107,10 @@ class PluginRegister(Enum):
         name='Asset Details',
         id='asset-details',
         view='plugins/asset-details-plugin.html',
-        fields={'value1', 'value2', 'value3'},
+        fields={'value1', 'value2', 'value3'},  # TODO: Make this a mapping field -> frontend rep
+        allow_custom_mappings=True,
         allow_custom_fields=True,
+        default_field_mappings=None,
         server=None,
         type=PluginType.ASSET
     )
@@ -91,7 +120,9 @@ class PluginRegister(Enum):
         id='list-assets',
         view='plugins/list-assets-plugin.html',
         fields={'field-title'},
+        allow_custom_mappings=True,
         allow_custom_fields=True,
+        default_field_mappings=None,
         server=None,
         type=PluginType.ASSET_TYPE
     )
