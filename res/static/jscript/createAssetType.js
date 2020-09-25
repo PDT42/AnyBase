@@ -7,6 +7,11 @@ let columnsAdded = new Set();
 let columnNumber = 0;
 
 function addColumn() {
+
+    // TODO: Add dataTypes to parameters
+    // TODO: Gosh this is ugly as shit.
+    // TODO: Refactor this! ಠಿ_ಠ
+
     if (columnsAdded.size < 15) {
 
         while (columnsAdded.has(columnNumber)) {
@@ -54,6 +59,7 @@ function addColumn() {
         removeColumnButton.appendChild(removeColumnButtonIcon);
 
         // Adding Column Name Input
+        // °°°°°°°°°°°°°°°°°°°°°°°°
 
         let columnName = document.createElement('div');
         columnName.setAttribute('class', 'col-md-6');
@@ -66,6 +72,7 @@ function addColumn() {
         columnName.appendChild(columnNameInput);
 
         // Adding Data Type Input
+        // °°°°°°°°°°°°°°°°°°°°°°
 
         let columnDataType = document.createElement('div');
         columnDataType.setAttribute('class', 'col-md-4');

@@ -6,7 +6,7 @@
 // EventSource for the url passed to the function,
 // that listens to the channel provided in  channel.
 
-function observableFromUrl(root_id, channel, url) {
+function observableFromUrl(channel, url) {
 
     let result = {
         'event_source': new EventSource(url),
