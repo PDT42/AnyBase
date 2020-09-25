@@ -9,6 +9,23 @@
 function createDetailsContainer(asset, assetType, fieldMappings) {
 
     let pluginRootContainer = document.createElement('div');
+    pluginRootContainer.setAttribute('class', 'container shadow-sm p-3 mb-1 bg-white rounded')
+    pluginRootContainer.style.padding = '0px';
+
+    // Adding header row to asset detail plugin view
+    // °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+    let assetDetailHeaderRow = document.createElement('div');
+    assetDetailHeaderRow.setAttribute('class', 'row');
+    pluginRootContainer.appendChild(assetDetailHeaderRow);
+
+    let assetDetailHeaderCol = document.createElement('div');
+    assetDetailHeaderCol.setAttribute('class', 'col');
+    assetDetailHeaderRow.appendChild(assetDetailHeaderCol);
+
+    let assetDetailHeader = document.createElement('h6');
+    assetDetailHeader.innerText = 'Asset Details:';
+    assetDetailHeader.style.marginBottom = '6px';
+    assetDetailHeaderCol.appendChild(assetDetailHeader);
 
     Object.entries(fieldMappings).forEach(([field, mapping]) => {
 
@@ -75,12 +92,12 @@ function createFieldView(asset, assetType, mapping) {
 // CREATE PLUGIN FUNCTION
 // ~~~~~~~~~~~~~~~~~~~~~~
 
-function createPlugin(columnId) {
+function createPlugin(root_id, column_info) {
 
-    let assetRoot = document.getElementById('asset-root');
-    let pluginRoot = document.getElementById('column-' + columnId);
+    let assetRoot = document.getElementById(root_id);
+    let pluginRoot = document.getElementById('column-' + column_info['column_id']);
 
-    let fieldMappings = pluginRoot['fieldMappings'];
+    let fieldMappings = column_info['field_mappings'];
     let asset = assetRoot['asset'];
     let assetType = assetRoot['assetType'];
 
