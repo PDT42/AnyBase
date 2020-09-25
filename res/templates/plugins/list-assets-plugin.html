@@ -1,11 +1,10 @@
-{% macro plugin_macro(column_info, asset_type) %}
+{% macro plugin_macro(root_id, column_info) %}
 
 <script src="../../static/jscript/plugins/listAssetsPlugin.js"></script>
 
 <script>
 
-    createPlugin(JSON.parse('{{ column_info|tojson }}'),
-        JSON.parse('{{ asset_type.as_dict()|tojson }}'));
+    createPlugin(String('{{ root_id|string }}'), JSON.parse('{{ column_info|tojson }}'));
 
 </script>
 

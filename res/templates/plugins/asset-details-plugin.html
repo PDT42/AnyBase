@@ -1,11 +1,9 @@
-{% macro plugin_macro(column_id) %}
+{% macro plugin_macro(root_id, column_info) %}
 
 <script src="/static/jscript/plugins/assetDetailsPlugin.js"></script>
 <script>
 
-    let columnId = Number('{{ column_id|int }}');
-
-    createPlugin(columnId);
+    createPlugin(String('{{ root_id|string }}'), JSON.parse('{{ column_info|tojson }}'));
 
 </script>
 {% endmacro %}

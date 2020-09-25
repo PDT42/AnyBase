@@ -1,3 +1,9 @@
-{% macro plugin_macro(asset, asset_type, field_mappings, column_id) %}
+{% macro plugin_macro(root_id, column_info) %}
 
+<script src="/static/jscript/plugins/basicNotesPlugin.js"></script>
+<script>
+
+    createPlugin(String('{{ root_id|string }}'), JSON.parse('{{ column_info|tojson }}'));
+
+</script>
 {% endmacro %}
