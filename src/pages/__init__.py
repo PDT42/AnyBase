@@ -25,8 +25,8 @@ class ColumnInfo:
     plugin: Plugin
     column_width: int
     column_offset: int
-    field_mappings: Mapping[str, str]
-    sources: MutableMapping[str, str] = None
+    field_mappings: Optional[Mapping[str, str]]
+    sources: Optional[MutableMapping[str, str]] = None
     column_id: int = None
 
     def as_dict(self):
@@ -50,8 +50,8 @@ class PageLayout:
     field_mappings: Optional[MutableMapping[str, str]]
     created: datetime = None
     updated: datetime = None
-    sources: MutableMapping[str, str] = None
-    layout_id: Optional[int] = None
+    sources: Optional[MutableMapping[str, str]] = None
+    layout_id: int = None
 
     def __hash__(self):
         return hash(uuid4())
