@@ -15,21 +15,9 @@ type, a subtype asset type is sub to, is called __parent__. Subtypes realize an 
 >database column containing a true boolean, indicating, wether an AssetType is a subtype or not.
 
 
-### Example: Subtypes & Supertypes
-
-Consider the usecase of a library. They basically store (abstracted) only one AssetType - a "MediaArticle". 
-Each such, has a "name", an "ISBN", a "purchase_date" etc. field. A Subtype now could be the AssetType "Book".
-A "Book" has all the fields of a "MediaArticle", but requires some additional ones as well. You should by now, 
-see where this is going. The Subtype ("Book") _extends_ the Supertype ("MediaArticle"). This way the library 
-has one central register ("abintern_asset_table_media_article") containing all the "MediaArticles" they manage, 
-but will be able to load the "Books" separately. This will ease the type creation in the frontend, since the user
-will be able to just choose a supertype, and chain supertype hierarchies however he likes. He could for example 
-create a type hierarchy like: "NonFiction" extends "Book" extends "MediaArticle". This way he does not have 
-to create the same 15 fields over and over again. Another positive effect might be, that the user has an easy 
-time keeping entities concise and layering them in tight definitions, which could have a positive effect on the 
-loading time, when retrieving the items. 
-
-// TODO: Insert Image for clarification
+> ### Example
+>
+> For example: Let's look at some of the AssetTypes the library defines.
 
 ## Owner
 
@@ -44,12 +32,14 @@ separate method ``get_slaves``.
 
 ## Bookable AssetTypes
 
-Bookable [AssetType]s are basically just normal [AssetType]s who have the 'is_bookable' flag set to true and define
-a 'bookable_type_id'. For these [AssetType]s, when they are created, the [AssetTypeManager] creates an additional
-[AssetType] the 'bookable_type'. The 'bookable_type' is intended as a super type for each [AssetType] who realizes
+Bookable AssetTypes are basically just normal AssetTypes who have the 'is_bookable' flag set to true and define
+a 'bookable_type_id'. For these AssetTypes, when they are created, the [AssetTypeManager] creates an additional
+AssetType the 'bookable_type'. The 'bookable_type' is intended as a super type for each AssetType who realizes
 a booking of an asset of this type.
 
->In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user would make the Book bookable, by checking the appropriate box in the creation form.
+> ### Example
+>
+>In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user >would make the Book bookable, by checking the appropriate box in the creation form.
 >
 >
 > ![Bookable Type][bookable_type]
