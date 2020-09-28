@@ -1,16 +1,15 @@
 # AnyBase
 
 This is AnyBase. Think of it as a backoffice version of Wordpress. It is meant to
-be used by anyone. Most tasks in the backoffice can be reduced to storing updating 
-and overall managing data. Be it records about items in the inventory of a store. 
-The documentation files provided in this repository will use the usecase-example
-of a library. 
+be used by anyone. Most tasks in the backoffice can be reduced to storing, updating 
+and overall managing data. Records about items in a stores inventory must be kept, 
+holiday requests noted and the times employees spent working recorded. 
 
-Lets think about the needs of a library. What would the management of a library
-require to digitize its backoffice? The documentation will use the concepts and
-mechanisms provided by AnyBase to digitize the library. 
+>Lets think about the usecase of a library. What would the management of a library
+>require to digitize its backoffice? The documentation will use the concepts and
+>mechanisms provided by AnyBase to digitize the library. 
 
-## Concept
+## Concept and (some) Architecture
 
 AnyBase uses the concept of [Asset]s to model any kind of item a user might want
 to manage using the software. Since the managed assets will vary, depending on the
@@ -32,7 +31,6 @@ The programmatic concept for the frontend right now is _rough_ at best. I'm not 
 familiar with frontend as I am with backend development #NeedHelpHere. It is certain
 however, that the frontend will have to meet certain requirements.
 
-
 As mentioned earlier, everything in AnyBase concerns either an [Asset] or an [AssetType]. 
 This is also true for the frontend. The user must be enabled to adjust the frontend with 
 regard to his individual demands. This is why AnyBase provides the means, to define custom
@@ -40,13 +38,26 @@ views for [AssetType]s the user created. For each [AssetType] the user will be a
 define two views. One for the _entity_ [AssetType] and one for a single [Asset] with 
 that type. 
 
+>Let's take a moment and think about the usecase example of the library. What _type_
+>of assets would a libary want to define, in order to manage them using an awesome
+>AnyBase? Well a library will probably need to manage books and stuff. I'll assume, 
+>they'd want to defined some supertype [AssetType], that holds information common to 
+>all the items a library might have in their inventory. I will call this type of [Asset]
+>a "Media Article". The library will have personal as well as members, who can
+>borrow books from the library. Both must be modelled (an [AssetType] must be configured),
+>so data about them can be managed using AnyBase. 
+>
+>So let's define those [AssetType]s. More information about how configuring AssetTypes
+>works and what requirements the configuration process entails, you can read [TODO].
+>For now let's just assume we created the following AssetType sheme.
+
 To hold the information on what one of this views should look like, there are the
 [PageLayout]s. They contain general information and the definition of the _layout_
 of the view. The view is made up from a number of rows, that themselves are filled 
 with a number of columns represented by [ColumnInfo] objects. Each column can contain
 a [Plugin]. A plugin must exist both as a frontend implementation that can be "put 
-into the view", as well as a backend entity, that fulfills all the backend needs of 
-the plugin.  
+into the view", as well as a backend entity (PluginServer), that fulfills all the 
+backend needs of the plugin.  
 
 The frontend is served by the server layer, which is implemented as a number of
 server singletons, which hold static methods serving as route outlets. The routes

@@ -42,6 +42,16 @@ Since owned AssetTypes are not independently interesting, they are ignored by th
 functions. Instead, since we only ever want to get the slaves of one AssetType, the AssetTypeManager defines a 
 separate method ``get_slaves``.
 
+## Bookable AssetTypes
+
+Bookable [AssetType]s are basically just normal [AssetType]s who have the 'is_bookable' flag set to true and define
+a 'bookable_type_id'. For these [AssetType]s, when they are created, the [AssetTypeManager] creates an additional
+[AssetType] the 'bookable_type'. The 'bookable_type' is intended as a super type for each [AssetType] who realizes
+a booking of an asset of this type.
+
+>In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user would make the 
+>Book bookable, by checking the appropriate box in the creation form.
+>![bookable_type]Bookable Type
 
 ## Backend Representation
 
@@ -81,4 +91,5 @@ representation is part of the abstracth implementation of the asset type manager
 
 [//]: # (IMAGES)
 [asset_type_class]: graphics/rendered_images/asset_type_class.png "Asset Type Class"
+[bookable_type]: graphics/rendered_images/BookableType.png "Bookable Type"
 [asset_type_db]: graphics/rendered_images/asset_type_db.png "Asset Type Database Entity"
