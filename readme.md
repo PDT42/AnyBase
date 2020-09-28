@@ -50,6 +50,9 @@ that type.
 >So let's define those [AssetType]s. More information about how configuring AssetTypes
 >works and what requirements the configuration process entails, you can read [TODO].
 >For now let's just assume we created the following AssetType sheme.
+>
+>
+>![Library Types][library_types]
 
 To hold the information on what one of this views should look like, there are the
 [PageLayout]s. They contain general information and the definition of the _layout_
@@ -159,3 +162,4 @@ Managers represent the connection between the server and the database layer.
 
 [//]: # (IMAGES)
 [concept_diagram]: doc/graphics/rendered_images/AnyBase.png
+[library_types]: doc/graphics/rendered_images/LibraryTypes.png
