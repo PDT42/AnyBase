@@ -49,8 +49,9 @@ a 'bookable_type_id'. For these [AssetType]s, when they are created, the [AssetT
 [AssetType] the 'bookable_type'. The 'bookable_type' is intended as a super type for each [AssetType] who realizes
 a booking of an asset of this type.
 
->In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user would make the 
->Book bookable, by checking the appropriate box in the creation form.
+>In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user would make the Book bookable, by checking the appropriate box in the creation form.
+>
+>
 > ![Bookable Type][bookable_type]
 
 ## Backend Representation
