@@ -51,7 +51,7 @@ a booking of an asset of this type.
 
 >In the libraries usecase, an obvious bookable would be a Book. When creating the Book, the user would make the 
 >Book bookable, by checking the appropriate box in the creation form.
->![bookable_type]Bookable Type
+> ![Bookable Type][bookable_type]
 
 ## Backend Representation
 
