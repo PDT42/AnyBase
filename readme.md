@@ -31,6 +31,8 @@ The programmatic concept for the frontend right now is _rough_ at best. I'm not 
 familiar with frontend as I am with backend development #NeedHelpHere. It is certain
 however, that the frontend will have to meet certain requirements.
 
+#### AssetTypes & Assets
+
 As mentioned earlier, everything in AnyBase concerns either an [Asset] or an [AssetType]. 
 This is also true for the frontend. The user must be enabled to adjust the frontend with 
 regard to his individual demands. This is why AnyBase provides the means, to define custom
