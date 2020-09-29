@@ -56,6 +56,8 @@ that type.
 >
 >![Library Types][library_types]
 
+#### PageLayouts & Plugins
+
 To hold the information on what one of this views should look like, there are the
 [PageLayout]s. They contain general information and the definition of the _layout_
 of the view. The view is made up from a number of rows, that themselves are filled 
