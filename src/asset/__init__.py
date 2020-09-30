@@ -19,10 +19,13 @@ class Asset:
     created: datetime = None
     updated: datetime = None
     asset_id: Optional[int] = None
-    extended_by_id: Optional[int] = 0
+    extended_by_id: int = 0
+    sub_type_id: int = 0
+    sub_id: int = 0
 
     def __hash__(self):
-        return hash(uuid4())
+        # TODO: Fix this!
+        return hash(self)
 
     def __eq__(self, other):
         if not isinstance(other, Asset):
@@ -52,5 +55,7 @@ class Asset:
             'asset_id': self.asset_id,
             'created': int(self.created.timestamp()),
             'updated': int(self.updated.timestamp()),
-            'extended_by_id': self.extended_by_id
+            'extended_by_id': self.extended_by_id,
+            'sub_type_id': self.sub_type_id,
+            'sub_id': self.sub_id
         }

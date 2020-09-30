@@ -65,23 +65,31 @@ class AssetManager(AAssetManager):
         self.JOIN_ON: str = 'abintern_extended_by_id'
         self.CREATED: str = 'abintern_created'
         self.UPDATED: str = 'abintern_updated'
+        self.SUB_TYPE_ID: str = 'abintern_sub_type_id'
+        self.SUB_ID: str = 'abintern_sub_id'
 
-        self.ASSET_HEADERS = [self.PRIMARY_KEY, self.CREATED, self.JOIN_ON, self.UPDATED]
+        self.ASSET_HEADERS = [
+            self.PRIMARY_KEY, self.CREATED, self.JOIN_ON,
+            self.UPDATED, self.SUB_TYPE_ID, self.SUB_ID
+        ]
 
-    def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
+    def create_asset(self, asset_type: AssetType, asset: Asset) -> Asset:
         """Create an asset in the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
-            return None
+            raise AssetTypeDoesNotExistException(
+                "The asset_type you specified does not exist in the database!")
 
         # If the asset has a super type, we won't be able to store
         # all the data in asset.data in the asset database table.
         # We need to create a super type asset and let it handle
         # the additional data.
 
-        if (super_id := asset_type.get_super_type_id()) > 0:
+        super_type: Optional[AssetType] = None
+        if (super_type_id := asset_type.get_super_type_id()) > 0:
 
-            super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
+            # Getting the supertype AssetType.
+            super_type = self.asset_type_manager.get_one_by_id(super_type_id)
 
             if not super_type:
                 raise SuperTypeDoesNotExistException()
@@ -96,7 +104,8 @@ class AssetManager(AAssetManager):
             }
 
             # Creating the super asset, using the data _not used_ by the sub
-            super_asset: Asset = self.create_asset(super_type, Asset(data=super_data))
+            super_asset: Asset = Asset(data=super_data, sub_type_id=asset_type.asset_type_id)
+            super_asset = self.create_asset(super_type, super_asset)
             asset.extended_by_id = super_asset.asset_id
 
         # This is WHEN the asset is created
@@ -107,10 +116,18 @@ class AssetManager(AAssetManager):
             self.PRIMARY_KEY: None,
             self.CREATED: int(created.timestamp()),
             self.UPDATED: int(created.timestamp()),
-            self.JOIN_ON: asset.extended_by_id
+            self.JOIN_ON: asset.extended_by_id,
+            self.SUB_TYPE_ID: asset.sub_type_id,
+            self.SUB_ID: asset.sub_id
         })
 
         asset_id = self.db_connection.write_dict(asset_type.asset_table_name, values)
+
+        if (super_id := asset.extended_by_id) > 0 and isinstance(super_type, AssetType):
+            super_asset = self.get_one(super_id, super_type)
+            super_asset.sub_id = asset_id
+            self.update_asset(super_type, super_asset)
+
         self.db_connection.commit()
 
         return Asset(
@@ -118,15 +135,15 @@ class AssetManager(AAssetManager):
             asset_id=asset_id,
             created=created,
             updated=created,
-            extended_by_id=asset.extended_by_id
-        )
+            extended_by_id=asset.extended_by_id,
+            sub_type_id=asset.sub_type_id,
+            sub_id=asset.sub_id)
 
     def delete_asset(self, asset_type: AssetType, asset: Asset):
         """Delete an asset from the system."""
 
         # Checking for and deleting super assets
         if (super_id := asset_type.get_super_type_id()) > 0:
-
             super_type: AssetType = self.asset_type_manager.get_one_by_id(super_id)
             super_asset: Asset = self.get_one(asset.extended_by_id, super_type)
             self.delete_asset(super_type, super_asset)
@@ -137,7 +154,7 @@ class AssetManager(AAssetManager):
 
         self.db_connection.commit()
 
-    def update_asset(self, asset_type: AssetType, asset: Asset):
+    def update_asset(self, asset_type: AssetType, asset: Asset) -> Asset:
         """Update the information on an asset in the database."""
 
         # Making sure the asset exists in the database
@@ -178,6 +195,7 @@ class AssetManager(AAssetManager):
 
             self.update_asset(super_type, super_asset)
 
+        # Getting the asset currently stored in the database.
         old_asset: Asset = self.get_one(asset.asset_id, asset_type)
 
         if old_asset.updated > asset.updated:
@@ -190,17 +208,22 @@ class AssetManager(AAssetManager):
             self.PRIMARY_KEY: asset.asset_id,
             self.CREATED: int(asset.created.timestamp()),
             self.UPDATED: int(updated.timestamp()),
-            self.JOIN_ON: asset.extended_by_id
+            self.JOIN_ON: asset.extended_by_id,
+            self.SUB_TYPE_ID: asset.sub_type_id,
+            self.SUB_ID: asset.sub_id
         })
 
         self.db_connection.update(asset_type.asset_table_name, data)
+        self.db_connection.commit()
 
         return Asset(
             data=asset.data,
             created=asset.created,
             updated=updated,
             asset_id=asset.asset_id,
-            extended_by_id=asset.extended_by_id
+            extended_by_id=asset.extended_by_id,
+            sub_type_id=asset.sub_type_id,
+            sub_id=asset.sub_id
         )
 
     def get_one(
@@ -222,7 +245,6 @@ class AssetManager(AAssetManager):
 
             table_name, table_headers, result_columns = \
                 self._extract_joined_parameters(asset_type)
-
             result: Sequence[MutableMapping[str, Any]] = \
                 self.db_connection.read_joined(
                     and_filters=[f'{table_name}.primary_key = {asset_id}'],
@@ -235,8 +257,7 @@ class AssetManager(AAssetManager):
             result_columns: List[Column] = asset_type.columns
             result: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
                 table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-                headers=headers, and_filters=[f'primary_key = {asset_id}']
-            )
+                headers=headers, and_filters=[f'primary_key = {asset_id}'])
 
         if not result:
             return None
@@ -244,8 +265,7 @@ class AssetManager(AAssetManager):
         if len(result) > 1:
             raise KeyConstraintException(
                 "There is a real big problem here! Real biggy - Trust me! " +
-                "The primary key constraint is broken!"
-            )
+                "The primary key constraint is broken!")
 
         return self._convert_result_to_asset(result[0], result_columns, depth)
 
@@ -276,8 +296,7 @@ class AssetManager(AAssetManager):
             result_columns: List[Column] = asset_type.columns
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
                 table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-                headers=headers
-            )
+                headers=headers)
 
         return self._convert_results_to_assets(results, result_columns, depth)
 
@@ -363,7 +382,9 @@ class AssetManager(AAssetManager):
             data=self.convert_row_to_data(result, result_columns, depth),
             created=datetime.fromtimestamp(result[self.CREATED]),
             updated=datetime.fromtimestamp(result[self.UPDATED]),
-            extended_by_id=result[self.JOIN_ON]
+            extended_by_id=result[self.JOIN_ON],
+            sub_type_id=result[self.SUB_TYPE_ID],
+            sub_id=result[self.SUB_ID]
         )
 
     def _convert_results_to_assets(self, results, result_columns, depth):
@@ -396,7 +417,6 @@ class AssetManager(AAssetManager):
             result_columns.extend(inspected_type.columns)
 
             headers: Set[str] = set(column.db_name for column in inspected_type.columns)
-            table_headers[inspected_type.asset_table_name] = \
-                (self.JOIN_ON, [column.db_name for column in inspected_type.columns])
+            table_headers[inspected_type.asset_table_name] = self.JOIN_ON, list(headers)
 
         return asset_type.asset_table_name, table_headers, result_columns
