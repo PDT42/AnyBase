@@ -131,14 +131,70 @@ This is because there is no sceanario, in which an AssetType is bookable, but do
 Thus we can imply, whether an AssetType is bookable or not, from the fact, that it either does, or does not define
 a _bookable\_type_.
 
+> ### Example
+>
+> For the AssetType sheme, we defined for the library ...
+>
+>
+>![Library Types][library_types]
+>
+>
+>... an Sqlite Database connected to, using the [SqliteConnection] and inspected using [SqliteBrowser], would have
+>tables something like this:
+>
+>#### AssetTypes Table
+>
+>
+>![AssetTypes Table][asset_types_table]
+>
+>
+>#### MediaArticle Type Table
+>
+>
+>![MediaArticle Type Table][media_article_table]
+>
+>
+>#### Book Type Table
+>
+>
+>![Book Type Table][book_table]
+>
+>
+>#### Book BookingType Table
+>
+>
+>![Book BookingType Table][book_booking_table]
+>
+>
+>#### Member Type Table
+>
+>
+>![Member Type Table][member_table]
+>
+>
+>#### Borrow Type Table
+>
+>
+>![Borrow Type Table][borrow_table]
+
 [//]: # (LINKS)
 [Column]: ../components/column.md
 [Asset]: ../components/assets.md
 [AssetTypeManager]: ../managers/asset_type_manager.md
 [DbConnection]: ../database/db_connection.md
+[SqliteConnection]: ../databse/sqlite_connection.md
+
+[SqliteBrowser]: https://sqlitebrowser.org/
 
 [//]: # (IMAGES)
 [asset_type_class]: graphics/rendered_images/asset_type_class.png "Asset Type Class"
 [bookable_type]: graphics/rendered_images/BookableType.png "Bookable Type"
 [asset_type_db]: graphics/rendered_images/asset_type_db.png "Asset Type Database Entity"
 [super_type]: graphics/rendered_images/SuperType.png "Super Type - Type Extension"
+[library_types]: ../graphics/rendered_images/LibraryTypes.png "Library Types"
+[asset_types_table]: graphics/rendered_images/AssetTypesDbTable.png "AssetTypes Table"
+[media_article_table]: graphics/rendered_images/MediaArticleTypeTable.png "MediaArticle Type Table"
+[book_table]: graphics/rendered_images/BookTypeTable.png "Book Type Table"
+[book_booking_table]: graphics/rendered_images/BookingTypeBookTable.png "Book BookingType Table"
+[member_table]: graphics/rendered_images/MemberTypeTable.png "Member Type Table"
+[borrow_table]: graphics/rendered_images/BorrowTypeTable.png "Borrow Type Table"
