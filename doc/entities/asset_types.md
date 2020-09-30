@@ -10,11 +10,11 @@ basically any AssetType, who is implemented as a ``super_type`` by another Asset
 themselves have subtypes. The AssetType, a subtype AssetType is sub to, is called __parent__. Subtypes realize
 an Extension of their supertypes.
 
->An AssetType is considered a subtype, if its ``super_type`` is less or equal to zero. This is just opportune, 
->since every table, handled by AnyBase's [DbConnection], defines a ``pimary_key`` which, for sqlite, starts at 
->one and automatically increases with every row appended and can thus be used in the ``super_type`` field as a
->foreign key. In the future it might be sensable, to add a separate database column containing a true boolean,
->indicating, wether an AssetType is a subtype or not.
+An AssetType is considered a subtype, if its ``super_type`` is less or equal to zero. This is just opportune, 
+since every table, handled by AnyBase's [DbConnection], defines a ``pimary_key`` which, for sqlite, starts at 
+one and automatically increases with every row appended and can thus be used in the ``super_type`` field as a
+foreign key. In the future it might be sensable, to add a separate database column containing a true boolean,
+indicating, wether an AssetType is a subtype or not.
 
 > ### Example
 >
