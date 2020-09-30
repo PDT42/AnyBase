@@ -140,7 +140,7 @@ a _bookable\_type_.
 >
 >
 >... an Sqlite Database connected to, using the [SqliteConnection] and inspected using [SqliteBrowser], would have
->tables something like this:
+>tables something like this (TODO incomplete list):
 >
 >#### AssetTypes Table
 >
