@@ -33,6 +33,7 @@ indicating, wether an AssetType is a subtype or not.
 >
 >![Super Type][super_type]
 
+
 ## Owner
 
 AssetTypes can be slaves and slave owners. This will probably shock you now, but sadly, it's the truth. Whether an 
@@ -59,6 +60,7 @@ In this configuration, the ``owner_id`` field of the _slavetype_ is set, yet the
 this is not a slave (THIS IS SPARRRRRRTAAAAAA!!!!11elf1 ㄟ(≧◇≦)ㄏ). Every ``get`` method of the [AssetTypeManager]
 will ignore types in this configuration, since these ``get`` methods, if they ignore slaves, will exclude any Type who
 defines an ``owner_id`` and should they include slaves, will required the ``is_slave`` flag to be set.
+
 
 ## Bookable AssetTypes
 
@@ -87,9 +89,9 @@ and will usually be _slavetypes_.
 >
 > ![Bookable Type][bookable_type]
 
+
 ## Backend Representation
 
->TODO: Update
 
 In the backend of the software an asset type is stored in a dataclass called ``AssetType``. All operations performed 
 on asset types must use this as their input/output parameter type. An asset type should _never_ be handled in any 
@@ -97,31 +99,37 @@ other form in the backend.
 
 ![Asset Type Class][asset_type_class]
 
-Each asset type contains a list of [Column]s. This list defines the columns required from a database table, so 
-[Asset]s of this type can be stored in it. It also contains an asset type id, which is filled database primary key.
-The column ``primary_key`` is automatically added to each asset type table. When creating a new asset type in the 
-backend or using a frontend facility, the asset type does not need to set this field. When storing the asset type 
-in the database, the current implementation of the asset type manager checks (and future implementations will and 
-should probably do so) if an asset type with that asset name already exists in the database, if not the asset type 
-is stored and the primary key is set for the asset type. When loading an asset type from the databse the 
+Each asset type contains a list of [Column]s. This list defines the [Column]s required from a database table, so 
+[Asset]s of this type can be stored in it. It also contains an ``asset_type_id``, which is filled by database's 
+``primary_key``. The column ``primary_key`` is automatically added to each asset type table. When creating a new
+asset type in the backend or using a frontend facility, the asset type does not need to set this field. When storing
+the asset type in the database, the current implementation of the [AssetTypeManager] checks (and future implementations
+will and should probably do so) if an asset type with that asset name already exists in the database, if not the 
+AssetType is stored and the primary key is set by the database. When loading an asset AssetType from the database the 
+``asset_type_id`` will be filled with the database row's ``primary_key``.
 
 
 ## Database Representation
 
->TODO: Update
-
-All of these asset types are stored in the database table ``abintern_asset_types``. On creation, for each asset type
-an additional table called ``abasset_table_{asset_name}``. The table name is generated from the name of the asset 
-type. The manner in which the table names are generated from the name is part of the abstract implementation of the
-asset type manager, to guarantee, that future implementations of the asset type manager will still be able to access
-these tables. The table name generation is provided by the static method ``generate_asset_table_name``. 
+All of these asset types are stored in the database table ``abintern_asset_types``. On creation, for each AssetType
+an additional table called ``abasset_table_{asset_name}`` is created. The table name is generated from the name of the 
+AssetType. The manner in which the table names are generated from the name is part of the abstract implementation of the
+[AssetTypeManager], to guarantee, that future implementations of the [AssetTypeManager] will still be able to interact 
+with the tables. The table name generation is provided in the static method ``generate_asset_table_name``. 
 
 ![Asset Type Database Representation][asset_type_db]
 
 The fieldnames suggest the content. The only interesting one being ``asset_columns``. Since the [Column] is also an
 item defined by AnyBase, in this field we store a string representation of the columns. This representation must be
 the formatted the same way in each future version to guarantee interoperability, which is why the generation of the
-representation is part of the abstract implementation of the asset type manager.
+representation is part of the abstract implementation of the [AssetTypeManager]. Right now we simply use 
+``json.dumps(...)``, but I think it might be worth considering if implementing a less dataintensive enconding would
+be worth the trouble. 
+
+Also notable is, that the database representation of the AssetType is missing a column designed to store ``bookable``.
+This is because there is no sceanario, in which an AssetType is bookable, but does not define a _bookable\_type_. 
+Thus we can imply, whether an AssetType is bookable or not, from the fact, that it either does, or does not define
+a _bookable\_type_.
 
 [//]: # (LINKS)
 [Column]: ../components/column.md
