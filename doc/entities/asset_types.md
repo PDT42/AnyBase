@@ -44,6 +44,7 @@ highly politically incorrect, the _owned AssetTypes_ are called _slavetypes_. (M
 term?)They exist to be employed at will by their _owner_. Since owned AssetTypes are not independently interesting, 
 they are ignored by the [AssetTypeManager]s ``get_all`` functions. Instead, since we only ever want to get the slaves
 of one AssetType, the [AssetTypeManager] defines a separate method ``get_slaves``. 
+
 Additionaly there is the "public" configuration for _slavetypes_. If their ``is_slave`` flag is set, yet the AssetType
 does not define an ``owner_id``, it is a public slave, to be employed by anyone. The [AssetTypeManager] will include 
 these slaves in every call to ``get_slaves`` if not explicitly told to ignore them.
