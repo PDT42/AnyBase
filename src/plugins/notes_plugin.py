@@ -38,7 +38,7 @@ class NotesPluginServer(APluginServer):
     PLUGIN_NAME = 'basic-notes'
 
     # Map to hold info on the plugins served by this server
-    # AssetTypeId, AssetId -> InternalTypeName, AssetTypeId
+    # AssetTypeId, AssetId -> (InternalTypeName, AssetTypeId)
 
     table_mappings: Dict[Tuple[int, Optional[int]], Dict[str, int]] = None
 
@@ -53,8 +53,8 @@ class NotesPluginServer(APluginServer):
     def __init__(self):
         """Create a new ``NotesPluginServer``."""
 
-        self.asset_manager: AAssetManager = AssetManager()
         self.asset_type_manager: AAssetTypeManager = AssetTypeManager()
+        self.asset_manager: AAssetManager = AssetManager()
 
         self.table_mappings = {}
 
