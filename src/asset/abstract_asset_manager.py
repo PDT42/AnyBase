@@ -37,7 +37,7 @@ class AAssetManager:
         pass
 
     @abstractmethod
-    def update_asset(self, asset_type: AssetType, asset: Asset) -> None:
+    def update_asset(self, asset_type: AssetType, asset: Asset) -> Asset:
         """Update the information on an asset in the database."""
         pass
 
@@ -97,13 +97,13 @@ class AAssetManager:
             else:
                 field = self._conversions[column.datatype](row_value)
 
-            if field and column.datatype is DataTypes.ASSET.value and depth > 0:
+            if field and column.datatype == DataTypes.ASSET.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one_by_id(column.asset_type_id)
                 asset = self.get_one(field, asset_type, depth - 1)
 
                 received_data[column.db_name] = asset
 
-            elif field and column.datatype is DataTypes.ASSETLIST.value and depth > 0:
+            elif field and column.datatype == DataTypes.ASSETLIST.value and depth > 0:
                 asset_type = self.asset_type_manager.get_one_by_id(column.asset_type_id)
 
                 received_data[column.db_name] = [
