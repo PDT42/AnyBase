@@ -2,24 +2,27 @@
 
 ## Subtypes & Supertypes
 
-Asset types are _the_ central element of AnyBase. They define the structure of [Asset]s managed by the software. 
-To manage the asset types available, there is the asset type manager, which provides the database interface to 
-store, edit and get asset types. [Asset]s come with one of two different types: There are __supertype__ and 
-__subtype__ asset types. To create a subtype asset type, there must first exist a super type. A supertype asset 
-type is basically any asset type, which is not a subtype. Still subtypes can themselves have subtypes. The asset 
-type, a subtype asset type is sub to, is called __parent__. Subtypes realize an Extension Type.
+AssetTypes are _the_ central element of AnyBase. They define the structure of [Asset]s managed by the software. 
+To manage the AssetTypes available, there is the [AssetTypeManager], which provides the database interface to 
+store, edit and get asset types. [Asset]s come with one of two AssetTypes: There are __supertype__ and __subtype__
+AssetTypes. To create a subtype AssetType, there must first exist a super type. A supertype AssetType is 
+basically any AssetType, who is implemented as a ``super_type`` by another AssetType. Still subtypes can 
+themselves have subtypes. The AssetType, a subtype AssetType is sub to, is called __parent__. Subtypes realize
+an Extension of their supertypes.
 
 >An AssetType is considered a subtype, if its ``super_type`` is less or equal to zero. This is just opportune, 
->since every table, handled by AnyBase's DbConnection, defines a ``pimary_key`` which, for sqlite, starts at one 
->and automatically increases with every row appended. In the future it might be sensable, to add a separate 
->database column containing a true boolean, indicating, wether an AssetType is a subtype or not.
-
+>since every table, handled by AnyBase's [DbConnection], defines a ``pimary_key`` which, for sqlite, starts at 
+>one and automatically increases with every row appended and can thus be used in the ``super_type`` field as a
+>foreign key. In the future it might be sensable, to add a separate database column containing a true boolean,
+>indicating, wether an AssetType is a subtype or not.
 
 > ### Example
 >
 >For example: Let's look at some of the AssetTypes the library defines. The _Media Ariticle_ is the most general
 >abstraction of an item the library might want to manage. It will serve as the super type for all the asset types
->the library might want to define or manage.
+>the library might want to define or manage. The _Book_ is one such. The _Book_ will extend the _Media Article_,
+>by setting ``super_type_id = media_article.asset_type_id``. In doing so the _Book_ inherits all the fields of the
+>_Media Article_ and the user must not define them again. 
 >
 >
 >![Super Type][super_type]
@@ -96,11 +99,13 @@ these tables. The table name generation is provided by the static method ``gener
 The fieldnames suggest the content. The only interesting one being ``asset_columns``. Since the [Column] is also an
 item defined by AnyBase, in this field we store a string representation of the columns. This representation must be
 the formatted the same way in each future version to guarantee interoperability, which is why the generation of the
-representation is part of the abstracth implementation of the asset type manager.
+representation is part of the abstract implementation of the asset type manager.
 
 [//]: # (LINKS)
 [Column]: ../components/column.md
 [Asset]: ../components/assets.md
+[AssetTypeManager]: ../managers/asset_type_manager.md
+[DbConnection]: ../database/db_connection.md
 
 [//]: # (IMAGES)
 [asset_type_class]: graphics/rendered_images/asset_type_class.png "Asset Type Class"
