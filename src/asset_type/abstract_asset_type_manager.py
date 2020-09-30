@@ -9,12 +9,16 @@ be capable of for it to be operated by the system and what certain
 infrastructural parts should be formed like, in order to maintain
 interoperability.
 """
-
+import json
 from abc import abstractmethod
-from typing import List, Optional, Sequence, Union
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 from asset_type import AssetType
-from database import Column, DataTypes
+from database import Column
+from database import DataType
 from exceptions.common import InvalidArgumentError
 
 
@@ -32,7 +36,7 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def update_asset_type(self, asset_type: AssetType) -> AssetType:
+    def update_asset_type(self, asset_type: AssetType, extend_columns: bool = True) -> AssetType:
         """Update an ``asset_type_id`` in the database."""
         pass
 
@@ -77,7 +81,12 @@ class AAssetTypeManager:
         pass
 
     @abstractmethod
-    def get_slaves(self, asset_type: AssetType) -> List[AssetType]:
+    def get_type_children(self, asset_type: AssetType, depth: int = 0, ignore_slaves: bool = False) -> List[AssetType]:
+        """Get the children tree of an asset_type."""
+        pass
+
+    @abstractmethod
+    def get_slaves(self, asset_type: AssetType, pub_slaves: bool = True) -> List[AssetType]:
         """Get the slaves of this ``asset_type_id``."""
         pass
 
@@ -95,13 +104,8 @@ class AAssetTypeManager:
         is a basic concept of the software and should be the same
         everywhere."""
 
-        column_str: str = ';'.join([
-            f"{column.name}," +
-            f"{column.datatype.typename}," +
-            f"{int(column.asset_type_id)}," +
-            f"{int(column.required)}"
-            for column in columns
-        ])
+        column_data = [json.dumps(column.as_dict()) for column in columns]
+        column_str: str = ';'.join([col_data.replace('"', "'") for col_data in column_data])
 
         return column_str
 
@@ -115,20 +119,13 @@ class AAssetTypeManager:
         columns: List[Column] = []
 
         for column_str in column_str.split(';'):
-            column_str = column_str.split(',')
-
-            columns.append(Column(
-                name=' '.join(column_str[:-3]),
-                db_name='_'.join(column_str[:-3][0].split(' ')).lower(),
-                datatype=DataTypes[column_str[-3]].value,
-                asset_type_id=int(column_str[-2]),
-                required=bool(int(column_str[-1]))
-            ))
-
+            column_data = json.loads(column_str.replace("'", '"'))
+            column_data['datatype'] = DataType(**column_data['datatype'])
+            columns.append(Column(**column_data))
         return columns
 
     @staticmethod
-    def generate_asset_table_name(asset_type: AssetType) -> str:
+    def generate_asset_table_name(asset_type: Union[AssetType, str]) -> str:
         """Generate an ``asset_table_name`` from the ``asset type``.
         This method is part of the abstract asset type manager, to
         ensure, that future implementations still support the same
