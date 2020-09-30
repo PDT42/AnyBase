@@ -45,15 +45,15 @@ _Slavetypes_ exist to be employed at will by their _owner_. Since owned AssetTyp
 they are ignored by the [AssetTypeManager]s ``get_all`` functions. Instead, since we only ever want to get the slaves
 of one AssetType, the [AssetTypeManager] defines a separate method ``get_slaves``. 
 
-In the first possible ("standard") configuration for _slavetypes_ both, the ``is_slave`` field and the ``owner_id`` 
+In the first possible (__"standard"__) configuration for _slavetypes_ both, the ``is_slave`` field and the ``owner_id`` 
 field, are set. This indicates, that a _slavetype_ will be, exclusively employed by it's _owner_ and discarded at will. 
 
-Secondly there is the "public" configuration for _slavetypes_. If their ``is_slave`` flag is set, yet the AssetType
+Secondly there is the __"public"__ configuration for _slavetypes_. If their ``is_slave`` flag is set, yet the AssetType
 does not define an ``owner_id``, we call the AssetType a _public slave_, which can be employed by any other AssetType.
 The [AssetTypeManager] will include these slaves in every call to ``get_slaves`` if not explicitly told to ignore them.
 
-The last possible configuration for _slavetypes_ is the "private" configuration. This configuration indicates, that the
-relationship between the _slave_ and _owner_ is much closer than traditionally allowed for. The _owner_ depends on 
+The last possible configuration for _slavetypes_ is the __"private"__ configuration. This configuration indicates, that 
+the relationship between the _slave_ and _owner_ is much closer than traditionally allowed for. The _owner_ depends on 
 the slave and can't be without it. This is why "private" slavetypes are not accessible to anyone but their _owner_,
 who holds the only reference to them (Right now the only example for such a relationship is the _bookable\_type_).
 In this configuration, the ``owner_id`` field of the _slavetype_ is set, yet the ``is_slave`` field indicates, that
