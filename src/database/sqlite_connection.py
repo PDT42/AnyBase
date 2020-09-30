@@ -650,7 +650,7 @@ class SqliteConnection(DbConnection):
 
         table_name = table_name.replace(' ', '_').lower()
 
-        query = f"SELECT COUNT(*) as 'exists' FROM sqlite_master " + \
+        query = f'SELECT COUNT(*) as "exists" FROM sqlite_master ' + \
                 f"WHERE type='table' AND name='{table_name}'"
         self.cursor.execute(query)
 
