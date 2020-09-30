@@ -36,18 +36,29 @@ indicating, wether an AssetType is a subtype or not.
 ## Owner
 
 AssetTypes can be slaves and slave owners. This will probably shock you now, but sadly, it's the truth. Whether an 
-AssetType is a slave is indicated by the AssetTypes ``is_slave`` and ``owner_id`` fields. Those fields suggest, that 
-an asset_type is not independently interesting, but only as a "subsiduary" for _another_ AssetType. The AssetType, 
-who defines the field (typed either ASSET or ASSETLIST), the _owned AssetType_ is supposed to fill, is called the 
-_owner_. Just as one might think, the ``owner_id`` persists the ``asset_type_id`` of the _owner AssetType_. Though 
-highly politically incorrect, the _owned AssetTypes_ are called _slavetypes_. (Maybe subsiduaries would be a better 
-term?)They exist to be employed at will by their _owner_. Since owned AssetTypes are not independently interesting, 
+AssetType is a slave is indicated by the AssetTypes ``is_slave`` and ``owner_id`` fields. AssetTypes who are configured
+as _slavetypes_ are not indepentendly interesting, but only as "subsiduaries" for _other_ AssetTypes. The AssetType, 
+who defines the field (typed either ASSET or ASSETLIST), the _owned AssetType_ is supposed to fill, is called _the owner_.
+Just as one might think, the ``owner_id`` persists the ``asset_type_id`` of the _owner AssetType_. 
+_Slavetypes_ exist to be employed at will by their _owner_. Since owned AssetTypes are not independently interesting, 
 they are ignored by the [AssetTypeManager]s ``get_all`` functions. Instead, since we only ever want to get the slaves
 of one AssetType, the [AssetTypeManager] defines a separate method ``get_slaves``. 
 
-Additionaly there is the "public" configuration for _slavetypes_. If their ``is_slave`` flag is set, yet the AssetType
-does not define an ``owner_id``, it is a public slave, to be employed by anyone. The [AssetTypeManager] will include 
-these slaves in every call to ``get_slaves`` if not explicitly told to ignore them.
+In the first possible ("standard") configuration for _slavetypes_ both the ``is_slave`` field and the ``owner_id`` 
+field are set. This indicates, that a _slavetype_ will be, exclusively employed by it's _owner_ and discarded at will. 
+
+Secondly there is the "public" configuration for _slavetypes_. If their ``is_slave`` flag is set, yet the AssetType
+does not define an ``owner_id``, we call the AssetType a _public slave_, which can be employed by any other AssetType.
+The [AssetTypeManager] will include these slaves in every call to ``get_slaves`` if not explicitly told to ignore them.
+
+The last possible configuration for _slavetypes_ is the "private" configuration. This configuration indicates, that the
+relationship between the _slave_ and _owner_ is much closer than traditionally allowed for. The _owner_ depends on 
+the slave and can't be without it. This is why "private" slavetypes are not accessible to anyone but their _owner_,
+who holds the only reference to them (Right now the only example for such a relationship is the _BookableType_).
+In this configuration, the ``owner_id`` field of the _slavetype_ is set, yet the ``is_slave`` field indicates, that
+this is not a slave (THIS IS SPARRRRRRTAAAAAA!!!!11elf1 ㄟ(≧◇≦)ㄏ). Every ``get`` method of the [AssetTypeManager]
+will ignore types in this configuration, since, if they ignore slaves, they will exclude any type who defines an
+``owner_id`` and should they include slaves will required the ``is_slave`` flag to be set.
 
 ## Bookable AssetTypes
 
