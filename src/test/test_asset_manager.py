@@ -190,7 +190,7 @@ class TestAssetManager(TestCase):
         self.test_asset.data["testtext"] = "Updated Text"
 
         # Writing changes to database
-        self.asset_manager.update_asset(self.asset_type, asset)
+        self.test_asset = self.asset_manager.update_asset(self.asset_type, asset)
         asset = self.asset_manager.get_one(1, self.asset_type)
         self.assertEqual(asset, self.test_asset)
 
