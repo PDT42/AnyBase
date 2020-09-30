@@ -11,6 +11,8 @@ initialization method, that binds these static methods to routes.
 from abc import abstractmethod
 from typing import MutableMapping
 
+from quart import Quart
+
 from asset import Asset
 from asset.abstract_asset_manager import AAssetManager
 from asset_type import AssetType
@@ -29,6 +31,12 @@ class APluginServer:
     @abstractmethod
     def get() -> 'APluginServer':
         """Get the instance of this singleton."""
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def register_routes(app: Quart) -> None:
+        """Register the routes of this server in the ``app``."""
         pass
 
     @abstractmethod
