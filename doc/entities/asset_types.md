@@ -18,17 +18,20 @@ an Extension of their supertypes.
 
 > ### Example
 >
->For example: Let's look at some of the AssetTypes the library defines. The _Media Ariticle_ is the most general
->abstraction of an item the library might want to manage. It will serve as the super type for all the asset types
->the library might want to define or manage. The _Book_ is one such. The _Book_ will extend the _Media Article_,
->by setting ``super_type_id = media_article.asset_type_id``. In doing so the _Book_ inherits all the fields of the
->_Media Article_ and the user must not define them again. 
+>Let's, for example, take a look at some of the AssetTypes the library defines. The _Media Article_ is the most 
+>general abstraction of one of the libraries items. It will serve as the supertype for all the AssetTypes the 
+>library might want to define or manage. The _Book_ is one such AssetType. The _Book_ will extend the _Media Article_,
+>by setting ``super_type_id = media_article.asset_type_id``. In doing so the _Book_ inherits all the fields of 
+>the _Media Article_ and the user must not define them again. 
+>
+>Additionaly the _Book_ can be used in contexts designed to manage _Media Articles_. Take the case, for example,
+>that a _Member_ of the library wants to borrow a _Book_. In this context, it's completely irrelevant whether the
+>borrowed _Media Article_ is a _Book_ or a _DVD_. The process of borrowing a book will be the same either way. 
+>Since the both _Book_ and _DVD_ implement _Media Article_  as a supertype and thus have all the fields of a
+>_Media Article_, the user will be able to use both _Book_ and _DVD_ in workflows he configures for _Media Articles_.
 >
 >
 >![Super Type][super_type]
->
->
-> 
 
 ## Owner
 
