@@ -5,7 +5,13 @@ class AssetType {
     Column[]: columns
     str: asset_table_name
     int: asset_type_id
-    int: super_type
+    datetime: created
+    datetime: updated
+    Union[AssetType, int]: super_type
+    bool: is_slave
+    int: owner_id
+    bool: bookable
+    int: booking_type_id
 }
 
 @enduml
