@@ -16,8 +16,10 @@
 
     <hr/>
 
+    <!-- TODO: do this in javascript -->
+
     <div class="row" style="margin-top: 20px">
-        <form class="col" action="/asset-type/create" method="post">
+        <form id="create-asset-type-form" class="col" action="/asset-type/create" method="post">
 
             <!-- INPUT FOR ASSET TYPE ASSET_NAME -->
 
@@ -51,6 +53,36 @@
                     </select>
                 </div>
             </div>
+
+
+            <script>
+                function createTypeSettingsRow() {
+
+                    let settingsRow = document.createElement('div');
+                    settingsRow.setAttribute('class', 'row');
+
+                    let bookableSettingCol = document.createElement('div');
+                    bookableSettingCol.setAttribute('class', 'col');
+                    settingsRow.appendChild(bookableSettingCol);
+
+                    let bookableSettingLabel = document.createElement('label');
+                    bookableSettingLabel.setAttribute('for', 'bookable-type');
+                    bookableSettingLabel.setAttribute('class', 'label');
+                    bookableSettingLabel.textContent = 'Bookable Type:';
+                    bookableSettingCol.appendChild(bookableSettingLabel);
+
+                    let bookableSettingsInput = document.createElement('input');
+                    bookableSettingsInput.setAttribute('type', 'checkbox');
+                    bookableSettingsInput.setAttribute('name', 'bookable-type');
+                    bookableSettingsInput.setAttribute('id', 'bookable-type');
+                    bookableSettingsInput.style.marginLeft = '10px';
+                    bookableSettingCol.appendChild(bookableSettingsInput);
+
+                    document.getElementById('create-asset-type-form').appendChild(settingsRow);
+                }
+
+                createTypeSettingsRow();
+            </script>
 
             <hr/>
 
