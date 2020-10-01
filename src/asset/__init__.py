@@ -6,9 +6,12 @@ The package contains everything ``Asset`` related.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, time
-from typing import Any, MutableMapping, Optional
-from uuid import uuid4
+from datetime import date
+from datetime import datetime
+from datetime import time
+from typing import Any
+from typing import MutableMapping
+from typing import Optional
 
 
 @dataclass

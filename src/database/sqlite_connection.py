@@ -657,7 +657,7 @@ class SqliteConnection(DbConnection):
         result = bool(self.cursor.fetchall()[0]['exists'])
         return result
 
-    def count(self, table_name: str, query_filters: List[str] = None) -> int:
+    def count(self, table_name: str, and_filters: List[str] = None, or_filters: List[str] = None) -> int:
         """Count the number of items in ``table_name``."""
 
         # Initialize connection
@@ -667,8 +667,22 @@ class SqliteConnection(DbConnection):
 
         query = f"SELECT COUNT(*) FROM {table_name}"
 
-        if query_filters:
-            query = f"{query} WHERE {' AND '.join(query_filters)}"
+        # Adding Filters
+        if and_filters or or_filters:
+            query = f"{query} WHERE "
+
+        if and_filters:
+            query = f"{query}{' AND '.join(and_filters)}"
+
+        if or_filters:
+
+            if and_filters:
+                query = f"{query} AND ("
+
+            query = f"{query}{' OR '.join(or_filters)}"
+
+            if and_filters:
+                query = f"{query})"
 
         self.cursor.execute(query)
         result = self.cursor.fetchall()[0]['COUNT(*)']

@@ -35,6 +35,9 @@ class NotesPluginServer(APluginServer):
     _instance: 'NotesPluginServer' = None
     _initialized: bool = False
 
+    # This is the plugin name.
+    # The names of plugins must unique
+    # within the initialized plugins.
     PLUGIN_NAME = 'basic-notes'
 
     # Map to hold info on the plugins served by this server

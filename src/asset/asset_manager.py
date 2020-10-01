@@ -50,9 +50,12 @@ class AssetManager(AAssetManager):
         DataTypes.ASSETLIST.value: lambda al: [int(a) for a in al.split(';')]
     }
 
-    # Required fields
+    # Required fields.
     asset_type_manager: AssetTypeManager = None
     db_connection: DbConnection = None
+
+    # Constants.
+    ASSET_HEADERS: List[str] = None
 
     def __init__(self):
         """Create a new ``AssetManager``."""
@@ -230,6 +233,7 @@ class AssetManager(AAssetManager):
             self, asset_id: int,
             asset_type: AssetType,
             depth: int = 0,
+            load_sub_depth: int = 0,
             extend: bool = True) \
             -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
@@ -267,9 +271,9 @@ class AssetManager(AAssetManager):
                 "There is a real big problem here! Real biggy - Trust me! " +
                 "The primary key constraint is broken!")
 
-        return self._convert_result_to_asset(result[0], result_columns, depth)
+        return self._convert_result_to_asset(result[0], result_columns, depth, load_sub_depth)
 
-    def get_all(self, asset_type: AssetType, depth: int = 0) -> List[Asset]:
+    def get_all(self, asset_type: AssetType, depth: int = 0, load_sub_depth: int = 0) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -298,13 +302,15 @@ class AssetManager(AAssetManager):
                 table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
                 headers=headers)
 
-        return self._convert_results_to_assets(results, result_columns, depth)
+        return self._convert_results_to_assets(results, result_columns, depth, load_sub_depth)
 
     def get_all_filtered(
             self, asset_type: AssetType,
             depth: int = None,
+            load_sub_depth: int = 0,
             and_filters: Sequence[str] = None,
-            or_filters: Sequence[str] = None) -> List[Asset]:
+            or_filters: Sequence[str] = None
+    ) -> List[Asset]:
         """Get all (filtered) assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -328,12 +334,16 @@ class AssetManager(AAssetManager):
                 headers=headers, and_filters=and_filters, or_filters=or_filters
             )
 
-        return self._convert_results_to_assets(results, result_columns, depth)
+        return self._convert_results_to_assets(results, result_columns, depth, load_sub_depth)
 
     def get_batch(
             self, asset_type: AssetType,
             offset: int, limit: int,
-            depth: int = None) -> List[Asset]:
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            depth: Optional[int] = None,
+            load_sub_depth: int = 0
+    ) -> List[Asset]:
         """Get a batch of assets of ``AssetType`` from the database."""
 
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
@@ -348,18 +358,23 @@ class AssetManager(AAssetManager):
                 self._extract_joined_parameters(asset_type)
 
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read_joined(
-                table_headers=table_headers, limit=limit, offset=offset)
+                table_headers=table_headers, limit=limit, offset=offset,
+                and_filters=and_filters, or_filters=or_filters)
 
         else:
             result_columns: List[Column] = asset_type.columns
             results: Sequence[MutableMapping[str, Any]] = self.db_connection.read(
                 table_name=self.asset_type_manager.generate_asset_table_name(asset_type),
-                headers=headers, limit=limit, offset=offset
-            )
+                headers=headers, limit=limit, offset=offset, and_filters=and_filters,
+                or_filters=or_filters)
 
-        return self._convert_results_to_assets(results, result_columns, depth)
+        return self._convert_results_to_assets(results, result_columns, depth, load_sub_depth)
 
-    def count(self, asset_type: AssetType):
+    def count(
+            self, asset_type: AssetType,
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None
+    ) -> int:
         """Count the number of assets of the given type."""
 
         # TODO: Add filtered count
@@ -367,7 +382,8 @@ class AssetManager(AAssetManager):
         if not self.asset_type_manager.check_asset_type_exists(asset_type):
             raise AssetTypeDoesNotExistException()
 
-        count: int = self.db_connection.count(asset_type.asset_table_name)
+        count: int = self.db_connection.count(
+            asset_type.asset_table_name, and_filters=and_filters, or_filters=or_filters)
         return count
 
     #
@@ -375,25 +391,38 @@ class AssetManager(AAssetManager):
     # ~~~~~~~~~~~~~~~
     #
 
-    def _convert_result_to_asset(self, result, result_columns, depth):
+    def _convert_result_to_asset(self, result, result_columns, depth, load_sub_depth):
         """Convert a single result to an asset."""
-        return Asset(
+
+        result_asset: Asset = Asset(
             asset_id=result.pop(self.PRIMARY_KEY),
             data=self.convert_row_to_data(result, result_columns, depth),
             created=datetime.fromtimestamp(result[self.CREATED]),
             updated=datetime.fromtimestamp(result[self.UPDATED]),
             extended_by_id=result[self.JOIN_ON],
             sub_type_id=result[self.SUB_TYPE_ID],
-            sub_id=result[self.SUB_ID]
-        )
+            sub_id=result[self.SUB_ID])
 
-    def _convert_results_to_assets(self, results, result_columns, depth):
+        # CHECKOUT: If this can be done by the database.
+
+        if (sub_type_id := result.get(self.SUB_TYPE_ID)) and load_sub_depth > 0:
+            sub_type: AssetType = self.asset_type_manager.get_one_by_id(sub_type_id)
+            sub_asset: Asset = self.get_one(
+                asset_id=result.get(self.SUB_ID),
+                asset_type=sub_type,
+                load_sub_depth=load_sub_depth - 1,
+                extend=False)
+            result_asset.data.update(sub_asset.data)
+
+        return result_asset
+
+    def _convert_results_to_assets(self, results, result_columns, depth, load_sub_depth):
         """Convert the db results to a list of Assets."""
 
         assets = []
 
         for result in results:
-            assets.append(self._convert_result_to_asset(result, result_columns, depth))
+            assets.append(self._convert_result_to_asset(result, result_columns, depth, load_sub_depth))
         return assets
 
     def _extract_joined_parameters(self, asset_type: AssetType):

@@ -19,7 +19,12 @@ function createTitleRow(layout_form) {
 
     titleRow.appendChild(titleCol);
 
-    titleCol.appendChild(createColumnSelector(layout_form,'detail-view', 'title'));
+    let titleSelectLabel = document.createElement('label');
+    titleSelectLabel.setAttribute('for', 'detail-view-title')
+    titleSelectLabel.textContent = "Page Title:";
+    titleCol.appendChild(titleSelectLabel);
+
+    titleCol.appendChild(createColumnSelector(layout_form, 'detail-view', 'title'));
 
     return titleRow;
 }
@@ -244,11 +249,17 @@ function createColumn(layout_form, rows, rowNumber, columnNumber) {
         columnEditorBody.appendChild(createWidthSelector(rowNumber, columnNumber));
         columnEditorBody.appendChild(createOffsetSelector(rowNumber, columnNumber));
 
-        let columnBodyId = 'row-' + rowNumber + '-col-' + columnNumber + '-field-mappings';
+        let fieldMappingsAnchorId = 'row-' + rowNumber + '-col-' + columnNumber + '-field-mappings';
 
         let columnEditorFieldMappings = document.createElement('div');
-        columnEditorFieldMappings.setAttribute('id', columnBodyId);
+        columnEditorFieldMappings.setAttribute('id', fieldMappingsAnchorId);
         columnEditorBody.appendChild(columnEditorFieldMappings);
+
+        let customMappingsAnchorId = 'row-' + rowNumber + '-col-' + columnNumber + '-custom-mappings';
+
+        let columnEditorCustomMappings = document.createElement('div');
+        columnEditorCustomMappings.setAttribute('id', customMappingsAnchorId);
+        columnEditorBody.appendChild(columnEditorCustomMappings);
 
         rows.get(rowNumber)['column_number'] += 1;
         rows.get(rowNumber).columns.push({
@@ -280,14 +291,25 @@ function createPluginSelector(layout_form, rowNumber, columnNumber) {
     selectPlugin.setAttribute('class', 'form-control custom-select');
     selectPlugin.setAttribute('id', rowId);
     selectPlugin.setAttribute('name', rowId);
-    selectPlugin.onchange = () => {
+    // IMPORTANT: This is the plugin changed handler.
+    selectPlugin.onchange = (selected) => {
 
-        let fieldMappingsAnchorId = 'row-' + rowNumber + '-col-' + columnNumber + '-field-mappings';
+        let fieldMappingsAnchorId = 'row-' + rowNumber + '-col-' + columnNumber + '-custom-mappings';
         let fieldMappingsAnchor = document.getElementById(fieldMappingsAnchorId);
+
+        let selectedPlugin = availablePlugins.filter(plugin => plugin.id === selected.target['value'])[0];
 
         fieldMappingsAnchor.querySelectorAll('*').forEach(n => n.remove());
 
-        fieldMappingsAnchor.appendChild(createFieldMappings(layout_form, rowNumber, columnNumber, rowId));
+        if (selectedPlugin['allow_custom_mappings']) {
+            fieldMappingsAnchor.appendChild(
+                createFieldMappings(layout_form, rowNumber, columnNumber, rowId, selectedPlugin));
+        }
+
+        if (selectedPlugin['allow_custom_fields']) {
+            fieldMappingsAnchor.appendChild(
+                createCustomMappings(layout_form, rowNumber, columnNumber));
+        }
     };
     selectPlugin.oncuechange = selectPlugin.onchange;
     selectPluginCol.appendChild(selectPlugin);
@@ -395,10 +417,7 @@ function createOffsetSelector(rowNumber, columnNumber) {
     return selectOffsetRow;
 }
 
-function createFieldMappings(layout_form, rowNumber, columnNumber, pluginRowId) {
-
-    let available_plugins = document.getElementById(
-        "layout-form")['available_plugins'];
+function createFieldMappings(layout_form, rowNumber, columnNumber, pluginRowId, selectedPlugin) {
 
     let inputId = 'row-' + rowNumber + '-col-' + columnNumber + '-field';
 
@@ -408,15 +427,85 @@ function createFieldMappings(layout_form, rowNumber, columnNumber, pluginRowId) 
 
     fieldMappingsContainer.style.padding = '0px';
 
-    let pluginSelectId = 'row-' + rowNumber + '-col-' + columnNumber + '-plugin';
-    let pluginSelect = document.getElementById(pluginSelectId);
-    let pluginId = pluginSelect.selectedIndex
-
-    available_plugins[pluginId]['fields'].forEach((fieldId) => {
+    selectedPlugin['fields'].forEach((fieldId) => {
         fieldMappingsContainer.appendChild(createMappingInput(layout_form, inputId, fieldId, pluginRowId))
     });
 
     return fieldMappingsContainer;
+}
+
+function createCustomMappings(layout_form, rowNumber, columnNumber) {
+
+    let inputId = 'row-' + rowNumber + '-col-' + columnNumber + '-custom-mappings';
+
+    let customMappingsContainer = document.createElement('div');
+    customMappingsContainer.setAttribute('class', 'container');
+    customMappingsContainer.setAttribute('id', inputId + '-container');
+
+    customMappingsContainer.style.padding = '0px';
+
+    // Creating a list to show the added custom mappings in.
+
+    let customMappingsListContainer = document.createElement('div');
+    customMappingsListContainer.style.marginTop = '8px';
+    customMappingsContainer.appendChild(customMappingsListContainer)
+
+    let customMappingsListLabel = document.createElement('div');
+    customMappingsListLabel.setAttribute('for', inputId + 'custom-mappings-list');
+    customMappingsListLabel.textContent = "Custom Fields:";
+    customMappingsListContainer.appendChild(customMappingsListLabel);
+
+    let customMappingsList = document.createElement('div');
+    customMappingsList.setAttribute('id', inputId + 'custom-mappings-list')
+    customMappingsListContainer.appendChild(customMappingsList);
+
+    // Creating a row to show the add custom mapping button in.
+
+    let addCustomMappingButtonRow = document.createElement('div');
+    addCustomMappingButtonRow.setAttribute('class', 'row');
+    addCustomMappingButtonRow.style.marginTop = '6px';
+    customMappingsContainer.appendChild(addCustomMappingButtonRow);
+
+    let addCustomMappingButtonCol = document.createElement('div');
+    addCustomMappingButtonCol.setAttribute('class', 'col');
+    addCustomMappingButtonRow.appendChild(addCustomMappingButtonCol);
+
+    // Initializing a custom mapping counter
+    layout_form['custom_mappings_added'] = 0;
+
+    let addCustomMappingButton = document.createElement('div');
+    addCustomMappingButton.setAttribute('class', 'form-control btn btn-dark');
+    addCustomMappingButton.onclick = () => {
+
+        // Right now we allow a maximum of 10 custom mappings.
+        // This is set by a constant in the abstract page manager.
+        // TODO: This should be generalized - common config?
+        if (layout_form['custom_mappings_added'] < 10) {
+
+            let customMappingRow = document.createElement('div');
+            customMappingRow.setAttribute('class', 'row');
+            customMappingRow.style.marginTop = '6px';
+            customMappingsList.appendChild(customMappingRow);
+
+            let customMappingCol = document.createElement('div');
+            customMappingCol.setAttribute('class', 'col');
+            customMappingRow.appendChild(customMappingCol);
+
+            let fieldId = 'custom-field-' + layout_form['custom_mappings_added']
+            let inputId = 'row-' + rowNumber + '-col-' + columnNumber;
+
+            customMappingCol.appendChild(createColumnSelector(layout_form, inputId, fieldId));
+
+            layout_form['custom_mappings_added'] += 1;
+        }
+    };
+    addCustomMappingButtonCol.appendChild(addCustomMappingButton);
+
+    let addCustomMappingButtonIcon = document.createElement('i');
+    addCustomMappingButtonIcon.setAttribute('class', 'fas fa-plus-circle');
+    addCustomMappingButton.appendChild(addCustomMappingButtonIcon);
+
+    return customMappingsContainer;
 }
 
 function createMappingInput(layout_form, inputId, fieldId) {

@@ -37,6 +37,9 @@ class APageManager:
     asset_type_layout_table_name: str = None
     plugin_table_name: str = None
 
+    # Constants.
+    MAX_FIELD_NUMBER: int = 10
+
     @abstractmethod
     def create_page(self, page_layout: PageLayout):
         """Create a new ``PageLayout`` in the database."""
@@ -208,9 +211,22 @@ class APageManager:
                     column_field_str = f'{col_id}-field-{field}'
                     column_field_mappings[field] = str(form_data.get(column_field_str))
 
+                # Add custom mappings if allowed.
+                if plugin.allow_custom_mappings:
+
+                    # CHECKOUT: This uses a constant to define a maximum allowed number
+                    # CHECKOUT: of custom field mappings. This might be done differently.
+
+                    for custom_field_number in range(0, APageManager.MAX_FIELD_NUMBER):
+                        custom_field_name = f'custom-field-{custom_field_number}'
+                        custom_field_key = f'{col_id}-{custom_field_name}'
+                        if custom_mapping := form_data.get(custom_field_key):
+                            column_field_mappings[custom_field_name] = custom_mapping
+
                 # Getting dependant values
                 column_sources: MutableMapping[str, str] = {}
                 if plugin.server and isinstance(plugin.server, APluginServer):
+                    # IMPORTANT: Here the the plugin server is initialized!
                     column_sources = plugin.server.get().initialize(asset_type, None)
                     sources.update(column_sources)
 

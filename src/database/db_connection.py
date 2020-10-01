@@ -9,6 +9,7 @@ database.
 
 from abc import abstractmethod
 from typing import Any
+from typing import List
 from typing import Mapping
 from typing import MutableMapping
 from typing import Optional
@@ -139,7 +140,7 @@ class DbConnection:
         pass
 
     @abstractmethod
-    def count(self, table_name: str, query_filters: Optional[Sequence[str]] = None) -> int:
+    def count(self, table_name: str, and_filters: List[str] = None, or_filters: List[str] = None) -> int:
         """Count the number ob items in ``table_name``."""
         pass
 

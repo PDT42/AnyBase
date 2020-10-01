@@ -9,6 +9,7 @@ be capable of for it to be operated by the system and what certain
 infrastructural parts should be formed like, in order to maintain
 interoperability.
 """
+
 import json
 from abc import abstractmethod
 from typing import List

@@ -445,24 +445,24 @@ class AssetTypeManager(AAssetTypeManager):
     def count(self, ignore_child_types: bool = False, ignore_slaves: bool = False):
         """Get the number of ``AssetTypes`` stored in the database."""
 
-        query_filters: List[str] = []
+        and_filters: List[str] = []
 
         if ignore_child_types:
-            query_filters.append('super_type = 0')
+            and_filters.append('super_type = 0')
 
             if ignore_slaves:
                 owner_filter: str = 'owner_id = 0'
                 is_slave_filter: str = 'is_slave = 0'
-                query_filters.append(f'({owner_filter} AND {is_slave_filter})')
+                and_filters.append(f'({owner_filter} AND {is_slave_filter})')
 
         elif ignore_slaves:
             owner_filter: str = 'owner_id = 0'
             is_slave_filter: str = 'is_slave = 0'
-            query_filters.append(f'({owner_filter} AND {is_slave_filter})')
+            and_filters.append(f'({owner_filter} AND {is_slave_filter})')
 
         return self.db_connection.count(
             self._asset_types_table_name,
-            query_filters=query_filters)
+            and_filters=and_filters)
 
     def _convert_result_to_asset_type(self, result: Mapping) -> AssetType:
         """Convert one result row to an asset type."""

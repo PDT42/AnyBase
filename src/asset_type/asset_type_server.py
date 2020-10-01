@@ -218,7 +218,7 @@ class AssetTypeServer:
                 result = await result_task
 
                 result_message = await AssetTypeServer._encode_message(
-                    result=[item.as_dict() for item in result],
+                    result=result,
                     item_count=asset_type_count,
                     event_name=event_name)
 
@@ -293,6 +293,7 @@ class AssetTypeServer:
         asset_name: str = sync_form.get('assetName')
         super_type_id = int(sync_form.get('superType', 0))
         owner_id = int(sync_form.get('ownerId', 0))
+        bookable_type = bool(sync_form.get('bookable-type'))
 
         columns: List[Column] = []
         column_names: Set[str] = set()
@@ -363,7 +364,8 @@ class AssetTypeServer:
             asset_name=asset_name,
             columns=columns,
             super_type=super_type_id,
-            owner_id=owner_id
+            owner_id=owner_id,
+            bookable=bookable_type
         )
 
         asset_type_manager = AssetTypeManager()

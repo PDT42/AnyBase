@@ -76,7 +76,9 @@ class Plugin:
             'name': self.name,
             'id': self.id,
             'view': self.view,
-            'fields': list(self.fields) if self.fields else []
+            'fields': list(self.fields) if self.fields else [],
+            'allow_custom_mappings': self.allow_custom_mappings,
+            'allow_custom_fields': self.allow_custom_fields
         }
 
 
@@ -86,6 +88,7 @@ class PluginRegister(Enum):
     between the ``id`` stored in the ``ColumnInfo``"""
 
     from plugins.notes_plugin import NotesPluginServer
+    from plugins.calendar_plugin import CalendarServer
 
     BASIC_NOTES = Plugin(
         name='Basic Notes',
@@ -95,7 +98,7 @@ class PluginRegister(Enum):
         allow_custom_mappings=False,
         allow_custom_fields=False,
         default_field_mappings={
-            'title': 'title',
+            'title': 'title',  # The right must be column.db_names.
             'note': 'note',
             'author': 'author'
         },
@@ -103,11 +106,23 @@ class PluginRegister(Enum):
         type=PluginType.HYBRID
     )
 
+    CALENDAR = Plugin(
+        name='Calendar',
+        id='calendar',
+        view='plugins/calendar-plugin.html',
+        fields=set(),
+        allow_custom_mappings=False,
+        allow_custom_fields=False,
+        default_field_mappings=None,
+        server=CalendarServer,
+        type=PluginType.HYBRID
+    )
+
     ASSET_DETAILS = Plugin(
         name='Asset Details',
         id='asset-details',
         view='plugins/asset-details-plugin.html',
-        fields={'value1', 'value2', 'value3'},  # TODO: Make this a mapping field -> frontend rep
+        fields=set(),
         allow_custom_mappings=True,
         allow_custom_fields=True,
         default_field_mappings=None,

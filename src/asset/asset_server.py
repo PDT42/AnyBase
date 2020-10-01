@@ -133,31 +133,33 @@ class AssetServer:
         AssetServer.get()._initialized = True
 
     @staticmethod
-    async def _th_request_asset_data(th_offset, asset_type, depth):
+    async def _th_request_asset_data(th_offset, asset_type, and_filters, depth, load_sub_depth):
         """Threaded method that loads a batch of assets."""
 
         asset_manager: AAssetManager = AssetManager()
         return asset_manager.get_batch(
             asset_type=asset_type,
+            and_filters=and_filters,
             offset=th_offset,
             limit=th_offset + AssetServer.get().DB_BATCH_SIZE,
-            depth=depth
-        )
+            depth=depth,
+            load_sub_depth=load_sub_depth)
 
     @staticmethod
-    async def stream_asset_data(asset_type_id: int, channel: str, depth: int = 0):
+    async def stream_asset_data(asset_type_id: int, channel: str, depth: int = 0, load_sub_depth: int = 0):
         """TODO ಥ_ಥ"""
 
         # Get AssetType and number of assets of this type
         asset_type = AssetTypeManager().get_one_by_id(asset_type_id)
 
+        and_filters: List[str] = AssetServer._get_filters_from_request(asset_type, request.args)
+
         if not asset_type:
             raise AssetTypeDoesNotExistException(
                 f"Error in GET to 'stream-asset-data'. There is no " +
-                f"AssetType with the id: {asset_type_id}!"
-            )
+                f"AssetType with the id: {asset_type_id}!")
 
-        asset_count = AssetManager().count(asset_type)
+        asset_count = AssetManager().count(asset_type, and_filters=and_filters)
 
         async def generate_response():
             """Generate a valid stream response."""
@@ -194,7 +196,12 @@ class AssetServer:
             offset = 0
             while offset < asset_count:
                 task = asyncio.create_task(
-                    AssetServer._th_request_asset_data(offset, asset_type, depth))
+                    AssetServer._th_request_asset_data(
+                        th_offset=offset,
+                        asset_type=asset_type,
+                        and_filters=and_filters,
+                        depth=depth,
+                        load_sub_depth=load_sub_depth))
                 tasks.add(task)
                 offset += AssetServer.get().DB_BATCH_SIZE
 
@@ -433,3 +440,28 @@ class AssetServer:
         asset_manager.delete_asset(asset_type, asset)
 
         return redirect(f'/asset-type:{asset_type_id}')
+
+    @staticmethod
+    def _get_filters_from_request(
+            asset_type: AssetType,
+            request_args: Mapping[str, str]
+    ) -> List[str]:
+        """Extract query filters from request arguments."""
+
+        asset_manager: AAssetManager = AssetManager()
+
+        and_filters: List[str] = []
+
+        # TODO: This will produce so many errors ... o(*^＠^*)o
+
+        for column in asset_type.columns:
+
+            if filter_value := request_args.get(column.db_name):
+                and_filters.append(f'{column.db_name} {filter_value}')
+
+        for header in asset_manager.ASSET_HEADERS:
+
+            if filter_value := request_args.get(header):
+                and_filters.append(f'{header} {filter_value}')
+
+        return and_filters

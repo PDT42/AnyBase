@@ -23,8 +23,12 @@ class AAssetManager:
 
     _conversions: Mapping[DataType, callable] = None
 
+    # Required fields.
     asset_type_manager: AssetTypeManager = None
     db_connection: DbConnection = None
+
+    # Constants
+    ASSET_HEADERS: List[str] = None
 
     @abstractmethod
     def create_asset(self, asset_type: AssetType, asset: Asset) -> Optional[Asset]:
@@ -42,7 +46,13 @@ class AAssetManager:
         pass
 
     @abstractmethod
-    def get_one(self, asset_id: int, asset_type: AssetType, depth: int = 0) -> Optional[Asset]:
+    def get_one(
+            self, asset_id: int,
+            asset_type: AssetType,
+            depth: int = 0,
+            load_sub_depth: int = 0,
+            extend: bool = True) \
+            -> Optional[Asset]:
         """Get the ``Asset`` with ``asset_id`` from the database."""
         pass
 
@@ -64,8 +74,11 @@ class AAssetManager:
     def get_batch(
             self, asset_type: AssetType,
             offset: int, limit: int,
-            depth: int = None) \
-            -> List[Asset]:
+            and_filters: Sequence[str] = None,
+            or_filters: Sequence[str] = None,
+            depth: int = 0,
+            load_sub_depth: int = 0
+    ) -> List[Asset]:
         """Get all assets of ``AssetType`` from the database."""
         pass
 

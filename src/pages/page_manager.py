@@ -176,14 +176,14 @@ class PageManager(APageManager):
         # Ensuring the required database tables exist
         self._init_page_layout_tables()
 
-        query_filters: List[str] = [
+        and_filters: List[str] = [
             f'{self.ASSET_TYPE_ID} = {asset_type_id}',
             f'{self.ASSET_PAGE_LAYOUT} = {int(asset_page_layout)}'
         ]
 
         count: int = self.db_connection.count(
             self.asset_type_layout_table_name,
-            query_filters=query_filters)
+            and_filters=and_filters)
 
         if count == 0:
             return False
