@@ -1,10 +1,25 @@
 # Routes
-This is a list of all the routes AnyBase uses. This should be kept up to date. So, when creating a new route or routeschema (Which should not be the case too often, I hope), it should be noted here, keeping to the notification used by the routes already registered.
+
+> TODO: Update or remove
+
+This is a list of all the routes AnyBase uses. This should be kept up to date. So, when creating
+a new route or routeschema (Which should not be the case too often, I hope), it should be noted 
+here, keeping to the notification used by the routes already registered.
 
 ## Concept
-AnyBase is a webapp, so (rather obviously) it uses routes to do stuff. Basic information on [Quart]s Routes and  [HTTP], can be found in the supplied links. 
+AnyBase is a webapp, so (rather obviously) it uses routes to do stuff. Basic information on [Quart]s
+Routes and  [HTTP], can be found in the supplied links. 
 
-Right now, AnyBase does not use that many routes and I intend to keep it that way. The concept is very simple. AnyBase right now works with two _Servers_ (AssetTypeServer, AssetServer), which are nothing else, than wrappers, for a collection of functions, that are bound to routes using [Quart]. These bindings are created in the ``register_routes`` functions of the servers, which are called in the setup done in [main.py], before starting the app. Each Route has an url, a name, a function it calls and a HTTP-method it uses. The names should be unique so one can refer to a route's name, which then is equivalent to a function and an url. The urls are assigned and right now follow a simple scheme. They start with the entity they are concerned with. Which right now is either ``/asset`` or ``/asset-type``, either directly followed by an _action call_ ``(/list, /created, ..)``, or an id. The id specifies the entity we want to inspect. This results in urls like: 
+Right now, AnyBase does not use that many routes and I intend to keep it that way. The concept is 
+very simple. AnyBase right now works with two _Servers_ (AssetTypeServer, AssetServer), which are 
+nothing else, than wrappers, for a collection of functions, that are bound to routes using [Quart].
+These bindings are created in the ``register_routes`` functions of the servers, which are called 
+in the setup done in [main.py], before starting the app. Each Route has an url, a name, a function 
+it calls and a HTTP-method it uses. The names should be unique so one can refer to a route's name, 
+which then is equivalent to a function and an url. The urls are assigned and right now follow a 
+simple scheme. They start with the entity they are concerned with. Which right now is either 
+``/asset`` or ``/asset-type``, either directly followed by an _action call_ ``(/list, /created, ..)``,
+or an id. The id specifies the entity we want to inspect. This results in urls like: 
 
 ```
 GET /asset-type/list

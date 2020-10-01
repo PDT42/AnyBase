@@ -160,11 +160,12 @@ Managers represent the connection between the server and the database layer.
 
 
 [//]: # (LINKS)
-[Column]: https://github.com/PDT420/AnyBase/blob/master/doc/entities/column.md
-[Asset]: https://github.com/PDT420/AnyBase/blob/master/doc/entities/assets.md
-[AssetType]: https://github.com/PDT420/AnyBase/blob/master/doc/entities/asset_types.md
+[Column]: entities/column.md
+[Asset]: entities/assets.md
+[AssetType]: entities/asset_types.md
 [Quart]: https://github.com/pgjones/quart
-[DbConnection]: https://github.com/PDT420/AnyBase/blob/master/doc/database/db_connection.md
+[DbConnection]: database/db_connection.md
+[PageLayout]: page_layouts/page_layout.md
 
 [//]: # (IMAGES)
 [concept_diagram]: doc/graphics/rendered_images/AnyBase.png
