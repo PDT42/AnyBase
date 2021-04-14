@@ -1,0 +1,21 @@
+/* TODO: Rename These */
+
+.itemList {
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.listItem {
+    border: 1px solid black;
+    margin-top: 8px;
+    padding: 4px;
+    padding-inline: 8px;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.2);
+    transition: 0.15s;
+    text-decoration: none;
+    color: #000;
+}
+
+.listItem:hover {
+    box-shadow: 0 4px 4px 0 rgba(0,0,0,0.2);
+}

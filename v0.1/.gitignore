@@ -1,9 +1,0 @@
-/venv/
-/.idea/
-*.pyc
-.db
-res/config.ini
-*.db
-node_modules/
-package.json
-package-lock.json
