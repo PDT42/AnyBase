@@ -4,7 +4,9 @@ export declare class MetaAnyty {
     _manyty_id: number;
     name: string;
     nameRep: string;
-    tableName: string;
+    anytyTableName: string;
+    bookingMAnytyId: number;
+    bookingMAnyty: MetaAnyty;
     anybutes: Anybute[];
     anylations: Anylation[];
     parentMAnytyId: number;
@@ -17,4 +19,5 @@ export interface MetaAnytyDTO {
     anybutes: AnybuteDTO[];
     anylations: AnylationDTO[];
     isProperty: boolean;
+    isBookable: boolean;
 }

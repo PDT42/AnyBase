@@ -8,8 +8,7 @@ export declare class AnytyService {
     constructor(moduleRef: ModuleRef, connection: Connection);
     initAnyty(metaAnyty: MetaAnyty): Promise<void>;
     createAnyty(metaAnyty: MetaAnyty, anyty: AnytyDTO): Promise<number>;
-    private getPAnyties;
-    private mergeAnyties;
+    private getSelected;
     getAll(metaAnyty: MetaAnyty, where?: string[]): Promise<Anyty[]>;
     getOne(metaAnyty: MetaAnyty, anytyId: number, where?: string[]): Promise<Anyty>;
     delete(metaAnyty: MetaAnyty, anytyId: number): Promise<void>;

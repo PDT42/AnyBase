@@ -36,7 +36,7 @@ let MetaAnytyController = class MetaAnytyController {
             .catch(r => {
             console.error(r);
             response.status(400);
-        });
+        }).finally(response.send());
     }
     async findOneMAnyty(mAnytyId, response) {
         await this.mAnytyProvider.getOne(mAnytyId).then(result => {
@@ -45,7 +45,7 @@ let MetaAnytyController = class MetaAnytyController {
         }).catch(r => {
             console.error(r);
             response.status(400);
-        });
+        }).finally(response.send());
     }
     async deleteOne(mAnytyId, response) {
         await this.mAnytyProvider.delete(mAnytyId).then(result => {
@@ -53,7 +53,7 @@ let MetaAnytyController = class MetaAnytyController {
         }).catch(r => {
             console.error(r);
             response.status(400);
-        });
+        }).finally(response.send());
     }
     async updateMAnyty(metaAnytyDTO, response) {
     }

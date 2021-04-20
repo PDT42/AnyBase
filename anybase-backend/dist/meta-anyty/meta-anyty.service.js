@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MetaAnytyService = void 0;
 const common_1 = require("@nestjs/common");
@@ -28,8 +29,8 @@ let MetaAnytyService = class MetaAnytyService {
         let anybuteNames = [];
         newMetaAnyty.name = metaAnytyDTO.name.replace(SQLITE_REGEX, "").toLowerCase();
         newMetaAnyty.nameRep = metaAnytyDTO.name;
-        newMetaAnyty.tableName = `_anyty_${newMetaAnyty.name}`;
-        newMetaAnyty.isProperty = metaAnytyDTO.isProperty;
+        newMetaAnyty.anytyTableName = `_anyty_${newMetaAnyty.name}`;
+        newMetaAnyty.isProperty = metaAnytyDTO.isProperty || false;
         let exMetaAnyty = await dbConnection.findOne(meta_anyty_entity_1.MetaAnyty, { where: `name = "${newMetaAnyty.name}"` });
         if (exMetaAnyty) {
             throw new Error("Could not create MetaAnyty! A MetaAnyty with that name already exists!");
@@ -53,9 +54,9 @@ let MetaAnytyService = class MetaAnytyService {
         }
         newMetaAnyty.anybutes = metaAnytyDTO.anybutes.map((anyDTO) => {
             let newAnybute = new anybute_entity_1.Anybute();
-            let anybuteName = anyDTO.columnName
+            let anybuteName = "_" + anyDTO.columnName
                 .replace(SQLITE_REGEX, "").toLowerCase();
-            if (anybuteName in anybuteNames) {
+            if (anybuteNames.includes(anybuteName)) {
                 throw new Error("There can't be more than one Anybute with the same name!");
             }
             else
@@ -66,16 +67,47 @@ let MetaAnytyService = class MetaAnytyService {
             newAnybute.metaAnyty = newMetaAnyty;
             return newAnybute;
         });
-        [
-            anybute_entity_1.createAnybute("_anyty_created", "Created", "integer", newMetaAnyty),
-            anybute_entity_1.createAnybute("_anyty_updated", "Updated", "integer", newMetaAnyty)
-        ].map((anybute) => {
+        [{
+                columnName: "_anyty_created",
+                nameRep: "Created",
+                dataType: "datetime",
+                metaAnyty: newMetaAnyty
+            }, {
+                columnName: "_anyty_updated",
+                nameRep: "Updated",
+                dataType: "datetime",
+                metaAnyty: newMetaAnyty
+            }].map((anybute) => {
             if (!anybuteNames.includes(anybute.columnName))
                 newMetaAnyty.anybutes.push(anybute);
         });
         newMetaAnyty.anylations = [];
-        await dbConnection.save(newMetaAnyty);
+        if (metaAnytyDTO.isBookable || (newMetaAnyty.parentMAnyty && newMetaAnyty.parentMAnyty.bookingMAnytyId > 0)) {
+            let bookingParentId = 0;
+            if (newMetaAnyty.parentMAnyty) {
+                bookingParentId = newMetaAnyty.parentMAnyty.bookingMAnytyId;
+            }
+            let bookingAnybutes = [];
+            if (bookingParentId == 0) {
+                bookingAnybutes = [
+                    { columnName: "From", dataType: "datetime" },
+                    { columnName: "Until", dataType: "datetime" }
+                ];
+            }
+            const bookingMAnyty = await this.createMAnyty({
+                name: `_booking_${newMetaAnyty.name}`,
+                parentMAnytyId: bookingParentId,
+                anybutes: bookingAnybutes,
+                anylations: [],
+                isProperty: true,
+                isBookable: false
+            });
+            newMetaAnyty.bookingMAnytyId = bookingMAnyty._manyty_id;
+            newMetaAnyty.bookingMAnyty = bookingMAnyty;
+        }
+        newMetaAnyty = await dbConnection.save(newMetaAnyty);
         await this.moduleRef.get(anyty_service_1.AnytyService, { strict: false }).initAnyty(newMetaAnyty);
+        return newMetaAnyty;
     }
     async getOne(manytyId) {
         return await typeorm_1.getRepository(meta_anyty_entity_1.MetaAnyty).findOne({
@@ -89,6 +121,12 @@ let MetaAnytyService = class MetaAnytyService {
             relations: ["anybutes", "anylations"]
         });
     }
+    async getDescendants(mAnytyId) {
+        return await typeorm_1.getRepository(meta_anyty_entity_1.MetaAnyty).find({
+            where: `parentMAnytyId = ${mAnytyId}`,
+            relations: ["anybutes", "anylations"]
+        });
+    }
     async delete(manytyId) {
         await typeorm_1.getRepository(meta_anyty_entity_1.MetaAnyty).delete(`_manyty_id = ${manytyId}`);
     }
@@ -97,8 +135,7 @@ let MetaAnytyService = class MetaAnytyService {
 };
 MetaAnytyService = __decorate([
     common_1.Injectable(),
-    __metadata("design:paramtypes", [core_1.ModuleRef,
-        typeorm_1.Connection])
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.ModuleRef !== "undefined" && core_1.ModuleRef) === "function" ? _a : Object, typeof (_b = typeof typeorm_1.Connection !== "undefined" && typeorm_1.Connection) === "function" ? _b : Object])
 ], MetaAnytyService);
 exports.MetaAnytyService = MetaAnytyService;
 //# sourceMappingURL=meta-anyty.service.js.map

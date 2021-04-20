@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnytyService = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,6 +23,7 @@ const TYPE_MAPPING = new Map([
     ["integer", "INTEGER"],
     ["int", "INTEGER"],
     ["id", "INTEGER"],
+    ["datetime", "INTEGER"],
     ["string", "TEXT"],
     ["str", "TEXT"]
 ]);
@@ -34,8 +36,6 @@ let AnytyService = class AnytyService {
         let createQuery = `CREATE TABLE IF NOT EXISTS _anyty_${metaAnyty.name} (`;
         createQuery += "_anyty_id INTEGER PRIMARY KEY,";
         createQuery += "_anyty_parent_id INTEGER DEFAULT 0,";
-        createQuery += "_anyty_child_id INTEGER DEFAULT 0,";
-        createQuery += "_anyty_child_manyty_id INTEGER DEFAULT 0,";
         metaAnyty.anybutes.map((anybute) => {
             let dataType = TYPE_MAPPING.get(anybute.dataType);
             createQuery += `${anybute.columnName} `;
@@ -52,7 +52,7 @@ let AnytyService = class AnytyService {
         await this.execute(createQuery);
     }
     async createAnyty(metaAnyty, anyty) {
-        let insertQuery = `INSERT INTO ${metaAnyty.tableName}  (`;
+        let insertQuery = `INSERT INTO ${metaAnyty.anytyTableName}  (`;
         let anytyValues = [];
         let anybuteColumnNames = [];
         const anybutesMap = new Map(anyty.anybutes);
@@ -77,105 +77,85 @@ let AnytyService = class AnytyService {
             anytyValues.push(anylationsMap.get(anylation.columnName));
             insertQuery += `${anylation.columnName},`;
         });
+        const mAnytyService = await this.moduleRef.get(meta_anyty_service_1.MetaAnytyService, { strict: false });
         if (metaAnyty.parentMAnytyId && metaAnyty.parentMAnytyId > 0) {
             if (!metaAnyty.parentMAnyty) {
-                metaAnyty.parentMAnyty = await this.moduleRef
-                    .get(meta_anyty_service_1.MetaAnytyService, { strict: false })
-                    .getOne(metaAnyty.parentMAnytyId);
+                metaAnyty.parentMAnyty = await mAnytyService.getOne(metaAnyty.parentMAnytyId);
+            }
+            let parentAnyty = null;
+            if (anyty.parentAnytyId && anyty.parentAnytyId > 0) {
+                parentAnyty = await this.getOne(metaAnyty.parentMAnyty, anyty.parentAnytyId);
+                if (!parentAnyty) {
+                    throw new Error("The referenced Parent-Anyty does not exist!");
+                }
             }
             if (metaAnyty.parentMAnyty) {
-                insertQuery += "_anyty_parent_id) ";
-                anytyValues.push(metaAnyty.parentMAnytyId);
+                insertQuery += "_anyty_parent_id,";
+                if (parentAnyty) {
+                    anytyValues.push(parentAnyty._anyty_id);
+                }
+                else {
+                    let parentAnyty = {
+                        mAnytyId: metaAnyty.parentMAnytyId,
+                        anybutes: anyty.anybutes.filter((anybute) => !anybuteColumnNames.includes(anybute[0])),
+                        anylations: anyty.anylations.filter((anylation) => !anylationColumnNames.includes(anylation[0]))
+                    };
+                    await mAnytyService.getOne(metaAnyty.parentMAnytyId)
+                        .then(async (parentMAnyty) => {
+                        anytyValues.push(await this.createAnyty(parentMAnyty, parentAnyty));
+                    });
+                }
             }
         }
-        else {
-            insertQuery = insertQuery.slice(0, insertQuery.length - 1) + ") ";
-        }
-        insertQuery += "VALUES (";
+        insertQuery = insertQuery.slice(0, insertQuery.length - 1);
+        insertQuery += ") VALUES (";
         insertQuery += anytyValues.join(",");
         insertQuery += ");";
-        let parentMAnytyId = null;
-        if (metaAnyty.parentMAnyty) {
-            let parentAnyty = {
-                anybutes: anyty.anybutes.filter((anybute) => !anybuteColumnNames.includes(anybute[0])),
-                anylations: anyty.anylations.filter((anylation) => !anylationColumnNames.includes(anylation[0]))
-            };
-            await this.moduleRef.get(meta_anyty_service_1.MetaAnytyService, { strict: false })
-                .getOne(metaAnyty.parentMAnytyId)
-                .then(async (parentMAnyty) => {
-                parentMAnytyId = await this.createAnyty(parentMAnyty, parentAnyty);
-            });
-        }
-        const anytyId = await this.execute(insertQuery);
-        if (parentMAnytyId) {
-            const updateQuery = `UPDATE ${metaAnyty.parentMAnyty.tableName} ` +
-                `SET _anyty_child_id = ${anytyId},` +
-                `_anyty_child_manyty_id = ${metaAnyty._manyty_id} ` +
-                `WHERE _anyty_id = ${parentMAnytyId};`;
-            await this.execute(updateQuery);
-        }
-        return anytyId;
+        return await this.execute(insertQuery);
     }
-    async getPAnyties(metaAnyty) {
-        let parentAnyties = [];
-        if (metaAnyty.parentMAnytyId && metaAnyty.parentMAnytyId > 0) {
+    async getSelected(metaAnyty, selectQuery) {
+        let anyties = await this.execute(selectQuery);
+        if (metaAnyty.parentMAnytyId) {
             if (!metaAnyty.parentMAnyty) {
-                metaAnyty.parentMAnyty = await this.moduleRef
-                    .get(meta_anyty_service_1.MetaAnytyService, { strict: false })
-                    .getOne(metaAnyty.parentMAnytyId);
+                metaAnyty.parentMAnyty = await this.moduleRef.get(meta_anyty_service_1.MetaAnytyService, {
+                    strict: false
+                }).getOne(metaAnyty.parentMAnytyId);
             }
-            parentAnyties = await this.getAll(metaAnyty.parentMAnyty, [
-                `_anyty_child_manyty_id = ${metaAnyty._manyty_id}`
-            ]);
+            anyties = await Promise.all(anyties.map(async (anyty) => {
+                return best_globals_1.changing(await this.getOne(metaAnyty.parentMAnyty, anyty._anyty_parent_id), anyty);
+            }));
         }
-        return parentAnyties;
-    }
-    async mergeAnyties(parentAnyties, anyties) {
-        const parentAnytiesMap = new Map(parentAnyties.map((pAnyty) => [pAnyty._anyty_id, pAnyty]));
-        anyties = anyties.map((anyty) => {
-            return best_globals_1.changing(parentAnytiesMap.get(anyty._anyty_parent_id), anyty);
-        });
         return anyties;
     }
     async getAll(metaAnyty, where) {
-        const parentAnyties = await this.getPAnyties(metaAnyty);
-        let selectQuery = `SELECT * FROM ${metaAnyty.tableName}`;
+        let selectQuery = `SELECT * FROM ${metaAnyty.anytyTableName}`;
         if (where && where.length > 0)
             selectQuery += " WHERE " + where.join(" AND ") + ";";
         else
             selectQuery += ";";
-        let anyties = await this.execute(selectQuery);
-        if (metaAnyty.parentMAnyty) {
-            anyties = await this.mergeAnyties(parentAnyties, anyties);
-        }
-        return anyties;
+        return this.getSelected(metaAnyty, selectQuery);
     }
     async getOne(metaAnyty, anytyId, where) {
-        const parentAnyties = await this.getPAnyties(metaAnyty);
-        let selectQuery = `SELECT * FROM ${metaAnyty.tableName}`;
+        let selectQuery = `SELECT * FROM ${metaAnyty.anytyTableName}`;
         selectQuery += ` WHERE _anyty_id=${anytyId} `;
         if (where && where.length > 0)
             selectQuery += where.join(" AND ") + ";";
         else
             selectQuery += ";";
-        let anyties = await this.execute(selectQuery);
-        if (metaAnyty.parentMAnyty) {
-            anyties = await this.mergeAnyties(parentAnyties, anyties);
-        }
-        return anyties[0];
+        return (await this.getSelected(metaAnyty, selectQuery))[0];
     }
     async delete(metaAnyty, anytyId) {
-        let deleteQuery = `DELETE FROM ${metaAnyty.tableName} WHERE _anyty_id=${anytyId};`;
+        let deleteQuery = `DELETE FROM ${metaAnyty.anytyTableName} WHERE _anyty_id=${anytyId};`;
         await this.execute(deleteQuery);
     }
-    async execute(query) {
+    async execute(query, parameters) {
         console.log(query);
         const queryRunner = this.connection.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
         let result = null;
         try {
-            result = await queryRunner.query(query);
+            result = await queryRunner.query(query, parameters);
             await queryRunner.commitTransaction();
         }
         catch (err) {
@@ -190,8 +170,7 @@ let AnytyService = class AnytyService {
 };
 AnytyService = __decorate([
     common_1.Injectable(),
-    __metadata("design:paramtypes", [core_1.ModuleRef,
-        typeorm_1.Connection])
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.ModuleRef !== "undefined" && core_1.ModuleRef) === "function" ? _a : Object, typeof (_b = typeof typeorm_1.Connection !== "undefined" && typeorm_1.Connection) === "function" ? _b : Object])
 ], AnytyService);
 exports.AnytyService = AnytyService;
 //# sourceMappingURL=anyty.service.js.map

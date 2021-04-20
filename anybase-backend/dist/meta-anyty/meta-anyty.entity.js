@@ -30,7 +30,11 @@ __decorate([
 __decorate([
     typeorm_1.Column({ nullable: false }),
     __metadata("design:type", String)
-], MetaAnyty.prototype, "tableName", void 0);
+], MetaAnyty.prototype, "anytyTableName", void 0);
+__decorate([
+    typeorm_1.Column({ default: 0 }),
+    __metadata("design:type", Number)
+], MetaAnyty.prototype, "bookingMAnytyId", void 0);
 __decorate([
     typeorm_1.OneToMany(() => anybute_entity_1.Anybute, anybute => anybute.metaAnyty, {
         cascade: true

@@ -6,10 +6,9 @@ export interface Anyty {
     [key: string]: any;
 }
 export interface AnytyDTO {
-    id?: number;
-    parentId?: number;
-    childId?: number;
-    childMAnytyId?: number;
+    mAnytyId: number;
+    parentMAnytyId?: number;
+    parentAnytyId?: number;
     created?: number;
     anybutes: [string, any][];
     anylations: [string, any][];

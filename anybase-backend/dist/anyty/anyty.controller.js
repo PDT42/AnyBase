@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnytyController = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,8 +23,11 @@ let AnytyController = class AnytyController {
         this.moduleRef = moduleRef;
         this.anytyProvider = anytyProvider;
     }
-    async createAnyty(anytyDTO, mAnytyId, response) {
-        await this.moduleRef.get(meta_anyty_service_1.MetaAnytyService, { strict: false }).getOne(mAnytyId)
+    async createAnyty(anytyDTO, response) {
+        if (!(anytyDTO.mAnytyId && anytyDTO.mAnytyId > 0)) {
+            throw new Error("No valid MetaAnyty specified!");
+        }
+        await this.moduleRef.get(meta_anyty_service_1.MetaAnytyService, { strict: false }).getOne(anytyDTO.mAnytyId)
             .then(async (mAnyty) => {
             if (!mAnyty) {
                 throw new Error("Specified MetaAnyty does not exist!");
@@ -74,12 +78,11 @@ let AnytyController = class AnytyController {
     }
 };
 __decorate([
-    common_1.Post(":manyty_id/create"),
+    common_1.Post("/create"),
     __param(0, common_1.Body()),
-    __param(1, common_1.Param("manyty_id")),
-    __param(2, common_1.Res()),
+    __param(1, common_1.Res()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AnytyController.prototype, "createAnyty", null);
 __decorate([
@@ -110,8 +113,7 @@ __decorate([
 ], AnytyController.prototype, "deleteOne", null);
 AnytyController = __decorate([
     common_1.Controller("anyty"),
-    __metadata("design:paramtypes", [core_1.ModuleRef,
-        anyty_service_1.AnytyService])
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.ModuleRef !== "undefined" && core_1.ModuleRef) === "function" ? _a : Object, anyty_service_1.AnytyService])
 ], AnytyController);
 exports.AnytyController = AnytyController;
 //# sourceMappingURL=anyty.controller.js.map
