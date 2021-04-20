@@ -4,6 +4,7 @@ import { AnytyService } from "../anyty/anyty.service";
 import { Connection, getRepository } from "typeorm";
 import { Anybute, AnybuteDTO, createAnybute } from "../anybute/anybute.entity";
 import { ModuleRef } from "@nestjs/core";
+import { Anylation, AnylationDTO } from "../anylation/anylation.entity";
 
 @Injectable()
 export class MetaAnytyService {
@@ -23,15 +24,16 @@ export class MetaAnytyService {
     const SQLITE_REGEX = /([ &])/g;
 
     // TODO: This function needs way more error handling!
+    // TODO: Split this function into multiple functions
 
     let dbConnection = this.connection.createEntityManager();
 
     //  Constructing a MetaAnyty from MetaAnytyDTO
     let newMetaAnyty = new MetaAnyty();
-    let anybuteNames: string[] = [];
+    let anyNames: string[] = [];
 
-    newMetaAnyty.name = metaAnytyDTO.name.replace(SQLITE_REGEX, "").toLowerCase();
-    newMetaAnyty.nameRep = metaAnytyDTO.name;
+    newMetaAnyty.name = metaAnytyDTO.nameRep.replace(SQLITE_REGEX, "").toLowerCase();
+    newMetaAnyty.nameRep = metaAnytyDTO.nameRep;
     newMetaAnyty.anytyTableName = `_anyty_${newMetaAnyty.name}`;
     newMetaAnyty.isProperty = metaAnytyDTO.isProperty || false;
 
@@ -60,7 +62,7 @@ export class MetaAnytyService {
       }
 
       parentMetaAnyty.anybutes.map((pAnybute: Anybute) => {
-        anybuteNames.push(pAnybute.columnName);
+        anyNames.push(pAnybute.columnName);
       });
     }
 
@@ -71,19 +73,20 @@ export class MetaAnytyService {
 
       // Creating the Anybute instance ..
       let newAnybute: Anybute = new Anybute();
-      let anybuteName: string = "_" + anyDTO.columnName
+      let anybuteName: string = "_" + anyDTO.nameRep
         .replace(SQLITE_REGEX, "").toLowerCase();
 
       // Making sure every anybuteName is unique
-      if (anybuteNames.includes(anybuteName)) {
+      if (anyNames.includes(anybuteName)) {
         throw new Error("There can't be more than one Anybute with the same name!");
-      } else anybuteNames.push(anybuteName);
+      } else anyNames.push(anybuteName);
 
       // Convert AnybuteDTO to Anybute
       newAnybute.columnName = anybuteName;
-      newAnybute.nameRep = anyDTO.columnName;
+      newAnybute.nameRep = anyDTO.nameRep;
       newAnybute.dataType = anyDTO.dataType;
       newAnybute.metaAnyty = newMetaAnyty;
+      newAnybute.required = anyDTO.required;
 
       return newAnybute;
     });
@@ -93,45 +96,84 @@ export class MetaAnytyService {
       columnName: "_anyty_created",
       nameRep: "Created",
       dataType: "datetime",
-      metaAnyty: newMetaAnyty
+      metaAnyty: newMetaAnyty,
+      required: true
     }, {
       columnName: "_anyty_updated",
       nameRep: "Updated",
       dataType: "datetime",
-      metaAnyty: newMetaAnyty
+      metaAnyty: newMetaAnyty,
+      required: true
     }].map((anybute: Anybute) => {
-      if (!anybuteNames.includes(anybute.columnName)) newMetaAnyty.anybutes.push(anybute);
+      if (!anyNames.includes(anybute.columnName)) {
+        newMetaAnyty.anybutes.push(anybute);
+      }
     });
-    // -----------
 
-    // Anylations
-    // ----------
-    // TODO: Add Anylations
-    newMetaAnyty.anylations = [];
-    // ----------
+    // Anylations ..
+    // -------------
+    newMetaAnyty.anylations = await Promise.all(metaAnytyDTO.anylations.map(
+      async (anylationDTO: AnylationDTO) => {
+        let newAnylation: Anylation = new Anylation();
+
+        const anylationName = "_" + anylationDTO.nameRep
+          .replace(SQLITE_REGEX, "").toLowerCase();
+
+        // Making sure every anybuteName is unique
+        if (anyNames.includes(anylationName)) {
+          throw new Error("There can't be more than one Anybute with the same name!");
+        } else anyNames.push(anylationName);
+
+        // Check the target MAnyty exists and get it
+        const targetMAnyty = await this.getOne(anylationDTO.targetMAnytyId);
+        if (!targetMAnyty) {
+          throw new Error("Specified target Meta Anyty does not exist!");
+        }
+
+        // Converting the AnylationDTO
+        newAnylation.columnName = anylationName;
+        newAnylation.nameRep = anylationDTO.nameRep;
+        newAnylation.metaAnyty = newMetaAnyty;
+        newAnylation.anylationType = anylationDTO.anylationType;
+        newAnylation.required = anylationDTO.required;
+        newAnylation.targetMetaAnytyId = targetMAnyty._manyty_id;
+
+        // Create the MAnyty that is intended to store
+        // data on the Anylation between MAnyty and Target
+        if (anylationDTO.anylationMAnytyDTO) {
+          newAnylation.anylationMAnytyId = (await this.createMAnyty(
+            anylationDTO.anylationMAnytyDTO))._manyty_id;
+        } else newAnylation.anylationMAnytyId = 0;
+
+        return newAnylation;
+      })
+    );
 
     // Handle Bookable MetaAnyty
     // -------------------------
 
     // Booking a Parent MAnyty means booking the Child MAnyty
-    if (metaAnytyDTO.isBookable || (newMetaAnyty.parentMAnyty && newMetaAnyty.parentMAnyty.bookingMAnytyId > 0)) {
+    if (metaAnytyDTO.isBookable || (newMetaAnyty.parentMAnyty &&
+      newMetaAnyty.parentMAnyty.bookingMAnytyId > 0)) {
 
+      // Get the id of the parents booking MAnyty
       let bookingParentId: number = 0;
       if (newMetaAnyty.parentMAnyty) {
         bookingParentId = newMetaAnyty.parentMAnyty.bookingMAnytyId;
       }
 
+      // Add default columns to the booking MAnyty
       let bookingAnybutes: AnybuteDTO[] = [];
       if (bookingParentId == 0) {
         bookingAnybutes = [
-          { columnName: "From", dataType: "datetime" },
-          { columnName: "Until", dataType: "datetime" }
+          { nameRep: "From", dataType: "datetime", required: true },
+          { nameRep: "Until", dataType: "datetime", required: true }
         ];
       }
 
       // Create the booking MAnyty in the application database
       const bookingMAnyty: MetaAnyty = await this.createMAnyty({
-        name: `_booking_${newMetaAnyty.name}`,
+        nameRep: `_booking_${newMetaAnyty.name}`,
         parentMAnytyId: bookingParentId,
         anybutes: bookingAnybutes,
         anylations: [],
@@ -139,6 +181,7 @@ export class MetaAnytyService {
         isBookable: false
       });
 
+      // Store new information
       newMetaAnyty.bookingMAnytyId = bookingMAnyty._manyty_id;
       newMetaAnyty.bookingMAnyty = bookingMAnyty;
     }
@@ -189,7 +232,14 @@ export class MetaAnytyService {
    * @param manytyId
    */
   async delete(manytyId: number): Promise<void> {
-    await getRepository(MetaAnyty).delete(`_manyty_id = ${manytyId}`);
+    const mAnyty: MetaAnyty = await this.getOne(manytyId);
+
+    if (mAnyty) {
+      await this.moduleRef.get(AnytyService, {
+        strict: false
+      }).deleteRecords(mAnyty);
+      await getRepository(MetaAnyty).delete(`_manyty_id = ${manytyId}`);
+    }
   }
 
   async update(manytyId: number, metaAnytyDTO: MetaAnytyDTO): Promise<void> {

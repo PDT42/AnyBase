@@ -1,5 +1,5 @@
-import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { MetaAnyty } from "../meta-anyty/meta-anyty.entity";
+import { Column, Entity, JoinColumn, JoinTable, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { MetaAnyty, MetaAnytyDTO } from "../meta-anyty/meta-anyty.entity";
 
 @Entity()
 export class Anylation {
@@ -13,13 +13,26 @@ export class Anylation {
   @Column({ nullable: false })
   nameRep: string;
 
-  @ManyToOne(type => MetaAnyty, metaAnyty => metaAnyty.anylations)
+  @ManyToOne(() => MetaAnyty, metaAnyty => metaAnyty.anylations)
   metaAnyty: MetaAnyty;
 
-  @OneToOne(() => MetaAnyty)
-  targetMetaAnyty: MetaAnyty;
+  @Column()
+  targetMetaAnytyId: number;
+
+  @Column({ nullable: false })
+  anylationType: string;
+
+  @Column({ nullable: false })
+  required: boolean;
+
+  @Column()
+  anylationMAnytyId: number;
 }
 
 export class AnylationDTO {
-  columnName: string;
+  nameRep: string;
+  anylationType: string; //TODO: Enumeration?
+  targetMAnytyId: number;
+  required: boolean;
+  anylationMAnytyDTO?: MetaAnytyDTO;
 }

@@ -20,12 +20,55 @@ export class MetaAnytyController {
 
     await this.mAnytyProvider.getAll()
       .then((result) => {
-        response.status(200);
         response.json(result);
+        response.status(200);
       }).catch(r => {
         console.error(r);
         response.status(400);
       });
+  }
+
+  /**
+   * Get Route /meta-anyty/anybutetypes - to get all
+   * datatypes an anybute can possibly have.
+   *
+   * @param response
+   */
+  @Get("anybutetypes")
+  async findAllAnybutetypes(@Res() response) {
+    response.setHeader("Content-Type", "application/json");
+
+    response.json([
+      "String",
+      "Integer",
+      "Real",
+      "Datetime",
+      "Date"
+    ]);
+    response.status(200);
+  }
+
+  /**
+   * Get Route /meta-anyty/anylationtypes - to get all
+   * types an anyltion can possibly have.
+   *
+   * @param response
+   */
+  @Get("anylationtypes")
+  async findAllAnylationtypes(@Res() response) {
+    response.setHeader("Content-Type", "application/json");
+
+    response.json([ //TODO: Enumeration?
+      "Reference", // Anylation to an any other public MAnyty
+      "ReferenceCollection", // Collection of any Anyties of any other public MAnyty
+
+      // Limited in time reference to another Anyty of any other MAnyty.
+      // The referenced Anyty must be of a bookable type. Referencing an
+      // Anyty creates a booking of that anyty.
+      "TReference",
+      "TReferenceCollection"
+    ]);
+    response.status(200);
   }
 
   /**
@@ -61,13 +104,15 @@ export class MetaAnytyController {
   async findOneMAnyty(
     @Param("manyty_id") mAnytyId: number,
     @Res() response) {
+    response.setHeader("Content-Type", "application/json");
+
     await this.mAnytyProvider.getOne(mAnytyId).then(result => {
-      response.status(200);
       response.json(result);
+      response.status(200);
     }).catch(r => {
       console.error(r);
       response.status(400);
-    }).finally(response.send());
+    });
   }
 
   /**
@@ -82,12 +127,12 @@ export class MetaAnytyController {
     @Param("manyty_id") mAnytyId: number,
     @Res() response) {
 
-    await this.mAnytyProvider.delete(mAnytyId).then(result => {
+    await this.mAnytyProvider.delete(mAnytyId).then(() => {
       response.status(200);
     }).catch(r => {
       console.error(r);
       response.status(400);
-    }).finally(response.send());
+    });
   }
 
   @Post(":manyty_id/update")
