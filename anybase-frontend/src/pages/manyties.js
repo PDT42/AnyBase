@@ -1,6 +1,7 @@
 import React from "react";
+import { Button } from "@material-ui/core";
 
-import { TitleRowAddButton } from "../components/common/title-row";
+import { TitleRowButton } from "../components/common/title-row";
 import { AnytyList } from "../components/item-list/item-list";
 import { getAllMAnyties } from "../services/meta-anyty/meta-anyty-service";
 
@@ -24,7 +25,13 @@ export class Manyties extends React.Component {
   render() {
     return (
       <div>
-        <TitleRowAddButton {...this.props} titleText="Meta Anyties"/>
+        <TitleRowButton titleText="Meta Anyties" button={
+          <Button variant="contained"
+            color="secondary"
+            size="medium"
+            onClick={() => this.props.history.push('/manyties/create')}
+          >add</Button>
+        } />
         <AnytyList {...this.props} listAnyties={this.state.listAnyties} />
       </div>
     );
