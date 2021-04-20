@@ -38,3 +38,19 @@ export async function getOneMAnyty(mAnytyId) {
     .catch((r) => console.error(r));
   return mAnyty;
 }
+
+/**
+ * Create a MetaAnyty in the application database.
+ * 
+ * @param { Object } mAnytyId
+ * @returns
+ */
+export async function createMAnyty(mAnyty) {
+  const URL = "meta-anyty/create";
+
+  return await fetch(`${config["host-url"]}/${URL}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(mAnyty)
+  }).then((response) => response);
+}
