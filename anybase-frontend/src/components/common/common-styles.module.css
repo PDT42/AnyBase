@@ -40,8 +40,6 @@
 }
 
 .flexCard {
-  display: flex;
-  flex-flow: column nowrap;
   margin-top: 8px;
   margin-bottom: 8px;
   padding: 8px;

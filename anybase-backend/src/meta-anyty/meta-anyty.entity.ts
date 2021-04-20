@@ -29,17 +29,15 @@ export class MetaAnyty {
 
   @OneToMany(() => Anybute, anybute => anybute.metaAnyty, {
     cascade: true
-  })
-  @JoinTable()
+  }) @JoinTable()
   anybutes: Anybute[];
 
   @OneToMany(() => Anylation, anylation => anylation.metaAnyty, {
     cascade: true
-  })
-  @JoinTable()
+  }) @JoinTable()
   anylations: Anylation[];
 
-  @Column({ default: 0 })
+  @Column({ nullable: false, default: 0 })
   parentMAnytyId: number;
 
   parentMAnyty: MetaAnyty;
@@ -49,7 +47,7 @@ export class MetaAnyty {
 }
 
 export interface MetaAnytyDTO {
-  name: string;
+  nameRep: string;
   parentMAnytyId: number;
   anybutes: AnybuteDTO[];
   anylations: AnylationDTO[];
