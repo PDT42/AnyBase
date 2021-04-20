@@ -14,10 +14,10 @@ export class AnytyController {
   }
 
   /**
-   * Create a new MetaAnyty.
+   * POST route /anyty/create - to Create a new Anyty
+   * in the application database.
    *
    * @param anytyDTO
-   * @param mAnytyId
    * @param response
    */
   @Post("/create")
@@ -37,7 +37,7 @@ export class AnytyController {
           throw new Error("Specified MetaAnyty does not exist!");
         }
 
-        await this.anytyProvider.createAnyty(mAnyty, anytyDTO)
+        await this.anytyProvider.syncCreateAnyty(mAnyty, anytyDTO)
           .then(() => response.status(200))
           .catch(r => {
             console.error(r);
@@ -51,7 +51,8 @@ export class AnytyController {
   }
 
   /**
-   * Get all MetaAnyties.
+   * Get route /anyty/:manyty_id/all to get all Anyties
+   * of one MetaAnyty from the application database.
    *
    * @param mAnytyId
    * @param response
@@ -63,7 +64,7 @@ export class AnytyController {
 
     await this.moduleRef.get(MetaAnytyService, { strict: false }).getOne(mAnytyId)
       .then(async (mAnyty) => {
-        await this.anytyProvider.getAll(mAnyty, []).then((result) => {
+        await this.anytyProvider.syncGetAnyties(mAnyty, []).then((result) => {
           response.json(result);
           response.status(200);
         });
@@ -74,7 +75,8 @@ export class AnytyController {
   }
 
   /**
-   * Get detailed data on one Anyty.
+   * GET route /anyty/:manyty_id/details - to get detailed data
+   * on one Anyty in the application database.
    *
    * @param mAnytyId
    * @param anytyId
@@ -88,7 +90,7 @@ export class AnytyController {
 
     await this.moduleRef.get(MetaAnytyService, { strict: false }).getOne(mAnytyId)
       .then(async (mAnyty) => {
-        await this.anytyProvider.getOne(mAnyty, anytyId).then((result) => {
+        await this.anytyProvider.syncGetAnyty(mAnyty, anytyId).then((result) => {
 
           // TODO: Anyty does not exist
 
@@ -102,7 +104,8 @@ export class AnytyController {
   }
 
   /**
-   * Delete an Anyty from the database.
+   * DELETE route /anyty/:manyty_id/delete - to Delete
+   * an Anyty from the database.
    *
    * @param mAnytyId
    * @param anytyId
@@ -116,10 +119,38 @@ export class AnytyController {
 
     await this.moduleRef.get(MetaAnytyService, { strict: false }).getOne(mAnytyId)
       .then(async (mAnyty) => {
-        await this.anytyProvider.delete(mAnyty, anytyId);
+        await this.anytyProvider.deleteAnyty(mAnyty, anytyId);
       }).catch((r) => {
         console.error(r);
         response.status(400);
       }).finally(() => response.send());
+  }
+
+  /**
+   *  POST route /anyty/:manyty_id/update - to Update
+   *  an Anyty in the database.
+   */
+  @Post(":manyty_id/:anyty_id/update")
+  async updateAnyty(
+    @Param("manyty_id") mAnytyId: number,
+    @Param("anyty_id") anytyId: number,
+    @Body() anytyDTO: AnytyDTO,
+    @Res() response
+  ) {
+    // TODO
+  }
+
+  /**
+   * GET route /anyty/:manyty_id/:anyty_id/bookings - to get all Bookings
+   * of the specified anyty.
+   *
+   */
+  @Get(":manyty_id/:anyty_id/bookings")
+  async findAllBookings(
+    @Param("manyty_id") mAnytyId: number,
+    @Param("anyty_id") anytyId: number,
+    @Res() response
+  ) {
+    // TODO
   }
 }
