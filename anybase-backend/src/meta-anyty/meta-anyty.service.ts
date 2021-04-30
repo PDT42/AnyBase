@@ -26,7 +26,7 @@ export class MetaAnytyService {
     // TODO: This function needs way more error handling!
     // TODO: Split this function into multiple functions
 
-    let dbConnection = this.connection.createEntityManager();
+    const dbConnection = this.connection.createEntityManager();
 
     //  Constructing a MetaAnyty from MetaAnytyDTO
     let newMetaAnyty = new MetaAnyty();
