@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Button, Grid, Paper, TextField } from "@material-ui/core";
 
-import { TitleRowButton } from "../components/common/title-row";
+import { TitleRowButtons } from "../components/common/title-row";
 import { HDivider } from "../components/common/common-components";
-import { getAllMAnyties, getOneMAnyty } from "../services/meta-anyty/meta-anyty-service";
+import { getAllMAnyties } from "../services/meta-anyty/meta-anyty-service";
 
 export class AnytyEditor extends React.Component {
 
@@ -13,143 +13,199 @@ export class AnytyEditor extends React.Component {
         this.state = {
             metaAnytyId: Number(this.props.match.params.manyty_id),
             metaAnyty: null,
+            metaAnytyInitialized: false,
             metaAnyties: [],
-            anybuteValues: [],
-            anylationValue: []
+            anybuteValues: {},
+            anylationValue: {}
         }
     }
 
     componentDidMount() {
-        getOneMAnyty(this.state.metaAnytyId).then((mAnyty) => {
-            this.setState({ metaAnyty: mAnyty });
-        }).catch(r => {
-            console.error(r);
-        });
+
         getAllMAnyties().then((mAnyties) => {
-            this.setState({ metaAnyties: mAnyties });
+            const foundMAnyties = mAnyties.filter(mAnyty => {
+                return mAnyty._manyty_id === this.state.metaAnytyId;
+            });
+
+            if (foundMAnyties.length > 0) {
+
+                const mAnyty = foundMAnyties[0];
+
+                // Init mappings that will hold
+                // all required parameters
+                let anybuteValues = {};
+                mAnyty.anybutes.map(anybute => {
+                    anybuteValues[anybute.columnName] = '';
+                    return anybute;
+                });
+                let anylationValues = {};
+                mAnyty.anylations.map(anylation => {
+                    anylationValues[anylation.columnName] = '';
+                    return anylation;
+                });
+
+                // Update State
+                this.setState({
+                    metaAnyties: mAnyties,
+                    metaAnyty: mAnyty,
+                    metaAnytyInitialized: true,
+                    anybuteValues: anybuteValues,
+                    anylationValues: anylationValues
+                });
+            } else {
+                this.setState({
+                    metaAnyties: mAnyties,
+                    metaAnyty: null,
+                    metaAnytyInitialized: true
+                });
+            }
+
         }).catch(r => {
-            this.setState({ metaAnyties: [] });
+            this.setState({
+                metaAnyties: [],
+                metaAnytyInitialized: true
+            });
             console.error(r)
         });
     }
 
+    // Define an onChange function for the anybute inputs
+    onAnybuteValueChanged = (event, anybute) => {
+        let anylationValues = this.state.anybuteValues;
+        anylationValues[anybute.columnName] = event.target.value;
+        this.setState({ anylationValues: anylationValues });
+    }
+
+    // Define an onChange function for the anylation inputs
+    onAnylationValueChanged = (event) => {
+
+    }
+
+    // Define a function to store the specified Anyty
+    onSaveButtonClicked = (event) => {
+        console.log("Save Button clicked!")
+    }
+
     render() {
-        if (this.state.metaAnyty == null) {
+        // If data is not yet available ...
+        if (!this.state.metaAnytyInitialized) {
             return (<div>Loading ...</div>)
         }
 
+        // If getting data failed ... 
+        if (!this.state.metaAnyty) {
+            return (<div>Meta Anyty could not be found!</div>)
+        }
 
+        // Go for it!
         return (
-            <div>
-                <TitleRowButton button={
-                    <Button variant="contained"
-                        color="secondary"
-                        size="medium"
-                        onClick={() => console.log('Save Button Clicked')}
-                    >Save</Button>}
-                    titleText={`Create Anyty: ${this.state.metaAnyty.nameRep}`}
-                />
+            <Grid container direction="column" spacing={2}>
+                <Grid item container>
+                    <TitleRowButtons buttons={[
+                        <Button variant="contained"
+                            color="secondary"
+                            size="medium"
+                            onClick={this.onSaveButtonClicked}
+                        >Save</Button>
+                    ]} titleText={`Create Anyty: ${this.state.metaAnyty.nameRep}`}
+                    />
+                </Grid>
 
-                <Box marginTop={2}>
+                <Grid item>
                     <Grid container spacing={2}>
-                        {this.AnybuteForm()}
-                        {this.AnylationForm()}
-                    </Grid>
-                </Box>
-            </div>
-        );
-    }
-
-    AnybuteForm() {
-        const anybuteFormRows = this.state.metaAnyty.anybutes.map((anybute) => {
-            if (!anybute.columnName.startsWith('_anyty')) {
-                return this.AnybuteFormRow(anybute);
-            } else return null;
-        }).filter(a => a);
-
-        return (
-            <Grid item xs={12}>
-                <Paper>
-                    <Box p={1}>
-                        <Grid container direction="column" spacing={1}>
-                            {this.AnybuteFormHeader()}
-                            <Grid item xs={12}>
-                                <HDivider />
-                            </Grid>
-                            {anybuteFormRows}
+                        <Grid item xs={12}>
+                            <Form formTitle={'Anybutes'}
+                                formRows={this.state.metaAnyty.anybutes.map((anybute, index) => {
+                                    return (
+                                        <AnybuteFormRow
+                                            key={index}
+                                            anybute={anybute}
+                                            anybuteValue={this.state.anybuteValues[anybute.columnName]}
+                                            anybuteIndex={index}
+                                            onChange={this.onAnybuteValueChanged}
+                                        />
+                                    );
+                                })} />
                         </Grid>
-                    </Box>
-                </Paper>
-            </Grid >
-        );
-    }
-
-    AnybuteFormHeader() {
-        return (
-            <Grid item container direction="row" xs={12}>
-                <Grid item xs={12}>
-                    <span>Anybutes</span>
+                        <Grid item xs={12}>
+                            <Form formTitle={'Anylations'}
+                                formRows={this.state.metaAnyty.anylations.map((anylation, index) => {
+                                    return (
+                                        <AnylationFormRow
+                                            key={index}
+                                            anylation={anylation}
+                                            anylationValue={this.state.anylationValue[anylation.columnName]}
+                                            anylationIndex={index}
+                                            onChange={this.onAnylationValueChanged}
+                                        />
+                                    );
+                                })} />
+                        </Grid>
+                    </Grid>
                 </Grid>
             </Grid>
         );
     }
+}
 
-    AnybuteFormRow(anybute) {
+class Form extends React.Component {
+    render() {
         return (
-            <Grid key={anybute.columnName} item container direction="row" xs={12}>
+            <Paper>
+                <Box p={1}>
+                    <Grid container direction="column" spacing={1}>
+                        <FormHeader title={this.props.formTitle} />
+                        <Grid item xs={12}>
+                            <HDivider />
+                        </Grid>
+
+                        {/* Display Form Rows */}
+                        {this.props.formRows}
+
+                    </Grid>
+                </Box>
+            </Paper>
+        );
+    }
+}
+
+class FormHeader extends React.Component {
+    render() {
+        return (
+            <Grid item container direction="row" xs={12}>
+                <Grid item xs={12}>
+                    <span>{this.props.title}</span>
+                </Grid>
+            </Grid>
+        );
+    }
+}
+
+class AnybuteFormRow extends React.Component {
+    render() {
+        return (
+            <Grid item xs={12} key={this.props.anybuteIndex} container direction="row">
                 <Grid item xs={12}>
                     <TextField
-                        id={anybute.columnName}
+                        id={this.props.anybute.columnName}
                         size="small"
                         fullWidth
-                        label={anybute.nameRep}
-                        value={anybute.nameRep}
-                        onChange={(event) => {
-
-                        }}
+                        label={this.props.anybute.nameRep}
+                        value={this.props.anybuteValue}
+                        onChange={(event) => this.props.onChange(event, this.props.anybute)}
                     />
                 </Grid>
             </Grid>
         );
     }
+}
 
-    AnylationForm() {
-        const anylationFormRows = this.state.metaAnyty.anylations.map((anylation) => {
-            return this.AnylationFormRow(anylation);
-        });
-
+class AnylationFormRow extends React.Component {
+    render() {
         return (
-            <Grid item xs={12}>
-                <Paper>
-                    <Box p={1}>
-                        <Grid container direction="column" spacing={1}>
-                            {this.AnylationFormHeader()}
-                            <Grid item xs={12}>
-                                <HDivider />
-                            </Grid>
-                            {anylationFormRows}
-                        </Grid>
-                    </Box>
-                </Paper>
-            </Grid>
-        );
-    }
-
-    AnylationFormHeader() {
-        return (
-            <Grid item container direction="row" xs={12}>
-                <Grid item xs={12}>
-                    <span>Anylations</span>
-                </Grid>
-            </Grid>
-        );
-    }
-
-    AnylationFormRow(anylation) {
-        return (
-            <Grid key={anylation.columnName} item container direction="row" xs={12}>
+            <Grid item xs={12} key={this.props.anylationIndex} container direction="row">
                 <Grid item xs={4}>
-                    <span>Anylation Name Rep</span>
+                    <span>xxx</span>
                 </Grid>
                 <Grid item xs={3}>
                     <span>xxx</span>
