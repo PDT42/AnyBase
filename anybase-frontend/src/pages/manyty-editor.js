@@ -2,9 +2,7 @@ import React from "react";
 import { Paper, Grid, Checkbox, FormControlLabel, FormGroup, Select, TextField, Button, MenuItem, InputLabel, Box } from "@material-ui/core";
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 
-import styles from "../components/common/common-styles.module.css";
-
-import { TitleRowButton } from "../components/common/title-row";
+import { TitleRowButtons } from "../components/common/title-row";
 import { HDivider } from "../components/common/common-components";
 import { CancelOutlined } from "@material-ui/icons";
 import { createMAnyty, getAllMAnyties } from "../services/meta-anyty/meta-anyty-service";
@@ -18,6 +16,7 @@ export class MAnytyEditor extends React.Component {
             parentManyties: [],
             selectedParentManyty: '',
             selectedParentAnybutes: 0,
+            selectedParentAnylations: 0,
             // --
             _manyty_name: '',
             _manyty_parent_id: 0,
@@ -30,7 +29,7 @@ export class MAnytyEditor extends React.Component {
             }],
             _manyty_anylations: [{
                 nameRep: '',
-                anylationType: 'Reference',
+                anylationType: 'reference',
                 required: false,
                 targetMAnytyId: 0,
                 anylationMAnytyDTO: {}
@@ -64,25 +63,31 @@ export class MAnytyEditor extends React.Component {
 
         return (
             <Grid container direction="column" spacing={2}>
-                <Grid item xs={12}>
-                    <TitleRowButton titleText="Create Meta Anyty" button={
+                <Grid item container>
+                    <TitleRowButtons buttons={[
                         <Button variant="contained"
                             color="secondary"
                             size="medium"
                             onClick={onSaveButtonClicked}
                         >Save</Button>
-                    } />
+                    ]} titleText="Create Meta Anyty" />
                 </Grid>
 
-                {this.MAnytyDefaultForm()}
-                <Grid item xs={12}>
+                <Grid item>
+                    {this.MAnytyDefaultForm()}
+                </Grid>
+                <Grid item>
                     <HDivider />
                 </Grid>
-                {this.MAnytyAnybuteForm()}
-                <Grid item xs={12}>
+                <Grid item>
+                    {this.MAnytyAnybuteForm()}
+                </Grid>
+                <Grid item>
                     <HDivider />
                 </Grid>
-                {this.MAnytyAnylationForm()}
+                <Grid item>
+                    {this.MAnytyAnylationForm()}
+                </Grid>
             </Grid>
         );
     }
@@ -91,20 +96,18 @@ export class MAnytyEditor extends React.Component {
 
     MAnytyDefaultForm() {
         return (
-            <Grid item xs={12}>
-                <Paper>
-                    <Box m={1}>
-                        <Grid container spacing={2}>
+            <Paper>
+                <Box m={1}>
+                    <Grid container spacing={2}>
 
-                            {this.MAnytyNameField()}
-                            {this.MAnytyParentSelector()}
-                            {this.MAnytyBookableCheckbox()}
-                            {this.MAnytyPropertyCheckbox()}
+                        {this.MAnytyNameField()}
+                        {this.MAnytyParentSelector()}
+                        {this.MAnytyBookableCheckbox()}
+                        {this.MAnytyPropertyCheckbox()}
 
-                        </Grid>
-                    </Box>
-                </Paper>
-            </Grid>
+                    </Grid>
+                </Box>
+            </Paper>
         );
     }
 
@@ -148,7 +151,8 @@ export class MAnytyEditor extends React.Component {
                         this.setState({
                             _manyty_parent_id: parent._manyty_id || 0,
                             selectedParentManyty: parent,
-                            selectedParentAnybutes: parent.anybutes.length || 0
+                            selectedParentAnybutes: parent.anybutes.length || 0,
+                            selectedParentAnylations: parent.anylations.length || 0
                         });
                     }}
                     value={this.state.selectedParentManyty}
@@ -253,42 +257,61 @@ export class MAnytyEditor extends React.Component {
         }
 
         return (
-            <Grid item xs={12}>
-                <FormGroup>
-                    <Paper>
-                        <Box p={1}>
-                            <Grid container direction="column">
-                                {parentAnybuteColumns}
-                                {anybuteColumns}
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Box paddingTop={2}>
-                                    <Button fullWidth
-                                        variant="contained"
-                                        color="primary"
-                                        size="small"
-                                        onClick={onAddButtonClick}
-                                    >
-                                        <AddCircleOutlineIcon />
-                                    </Button>
-                                </Box>
-                            </Grid>
-                        </Box>
-                    </Paper>
-                </FormGroup>
-            </Grid>
+            <FormGroup>
+                <Paper>
+                    <Box p={1}>
+                        <Grid container direction="column">
+                            {parentAnybuteColumns}
+                            {anybuteColumns}
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Box paddingTop={2}>
+                                <Button fullWidth
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    onClick={onAddButtonClick}
+                                >
+                                    <AddCircleOutlineIcon />
+                                </Button>
+                            </Box>
+                        </Grid>
+                    </Box>
+                </Paper>
+            </FormGroup>
         );
     }
 
     AnybuteColumn(anybuteDTO, key, disabled = false) {
         return (
-            <Grid key={`anybute_${key}`} container direction="row" spacing={2}>
-                <Grid item container justify="center" alignContent="center" xs={1}>
-                    <CancelOutlined />
-                </Grid>
+            <Grid item xs={12} key={`anybute_${key}`} container direction="row" spacing={2}>
+
+                {this.AnybuteRemoveButton(key, disabled)}
                 {this.AnybuteNameField(anybuteDTO.nameRep, key, disabled)}
                 {this.AnybuteDataTypeSelector(anybuteDTO.dataType, key, disabled)}
                 {this.AnybuteRequiredCheckbox(anybuteDTO.required, key, disabled)}
+
+            </Grid>
+        );
+    }
+
+    AnybuteRemoveButton(key, disabled) {
+        return (
+            <Grid item xs={1} container justify="center" alignContent="center">
+                <Button
+                    id={`_remove_anybute_${key}`}
+                    disabled={disabled}
+                    onClick={() => {
+                        let anybutes = this.state._manyty_anybutes;
+                        anybutes.pop(key)
+
+                        this.setState({
+                            _manyty_anybutes: anybutes
+                        });
+                    }}
+                >
+                    <CancelOutlined />
+                </Button>
             </Grid>
         );
     }
@@ -382,72 +405,205 @@ export class MAnytyEditor extends React.Component {
             });
         }
 
-        // Create Anybute Columns for 
-        // each Anybute already added
+        // Create Anylation Columns for 
+        // each Anylation already added
         const anylationColumns = this.state._manyty_anylations.map((anylationDTO, index) => {
             let key = index + parentAnylationColumns.length;
             return this.AnylationColumn(anylationDTO, key);
         });
 
-        // Define a function to add a new Anybute
+        // Define a function to add a new Anylation
         let addAnybute = () => {
-            let currentAnybutes = this.state._manyty_anybutes;
+            let currentAnylations = this.state._manyty_anylations;
 
-            //   nameRep: string;
-            //   anylationType: string; //TODO: Enumeration?
-            //   targetMAnytyId: number;
-            //   required: boolean;
-            //   anylationMAnytyDTO?: MetaAnytyDTO;
-
-            currentAnybutes.push({
+            currentAnylations.push({
                 nameRep: '',
-                anylationType: 'Reference',
+                anylationType: 'reference',
                 required: false,
                 targetMAnytyId: 0,
                 anylationMAnytyDTO: {}
             });
-            this.setState({ _manyty_anybutes: currentAnybutes })
+            this.setState({ _manyty_anylations: currentAnylations })
         }
 
         // Define OnClick Handler
-        let onAddButtonClick = () => {
+        let onAddButtonClicked = () => {
             addAnybute();
         }
 
         return (
-            <Grid item xs={12}>
-                <FormGroup>
-                    <Paper>
-                        <Box p={1}>
-                            <Grid container direction="column">
-                                {parentAnylationColumns}
-                                {anylationColumns}
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Box paddingTop={2}>
-                                    <Button fullWidth
-                                        variant="contained"
-                                        color="primary"
-                                        size="small"
-                                        onClick={() => console.log('anylation add')}
-                                    >
-                                        <AddCircleOutlineIcon />
-                                    </Button>
-                                </Box>
-                            </Grid>
-                        </Box>
-                    </Paper>
-                </FormGroup>
-            </Grid>
+            <FormGroup>
+                <Paper>
+                    <Box p={1}>
+                        <Grid container direction="column">
+                            {parentAnylationColumns}
+                            {anylationColumns}
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Box paddingTop={2}>
+                                <Button fullWidth
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    onClick={onAddButtonClicked}
+                                >
+                                    <AddCircleOutlineIcon />
+                                </Button>
+                            </Box>
+                        </Grid>
+                    </Box>
+                </Paper>
+            </FormGroup>
         );
     }
 
     AnylationColumn(anylationDTO, key, disabled) {
         return (
             <Grid key={`anylation_` + key} item xs={12} container direction="row" spacing={1}>
-                <Grid item xs={6}>
-                    {anylationDTO.anylationType}
-                </Grid>
+
+                {this.AnylationRemoveButton(key, disabled)}
+                {this.AnylationNameField(anylationDTO.nameRep, key, disabled)}
+                {this.AnylationTypeSelector(anylationDTO.anylationType, key, disabled)}
+                {this.AnylationTargetSelector(anylationDTO.targetMAnytyId, key, disabled)}
+                {this.AnylationRequiredCheckbox(anylationDTO.required, key, disabled)}
+
+            </Grid>
+        );
+    }
+
+    AnylationRemoveButton(key, disabled) {
+        return (
+            <Grid item xs={1} container justify="center" alignContent="center">
+                <Button
+                    id={`_remove_anylation_${key}`}
+                    disabled={disabled}
+                    onClick={() => {
+                        let anylations = this.state._manyty_anylations;
+                        anylations.pop(key)
+
+                        this.setState({
+                            _manyty_anylations: anylations
+                        });
+                    }}
+                >
+                    <CancelOutlined />
+                </Button>
+            </Grid>
+        );
+    }
+
+    AnylationNameField(anylationName, key, disabled) {
+        return (
+            <Grid item xs={5}>
+                <TextField
+                    id={`_anylation_column_name_${key}`}
+                    size="small" fullWidth
+                    label="Anylation Name"
+                    disabled={disabled}
+                    value={anylationName}
+                    onChange={(event) => {
+                        const anylations = this.state._manyty_anylations;
+                        anylations[key - this.state.selectedParentAnylations]
+                            .nameRep = event.target.value;
+
+                        this.setState({
+                            _manyty_anylations: anylations
+                        });
+                    }}
+                />
+            </Grid>
+        );
+    }
+
+    AnylationTypeSelector(anylationType, key, disabled) {
+        return (
+            <Grid item xs={2}>
+                <InputLabel shrink >
+                    Anylation Type
+                </InputLabel>
+                <Select
+                    id={`_anylation_type_${key}`}
+                    size="small" fullWidth
+                    displayEmpty
+                    disabled={disabled}
+                    value={anylationType}
+                    onChange={(event) => {
+                        let anylations = this.state._manyty_anylations;
+                        anylations[key - this.state.selectedParentAnylations]
+                            .anylationType = event.target.value;
+
+                        this.setState({
+                            _manyty_anylations: anylations
+                        });
+                    }}
+                >
+                    <MenuItem value={"reference"}>Reference</MenuItem>
+                </Select>
+            </Grid>
+        );
+    }
+
+    AnylationTargetSelector(anylationTarget, key, disabled) {
+        const targetOptions = [
+            <MenuItem key={0} value={0}>None</MenuItem>,
+            ...this.state.parentManyties.map((mAnyty) => {
+                return (
+                    <MenuItem key={mAnyty._manyty_id}
+                        value={mAnyty._manyty_id}
+                    >
+                        {mAnyty.nameRep}
+                    </MenuItem>
+                );
+            })]
+
+        return (
+            <Grid item xs={3}>
+                <InputLabel shrink >
+                    Anylation Target
+                </InputLabel>
+                <Select
+                    id={`_anylation_target_${key}`}
+                    size="small" fullWidth
+                    displayEmpty
+                    disabled={disabled}
+                    value={anylationTarget}
+                    onChange={(event) => {
+                        let anylations = this.state._manyty_anylations;
+                        anylations[key - this.state.selectedParentAnylations]
+                            .targetMAnytyId = event.target.value;
+
+                        this.setState({
+                            _manyty_anylations: anylations
+                        });
+                    }}
+                >
+                    {targetOptions}
+                </Select>
+            </Grid>
+        );
+    }
+
+    AnylationRequiredCheckbox(anylationRequired, key, disabled) {
+        return (
+            <Grid item xs={1} container justify="flex-end" direction="row">
+                <InputLabel shrink>required</InputLabel>
+                <Checkbox name="property"
+                    id={`_anylation_required_${key}`}
+                    checked={anylationRequired}
+                    disabled={disabled}
+                    onChange={() => {
+                        let anylations = this.state._manyty_anybutes;
+                        if (anylations[key - this.state.selectedParentAnylations].required) {
+                            anylations[key - this.state.selectedParentAnylations].required = false;
+                        } else {
+                            anylations[key - this.state.selectedParentAnylations].required = true;
+                        }
+
+                        this.setState({
+                            _manyty_anylations: anylations
+                        });
+                    }}
+                />
             </Grid>
         );
     }
