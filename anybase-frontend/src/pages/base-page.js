@@ -20,11 +20,13 @@ export function BasePage() {
 
         <div className={styles.mainContainer}>
 
-          <Route exact path="/manyties" component={Manyties} />
-          <Route exact path="/manyties/create" component={MAnytyEditor} />
+          <Route path="/manyties" exact component={Manyties} />
+          <Route path="/manyties/create" exact component={MAnytyEditor} />
+          
           <Route path="/manyties/:manyty_id/create/" component={AnytyEditor} />
           <Route path="/manyties/:manyty_id/details" component={MAnytyDetails} />
-          <Route exact path="/users" component={Users} />
+
+          <Route path="/users" exact component={Users} />
 
         </div>
       </div>
