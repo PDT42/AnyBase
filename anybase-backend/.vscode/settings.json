@@ -10,7 +10,17 @@
         "typescript"
     ],
     "cSpell.words": [
+        "Anylation",
+        "Bookable",
+        "Creating",
+        "Descendants",
+        "anybute",
+        "anybutes",
+        "anylations",
+        "cascade",
+        "datetime",
         "nestjs",
+        "relations",
         "typeorm"
     ]
 }
